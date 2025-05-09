@@ -52,10 +52,10 @@ export const COIN_EXPLOSION_DURATION_MS = 500; // 0.5 seconds for coin explosion
 
 // PLATFORM_GROUND_Y defines the Y-coordinate of the BOTTOM of the ground platform.
 // It is measured from the bottom of the game area.
-export const PLATFORM_GROUND_Y = 58; 
+export const PLATFORM_GROUND_Y = 55; // Lowered by 3 pixels from 58
 export const PLATFORM_GROUND_THICKNESS = 1; // Thickness of the ground platform
 
-export const HERO_HEIGHT = 80; // Height of the hero, increased from 60
+export const HERO_HEIGHT = 80; // Height of the hero
 export const COIN_SIZE = 20;
 export const PLATFORM_DEFAULT_WIDTH = 130; // Default width for non-ground platforms
 export const PLATFORM_NON_GROUND_HEIGHT = 24; // Default height for non-ground platforms
@@ -68,10 +68,10 @@ export const PLATFORM2_Y_OFFSET = 240;
 
 // Initial static properties for level 1 platforms
 export const INITIAL_PLATFORM1_X_PERCENT = 0.2; 
-export const INITIAL_PLATFORM1_SPEED = 0.5; // Reduced from 1.0
+export const INITIAL_PLATFORM1_SPEED = 0.5;
 
 export const INITIAL_PLATFORM2_X_PERCENT = 0.6;
-export const INITIAL_PLATFORM2_SPEED = 0.5; // Reduced from 1.0
+export const INITIAL_PLATFORM2_SPEED = 0.5;
 
 
 export interface GameState {
