@@ -19,9 +19,10 @@ interface GameObjectStylePropsBase {
   heroAction?: HeroType['action'];
   appearanceProps?: AppearanceProps;
   shape?: 'rect' | 'circle';
+  isHero?: boolean; // Added to identify hero for specific styling
 }
 
-function getGameObjectStyle({ x, y, width, height, gameAreaHeight, paddingTop, color, heroAction, appearanceProps, shape = 'rect' }: GameObjectStylePropsBase): React.CSSProperties {
+function getGameObjectStyle({ x, y, width, height, gameAreaHeight, paddingTop, color, heroAction, appearanceProps, shape = 'rect', isHero = false }: GameObjectStylePropsBase): React.CSSProperties {
   const topInEffectiveArea = gameAreaHeight - y - height;
   const finalCssTop = paddingTop + topInEffectiveArea;
   
@@ -31,9 +32,13 @@ function getGameObjectStyle({ x, y, width, height, gameAreaHeight, paddingTop, c
     top: `${finalCssTop}px`, 
     width: `${width}px`,
     height: `${height}px`,
-    boxShadow: '2px 2px 4px rgba(0,0,0,0.3)',
     objectFit: 'fill', // For img tags, to fill the dimensions
   };
+
+  if (!isHero) { // Apply shadow only if not hero
+    dynamicStyles.boxShadow = '2px 2px 4px rgba(0,0,0,0.3)';
+  }
+
 
   if (color) { // Only set if color is provided and it's not an image that will cover it
     dynamicStyles.backgroundColor = color;
@@ -110,6 +115,7 @@ export function HeroComponent({ hero, gameAreaHeight, paddingTop, heroAppearance
         // No color prop, image is used
         heroAction: hero.action,
         appearanceProps,
+        isHero: true, // Identify as hero
         // shape: 'rect' // borderRadius will be applied from default
       })}
       role="img"
@@ -221,3 +227,4 @@ export function CoinComponent({ coin, gameAreaHeight, paddingTop }: { coin: Coin
 
   return null; 
 }
+

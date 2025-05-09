@@ -26,7 +26,7 @@ import {
 // Game constants
 const GRAVITY_ACCELERATION = 0.4; 
 const MAX_FALL_SPEED = -8; 
-const HERO_BASE_SPEED = 3.0; 
+const HERO_BASE_SPEED = 1.5; // Reduced from 3.0
 
 // Calculate JUMP_STRENGTH based on TARGET_JUMP_HEIGHT_PX and GRAVITY_ACCELERATION
 const JUMP_STRENGTH = (-GRAVITY_ACCELERATION + Math.sqrt(GRAVITY_ACCELERATION * GRAVITY_ACCELERATION + 8 * GRAVITY_ACCELERATION * TARGET_JUMP_HEIGHT_PX)) / 2;
@@ -85,9 +85,11 @@ function generateCoins(count: number, gameArea: Size, coinSize: number): CoinTyp
   const effectiveMinYSpawn = Math.max(groundTopY + coinSize, coinZoneBottomEdgeGameCoords);
   const effectiveMaxYSpawn = Math.max(effectiveMinYSpawn, coinZoneTopEdgeGameCoords);
 
+  const segmentWidth = gameArea.width / count;
 
-  if (effectiveMinYSpawn >= effectiveMaxYSpawn || effectiveMaxYSpawn < groundTopY + coinSize || gameArea.width <= coinSize) {
-    console.warn("Coin spawn zone has invalid height, is below ground, or game area too small. Spawning coins in a fallback area above ground.");
+
+  if (effectiveMinYSpawn >= effectiveMaxYSpawn || effectiveMaxYSpawn < groundTopY + coinSize || gameArea.width <= coinSize * count) { // Adjusted width check
+    console.warn("Coin spawn zone has invalid height, is below ground, or game area too small for uniform distribution. Spawning coins in a fallback area above ground.");
     const fallbackMinY = groundTopY + gameArea.height * 0.1; 
     const fallbackMaxY = groundTopY + gameArea.height * 0.5 - coinSize; 
     for (let i = 0; i < count; i++) {
@@ -107,9 +109,13 @@ function generateCoins(count: number, gameArea: Size, coinSize: number): CoinTyp
   }
 
   for (let i = 0; i < count; i++) {
+    const segmentStartX = i * segmentWidth;
+    // Ensure coin fits within its segment
+    const randomXInSegment = segmentStartX + Math.random() * Math.max(0, segmentWidth - coinSize);
+    
     coins.push({
       id: `coin${i}_${Date.now()}`, 
-      x: Math.random() * (gameArea.width - coinSize),
+      x: randomXInSegment,
       y: effectiveMinYSpawn + Math.random() * (effectiveMaxYSpawn - effectiveMinYSpawn), 
       width: coinSize,
       height: coinSize,
@@ -186,6 +192,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
           ...initialHeroState, 
           x: newEffectiveGameArea.width / 2 - initialHeroState.width / 2, 
           y: PLATFORM_GROUND_Y + PLATFORM_GROUND_THICKNESS, 
+          height: HERO_HEIGHT, // Ensure hero height is set correctly
           isOnPlatform: true,
           platformId: 'platform_ground',
           velocity: {x: 0, y: 0},
@@ -350,6 +357,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
               ...initialHeroState, 
               x: gameArea.width / 2 - initialHeroState.width / 2, 
               y: PLATFORM_GROUND_Y + PLATFORM_GROUND_THICKNESS, 
+              height: HERO_HEIGHT, // Ensure hero height is set correctly on reset
               isOnPlatform: true,
               platformId: 'platform_ground',
               velocity: {x:0, y:0},
@@ -441,3 +449,4 @@ export function useGameLogic() {
 
   return { gameState, dispatch: handleGameAction, gameTick };
 }
+

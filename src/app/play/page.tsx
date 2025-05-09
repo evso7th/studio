@@ -125,7 +125,7 @@ const GameScreen = () => {
       style={{ 
         backgroundImage: 'url("https://neurostaffing.online/wp-content/uploads/2025/05/BackGround-003.png")',
         backgroundSize: 'cover',
-        backgroundPosition: 'center',
+        backgroundPosition: 'top left', // Changed from 'center'
         backgroundRepeat: 'no-repeat',
         backgroundColor: 'hsl(var(--game-bg))', // Fallback color
       }}
@@ -167,3 +167,4 @@ const GameScreen = () => {
 };
 
 export default GameScreen;
+

@@ -55,7 +55,7 @@ export const COIN_EXPLOSION_DURATION_MS = 500; // 0.5 seconds for coin explosion
 export const PLATFORM_GROUND_Y = 58; 
 export const PLATFORM_GROUND_THICKNESS = 1; // Thickness of the ground platform
 
-export const HERO_HEIGHT = 60; // Height of the hero
+export const HERO_HEIGHT = 80; // Height of the hero, increased from 60
 export const COIN_SIZE = 20;
 export const PLATFORM_DEFAULT_WIDTH = 130; // Default width for non-ground platforms
 export const PLATFORM_NON_GROUND_HEIGHT = 24; // Default height for non-ground platforms
@@ -68,10 +68,10 @@ export const PLATFORM2_Y_OFFSET = 240;
 
 // Initial static properties for level 1 platforms
 export const INITIAL_PLATFORM1_X_PERCENT = 0.2; 
-export const INITIAL_PLATFORM1_SPEED = 1.0;
+export const INITIAL_PLATFORM1_SPEED = 0.5; // Reduced from 1.0
 
 export const INITIAL_PLATFORM2_X_PERCENT = 0.6;
-export const INITIAL_PLATFORM2_SPEED = 1.0;
+export const INITIAL_PLATFORM2_SPEED = 0.5; // Reduced from 1.0
 
 
 export interface GameState {
@@ -98,3 +98,4 @@ export type GameAction =
   | { type: 'EXIT_GAME' }
   | { type: 'UPDATE_GAME_AREA', payload: { width: number; height: number; paddingTop: number; } }
   | { type: 'GAME_TICK', payload: { gameArea: Size, deltaTime: number } }; // Added deltaTime to game_tick payload
+
