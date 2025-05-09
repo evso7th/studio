@@ -1,7 +1,7 @@
 
 "use client";
 import type { HeroType, PlatformType, CoinType } from "@/lib/gameTypes";
-import { COIN_SPAWN_EXPLOSION_DURATION_MS } from "@/lib/gameTypes"; // Import if not already
+// import { COIN_SPAWN_EXPLOSION_DURATION_MS } from "@/lib/gameTypes"; // Not directly used, COIN_EXPLOSION_DURATION_MS is used
 import type React from 'react'; 
 
 interface AppearanceProps {
@@ -18,12 +18,13 @@ interface GameObjectStylePropsBase {
   paddingTop: number; 
   color?: string; 
   heroAction?: HeroType['action'];
+  heroFacingDirection?: HeroType['facingDirection'];
   appearanceProps?: AppearanceProps;
   shape?: 'rect' | 'circle';
   isHero?: boolean; 
 }
 
-function getGameObjectStyle({ x, y, width, height, gameAreaHeight, paddingTop, color, heroAction, appearanceProps, shape = 'rect', isHero = false }: GameObjectStylePropsBase): React.CSSProperties {
+function getGameObjectStyle({ x, y, width, height, gameAreaHeight, paddingTop, color, heroAction, heroFacingDirection, appearanceProps, shape = 'rect', isHero = false }: GameObjectStylePropsBase): React.CSSProperties {
   const topInEffectiveArea = gameAreaHeight - y - height;
   const finalCssTop = paddingTop + topInEffectiveArea;
   
@@ -43,11 +44,22 @@ function getGameObjectStyle({ x, y, width, height, gameAreaHeight, paddingTop, c
   if (color) { 
     dynamicStyles.backgroundColor = color;
   }
+  
+  let baseTransform = '';
+  if (isHero) {
+    if (heroFacingDirection === 'left') {
+      baseTransform = 'scaleX(-1)';
+    } else { // 'right' or undefined (default to right)
+      baseTransform = 'scaleX(1)';
+    }
+  }
+  
+  let animationTransform = '';
 
   if (appearanceProps?.type === 'heroAppear') {
     const progress = appearanceProps.progress;
     dynamicStyles.opacity = progress;
-    dynamicStyles.transform = `scale(${progress})`;
+    animationTransform = `scale(${progress})`; // This scale is for appearance, not related to jump/fall x-squash
     dynamicStyles.transformOrigin = 'center bottom'; 
     dynamicStyles.borderRadius = '2px'; 
   } else {
@@ -60,22 +72,30 @@ function getGameObjectStyle({ x, y, width, height, gameAreaHeight, paddingTop, c
     if (heroAction) {
       switch (heroAction) {
         case 'jump_up':
-          dynamicStyles.transform = `scaleY(0.95) translateY(-3px) scaleX(1.05)`; 
+          // The scaleX here is for the jump animation itself, applied after directional flip
+          animationTransform = `scaleY(0.95) translateY(-3px) scaleX(1.05)`; 
           dynamicStyles.transition = 'transform 0.1s ease-out';
           break;
         case 'fall_down':
-          dynamicStyles.transform = `scaleY(1.05) translateY(1px) scaleX(0.95)`; 
+          // The scaleX here is for the fall animation
+          animationTransform = `scaleY(1.05) translateY(1px) scaleX(0.95)`; 
           dynamicStyles.transition = 'transform 0.1s ease-in';
           break;
         case 'run_left':
         case 'run_right':
-          dynamicStyles.transform = 'none'; 
+        case 'idle':
+          animationTransform = ''; // No additional animation transform for these states
           break;
         default: 
-          dynamicStyles.transform = 'none';
+          animationTransform = '';
           break;
       }
     }
+  }
+  
+  const combinedTransform = `${baseTransform} ${animationTransform}`.trim();
+  if (combinedTransform) {
+    dynamicStyles.transform = combinedTransform;
   }
   
   return dynamicStyles;
@@ -111,6 +131,7 @@ export function HeroComponent({ hero, gameAreaHeight, paddingTop, heroAppearance
         gameAreaHeight, 
         paddingTop, 
         heroAction: hero.action,
+        heroFacingDirection: hero.facingDirection,
         appearanceProps,
         isHero: true, 
       })}
@@ -128,23 +149,25 @@ export function PlatformComponent({ platform, gameAreaHeight, paddingTop }: { pl
     ...platform, 
     gameAreaHeight, 
     paddingTop, 
-    color: undefined, 
+    color: undefined, // Platform image will be used
     shape: 'rect' 
   });
   
   const platformStyle: React.CSSProperties = {
     ...baseStyle,
-    backgroundImage: 'url("https://neurostaffing.online/wp-content/uploads/2025/05/PlatformGrassShort.png")',
-    backgroundSize: '100% 100%', 
-    backgroundPosition: 'center',
-    backgroundRepeat: 'no-repeat', 
+    backgroundImage: platform.id === 'platform_ground' 
+      ? 'url("https://neurostaffing.online/wp-content/uploads/2025/05/GroundFloor.png")' 
+      : 'url("https://neurostaffing.online/wp-content/uploads/2025/05/PlatformGrassShort.png")',
+    backgroundSize: platform.id === 'platform_ground' ? 'auto 100%' : '100% 100%', // Ground repeats, others stretch
+    backgroundPosition: platform.id === 'platform_ground' ? 'left bottom' : 'center', // Ground tiles from left
+    backgroundRepeat: platform.id === 'platform_ground' ? 'repeat-x' : 'no-repeat', 
   };
 
   return (
     <div
       style={platformStyle}
       role="presentation" 
-      data-ai-hint="grass platform"
+      data-ai-hint={platform.id === 'platform_ground' ? "stone ground" : "grass platform"}
     />
   );
 }
@@ -253,4 +276,3 @@ export function CoinComponent({ coin, gameAreaHeight, paddingTop }: { coin: Coin
 
   return null; 
 }
-

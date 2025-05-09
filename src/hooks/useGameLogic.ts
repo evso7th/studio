@@ -7,7 +7,7 @@ import { useReducer, useCallback, useEffect, useRef } from 'react';
 import type { GameState, GameAction, HeroType, PlatformType, CoinType, Size, Position } from '@/lib/gameTypes'; 
 import { 
     HERO_APPEARANCE_DURATION_MS, 
-    PLATFORM_GROUND_Y, 
+    PLATFORM_GROUND_Y_FROM_BOTTOM, 
     PLATFORM_GROUND_THICKNESS, 
     HERO_WIDTH,
     HERO_HEIGHT, 
@@ -23,7 +23,6 @@ import {
     INITIAL_PLATFORM2_SPEED,
     COIN_EXPLOSION_DURATION_MS,
     TOTAL_COINS_PER_LEVEL,
-    // COINS_PER_PAIR, // Not directly used in this file after initial calculations
     COIN_SPAWN_EXPLOSION_DURATION_MS,
     MIN_DISTANCE_BETWEEN_PAIR_COINS_X_FACTOR,
     MIN_DISTANCE_BETWEEN_PAIR_COINS_Y_FACTOR,
@@ -33,14 +32,18 @@ import {
 
 const GRAVITY_ACCELERATION = 0.4; 
 const MAX_FALL_SPEED = -8; 
-const HERO_BASE_SPEED = 0.5859375; // Increased by 25% from 0.46875
+const HERO_BASE_SPEED = 0.5859375; 
 
 const JUMP_STRENGTH = (-GRAVITY_ACCELERATION + Math.sqrt(GRAVITY_ACCELERATION * GRAVITY_ACCELERATION + 8 * GRAVITY_ACCELERATION * TARGET_JUMP_HEIGHT_PX)) / 2;
+
+const calculatePlatformGroundY = (gameAreaHeight: number) => {
+  return PLATFORM_GROUND_Y_FROM_BOTTOM; 
+};
 
 const initialHeroState: HeroType = {
   id: 'hero',
   x: 0, 
-  y: PLATFORM_GROUND_Y + PLATFORM_GROUND_THICKNESS, 
+  y: calculatePlatformGroundY(0) + PLATFORM_GROUND_THICKNESS, // Placeholder, updated on gameArea set
   width: HERO_WIDTH,
   height: HERO_HEIGHT, 
   velocity: { x: 0, y: 0 },
@@ -48,35 +51,41 @@ const initialHeroState: HeroType = {
   isOnPlatform: true, 
   platformId: 'platform_ground', 
   currentSpeedX: 0,
+  facingDirection: 'right', // Initialize facing direction
 };
 
-const getLevel1Platforms = (gameAreaWidth: number): PlatformType[] => [
-  {
-    id: 'platform_ground', x: -100, y: PLATFORM_GROUND_Y, 
-    width: gameAreaWidth + 200, height: PLATFORM_GROUND_THICKNESS, 
-    color: 'hsl(var(--platform-color))', isMoving: false, speed: 0, direction: 1, moveAxis: 'x',
-  },
-  {
-    id: 'platform1', x: gameAreaWidth * INITIAL_PLATFORM1_X_PERCENT, y: PLATFORM_GROUND_Y + PLATFORM_GROUND_THICKNESS + PLATFORM1_Y_OFFSET, width: PLATFORM_DEFAULT_WIDTH, height: PLATFORM_NON_GROUND_HEIGHT, 
-    color: 'hsl(var(--platform-color))', isMoving: true, speed: INITIAL_PLATFORM1_SPEED, direction: 1, moveAxis: 'x',
-    moveRange: { min: 0, max: gameAreaWidth - PLATFORM_DEFAULT_WIDTH } 
-  },
-  {
-    id: 'platform2', x: gameAreaWidth * INITIAL_PLATFORM2_X_PERCENT, y: PLATFORM_GROUND_Y + PLATFORM_GROUND_THICKNESS + PLATFORM2_Y_OFFSET, width: PLATFORM_DEFAULT_WIDTH, height: PLATFORM_NON_GROUND_HEIGHT,
-    color: 'hsl(var(--platform-color))', isMoving: true, speed: INITIAL_PLATFORM2_SPEED, direction: -1, moveAxis: 'x',
-    moveRange: { min: 0, max: gameAreaWidth - PLATFORM_DEFAULT_WIDTH } 
-  },
-];
+const getLevel1Platforms = (gameAreaWidth: number, gameAreaHeight: number): PlatformType[] => {
+  const groundPlatformY = calculatePlatformGroundY(gameAreaHeight);
+  return [
+    {
+      id: 'platform_ground', x: -100, y: groundPlatformY, 
+      width: gameAreaWidth + 200, height: PLATFORM_GROUND_THICKNESS, 
+      color: 'hsl(var(--platform-color))', isMoving: false, speed: 0, direction: 1, moveAxis: 'x',
+    },
+    {
+      id: 'platform1', x: gameAreaWidth * INITIAL_PLATFORM1_X_PERCENT, y: groundPlatformY + PLATFORM_GROUND_THICKNESS + PLATFORM1_Y_OFFSET, width: PLATFORM_DEFAULT_WIDTH, height: PLATFORM_NON_GROUND_HEIGHT, 
+      color: 'hsl(var(--platform-color))', isMoving: true, speed: INITIAL_PLATFORM1_SPEED, direction: 1, moveAxis: 'x',
+      moveRange: { min: 0, max: gameAreaWidth - PLATFORM_DEFAULT_WIDTH } 
+    },
+    {
+      id: 'platform2', x: gameAreaWidth * INITIAL_PLATFORM2_X_PERCENT, y: groundPlatformY + PLATFORM_GROUND_THICKNESS + PLATFORM2_Y_OFFSET, width: PLATFORM_DEFAULT_WIDTH, height: PLATFORM_NON_GROUND_HEIGHT,
+      color: 'hsl(var(--platform-color))', isMoving: true, speed: INITIAL_PLATFORM2_SPEED, direction: -1, moveAxis: 'x',
+      moveRange: { min: 0, max: gameAreaWidth - PLATFORM_DEFAULT_WIDTH } 
+    },
+  ];
+};
+
 
 function spawnNextCoinPair(gameArea: Size, coinSize: number, currentPairId: number): CoinType[] {
   if (!gameArea.width || !gameArea.height) return [];
   const newPair: CoinType[] = [];
   
-  const platform1TopActualY = PLATFORM_GROUND_Y + PLATFORM_GROUND_THICKNESS + PLATFORM1_Y_OFFSET + PLATFORM_NON_GROUND_HEIGHT;
+  const groundPlatformY = calculatePlatformGroundY(gameArea.height);
+  const platform1TopActualY = groundPlatformY + PLATFORM_GROUND_THICKNESS + PLATFORM1_Y_OFFSET + PLATFORM_NON_GROUND_HEIGHT;
   const coinSpawnZoneCeilingY = gameArea.height - COIN_ZONE_TOP_OFFSET - coinSize;
   const coinSpawnZoneFloorY = platform1TopActualY;
 
-  let effectiveMinSpawnY = Math.max(PLATFORM_GROUND_Y + PLATFORM_GROUND_THICKNESS, coinSpawnZoneFloorY);
+  let effectiveMinSpawnY = Math.max(groundPlatformY + PLATFORM_GROUND_THICKNESS, coinSpawnZoneFloorY);
   let effectiveMaxSpawnY = coinSpawnZoneCeilingY;
 
   if (effectiveMinSpawnY >= effectiveMaxSpawnY) {
@@ -84,7 +93,7 @@ function spawnNextCoinPair(gameArea: Size, coinSize: number, currentPairId: numb
         effectiveMinSpawnY = platform1TopActualY + 1; 
         effectiveMaxSpawnY = effectiveMinSpawnY;    
     } else {
-        effectiveMinSpawnY = PLATFORM_GROUND_Y + PLATFORM_GROUND_THICKNESS + 1;
+        effectiveMinSpawnY = groundPlatformY + PLATFORM_GROUND_THICKNESS + 1;
         effectiveMaxSpawnY = effectiveMinSpawnY;
     }
   }
@@ -134,7 +143,7 @@ function spawnNextCoinPair(gameArea: Size, coinSize: number, currentPairId: numb
 
 const initialGameState: GameState = {
   hero: { ...initialHeroState },
-  platforms: getLevel1Platforms(800), 
+  platforms: getLevel1Platforms(800, 600), // Placeholder, updated on gameArea set
   activeCoins: [], 
   score: 0,
   currentLevel: 1,
@@ -152,7 +161,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
     case 'MOVE_LEFT_START':
       if (state.heroAppearance === 'visible') {
-        return { ...state, hero: { ...state.hero, currentSpeedX: -HERO_BASE_SPEED, action: 'run_left' } };
+        return { ...state, hero: { ...state.hero, currentSpeedX: -HERO_BASE_SPEED, action: 'run_left', facingDirection: 'left' } };
       }
       return state;
     case 'MOVE_LEFT_STOP':
@@ -162,7 +171,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       return state;
     case 'MOVE_RIGHT_START':
       if (state.heroAppearance === 'visible') {
-        return { ...state, hero: { ...state.hero, currentSpeedX: HERO_BASE_SPEED, action: 'run_right' } };
+        return { ...state, hero: { ...state.hero, currentSpeedX: HERO_BASE_SPEED, action: 'run_right', facingDirection: 'right' } };
       }
       return state;
     case 'MOVE_RIGHT_STOP':
@@ -179,15 +188,18 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       let { hero, activeCoins, platforms, isGameInitialized, currentPairIndex, totalCoinsCollectedInLevel, score } = state;
       const newEffectiveGameArea = { width: action.payload.width, height: action.payload.height };
       const newPaddingTop = action.payload.paddingTop;
+      const groundPlatformY = calculatePlatformGroundY(newEffectiveGameArea.height);
 
-      platforms = state.platforms.map(p => {
-        if (p.id === 'platform_ground') {
-            return {...p, width: newEffectiveGameArea.width + 200, x: -100, y: PLATFORM_GROUND_Y }; 
+      platforms = getLevel1Platforms(newEffectiveGameArea.width, newEffectiveGameArea.height).map(p => {
+         if (p.id === 'platform_ground') {
+            return {...p, width: newEffectiveGameArea.width + 200, x: -100, y: groundPlatformY }; 
         }
         if (p.isMoving && p.moveAxis === 'x') {
           return { ...p, 
             x: Math.min(p.x, newEffectiveGameArea.width - p.width), 
-            moveRange: { min: 0, max: newEffectiveGameArea.width - p.width } };
+            moveRange: { min: 0, max: newEffectiveGameArea.width - p.width },
+            y: groundPlatformY + PLATFORM_GROUND_THICKNESS + (p.id === 'platform1' ? PLATFORM1_Y_OFFSET : PLATFORM2_Y_OFFSET) // Recalculate Y based on new ground
+          };
         }
         return p;
       });
@@ -196,7 +208,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         hero = {
           ...initialHeroState, 
           x: newEffectiveGameArea.width / 2 - initialHeroState.width / 2, 
-          y: PLATFORM_GROUND_Y + PLATFORM_GROUND_THICKNESS, 
+          y: groundPlatformY + PLATFORM_GROUND_THICKNESS, 
           width: HERO_WIDTH,
           height: HERO_HEIGHT,
           isOnPlatform: true,
@@ -204,9 +216,10 @@ function gameReducer(state: GameState, action: GameAction): GameState {
           velocity: {x: 0, y: 0},
           currentSpeedX: 0,
           action: 'idle',
+          facingDirection: 'right',
         };
         
-        let currentLevelPlatformsConfig = getLevel1Platforms(newEffectiveGameArea.width); 
+        let currentLevelPlatformsConfig = getLevel1Platforms(newEffectiveGameArea.width, newEffectiveGameArea.height); 
         activeCoins = spawnNextCoinPair(newEffectiveGameArea, COIN_SIZE, 0);
         isGameInitialized = true;
         currentPairIndex = 0;
@@ -289,7 +302,11 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         return coin;
       });
 
+      const groundPlatformY = calculatePlatformGroundY(gameArea.height);
       nextPlatforms = nextPlatforms.map(p => {
+        if (p.id === 'platform_ground') {
+             return {...p, y: groundPlatformY};
+        }
         if (p.isMoving && p.id !== 'platform_ground') {
           let platformNewX = p.x;
           let platformVelX = p.speed * p.direction;
@@ -301,7 +318,8 @@ function gameReducer(state: GameState, action: GameAction): GameState {
                platformNewX = Math.max(p.moveRange.min, Math.min(platformNewX, p.moveRange.max));
             }
           }
-          return { ...p, x: platformNewX, velocity: { x: platformVelX, y: 0 } };
+           const platformNewY = groundPlatformY + PLATFORM_GROUND_THICKNESS + (p.id === 'platform1' ? PLATFORM1_Y_OFFSET : PLATFORM2_Y_OFFSET);
+          return { ...p, x: platformNewX, y: platformNewY, velocity: { x: platformVelX, y: 0 } };
         }
         return { ...p, velocity: {x: 0, y: 0}}; 
       });
@@ -315,6 +333,8 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         }
         nextHero.velocity = { x: 0, y: 0 };
         nextHero.currentSpeedX = 0;
+        // Keep existing facingDirection or default to right
+        nextHero.facingDirection = heroState.facingDirection || 'right';
       } else { 
         let newVelY = (nextHero.velocity?.y ?? 0) - GRAVITY_ACCELERATION * (deltaTime / (1000/60));
         newVelY = Math.max(newVelY, MAX_FALL_SPEED);
@@ -330,10 +350,15 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         let newPosX = nextHero.x + nextHero.currentSpeedX * (deltaTime / (1000/60)) + platformMovementEffectX;
         let newPosY = nextHero.y + newVelY * (deltaTime / (1000/60));
         
+        // Determine action based on velocity and movement, facingDirection is handled by START actions
         if (newVelY < -GRAVITY_ACCELERATION * 0.5) nextHero.action = 'fall_down'; 
         else if (newVelY > 0) nextHero.action = 'jump_up';
-        else if (nextHero.currentSpeedX !== 0 && nextHero.isOnPlatform) nextHero.action = nextHero.currentSpeedX > 0 ? 'run_right' : 'run_left';
+        else if (nextHero.currentSpeedX !== 0 && nextHero.isOnPlatform) {
+             nextHero.action = nextHero.currentSpeedX > 0 ? 'run_right' : 'run_left';
+             // facingDirection is already set by START actions
+        }
         else if (nextHero.isOnPlatform) nextHero.action = 'idle'; 
+        // If not on platform and not jumping/falling, it implies airborne drift, action might remain jump or fall.
 
         let resolvedOnPlatform = false;
         let resolvedPlatformId = null;
@@ -358,7 +383,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
               resolvedOnPlatform = true;
               resolvedPlatformId = platform.id;
               if (nextHero.action === 'fall_down' || nextHero.action === 'jump_up') { 
-                 nextHero.action = nextHero.currentSpeedX !==0 ? (nextHero.currentSpeedX > 0 ? 'run_right' : 'run_left') : 'idle';
+                 nextHero.action = nextHero.currentSpeedX !==0 ? (nextHero.facingDirection === 'right' ? 'run_right' : 'run_left') : 'idle';
               }
               break; 
             }
@@ -379,7 +404,9 @@ function gameReducer(state: GameState, action: GameAction): GameState {
 
         if (nextHero.isOnPlatform) {
           if (nextHero.currentSpeedX === 0 && finalVelY === 0) nextHero.action = 'idle';
-          else if (nextHero.currentSpeedX !== 0 && finalVelY === 0) nextHero.action = nextHero.currentSpeedX > 0 ? 'run_right' : 'run_left';
+          else if (nextHero.currentSpeedX !== 0 && finalVelY === 0) {
+            nextHero.action = nextHero.facingDirection === 'right' ? 'run_right' : 'run_left';
+          }
         } else { 
           if (finalVelY > 0) nextHero.action = 'jump_up';
           else if (finalVelY < -GRAVITY_ACCELERATION * 0.5) nextHero.action = 'fall_down';
@@ -428,11 +455,11 @@ function gameReducer(state: GameState, action: GameAction): GameState {
             nextActiveCoins = [...nextActiveCoins, ...nextPairCoins];
         }
 
-        if (nextHero.y < 0) { 
+        if (nextHero.y < 0 && !levelComplete) { // Only reset if not already game over by level completion
           const resetHeroState = {
               ...initialHeroState, 
               x: gameArea.width / 2 - initialHeroState.width / 2, 
-              y: PLATFORM_GROUND_Y + PLATFORM_GROUND_THICKNESS, 
+              y: groundPlatformY + PLATFORM_GROUND_THICKNESS, 
               width: HERO_WIDTH,
               height: HERO_HEIGHT,
               isOnPlatform: true,
@@ -440,8 +467,9 @@ function gameReducer(state: GameState, action: GameAction): GameState {
               velocity: {x:0, y:0},
               currentSpeedX: 0,
               action: 'idle',
+              facingDirection: 'right', // Reset facing direction
           };
-          let newLevelPlatforms = getLevel1Platforms(gameArea.width);
+          let newLevelPlatforms = getLevel1Platforms(gameArea.width, gameArea.height);
           
           return { 
               ...state, 
@@ -508,5 +536,3 @@ export function useGameLogic() {
 
   return { gameState, dispatch: handleGameAction, gameTick };
 }
-
-
