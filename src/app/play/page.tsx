@@ -53,7 +53,7 @@ const GameScreen = () => {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (gameState.heroAppearance === 'appearing') return; // Disable controls during appearance
+      if (gameState.heroAppearance === 'appearing') return; 
 
       if (event.key === 'F5' || (event.ctrlKey && event.key.toLowerCase() === 'r')) return;
       if ((event.ctrlKey && event.shiftKey && event.key.toLowerCase() === 'i') || 
@@ -85,7 +85,7 @@ const GameScreen = () => {
     };
 
     const handleKeyUp = (event: KeyboardEvent) => {
-      if (gameState.heroAppearance === 'appearing') return; // Disable controls during appearance
+      if (gameState.heroAppearance === 'appearing') return; 
       let handled = false;
       switch (event.key.toLowerCase()) {
         case 'arrowleft':
@@ -110,18 +110,17 @@ const GameScreen = () => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
-      // Ensure movement stops if component unmounts or heroAppearance changes
       dispatch({ type: 'MOVE_LEFT_STOP' });
       dispatch({ type: 'MOVE_RIGHT_STOP' });
     };
-  }, [dispatch, gameState.heroAppearance]); // Add gameState.heroAppearance to dependencies
+  }, [dispatch, gameState.heroAppearance]); 
   
   const handleExit = () => {
     router.push('/');
   };
 
   return (
-    <div className="h-screen w-screen flex flex-col overflow-hidden bg-[hsl(var(--game-bg))] select-none">
+    <div className="h-screen w-screen flex flex-col overflow-hidden bg-game-bg select-none">
       <header className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center z-10 pointer-events-none">
         <h1 className="text-2xl font-bold text-white font-roboto shadow-md">IPO Mad Racing</h1>
         <div className="flex flex-col items-end">
@@ -130,7 +129,7 @@ const GameScreen = () => {
         </div>
       </header>
       
-      <div ref={gameAreaRef} className="flex-grow relative w-full overflow-hidden pt-16 pb-20">
+      <div ref={gameAreaRef} className="flex-grow relative w-full overflow-hidden pt-16 pb-20"> {/* Adjusted pt-16 to give space for header, pb-20 for control panel */}
         {gameState.isGameInitialized && gameState.gameArea.height > 0 && (
           <>
             <HeroComponent 
