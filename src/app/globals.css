@@ -31,8 +31,8 @@
     --accent: 180 90% 60%; /* Electric Blue (approx #7DF9FF -> HSL(180, 100%, 74.3%)) */
     --accent-foreground: 220 30% 5%;
 
-    --destructive: 0 70% 55%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 30 90% 55%; /* Orange for control buttons */
+    --destructive-foreground: 30 80% 15%; /* Dark orange/brown for text on orange buttons */
 
     --ring: 200 85% 60%;
     --radius: 0.5rem;
@@ -74,8 +74,8 @@
     --secondary-foreground: 210 40% 95%;
     --accent: 180 90% 60%;
     --accent-foreground: 220 30% 5%;
-    --destructive: 0 70% 55%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 30 90% 55%; /* Orange for control buttons */
+    --destructive-foreground: 30 80% 15%; /* Dark orange/brown for text on orange buttons */
     --ring: 200 85% 60%;
 
     --game-bg: 230 50% 40%;
