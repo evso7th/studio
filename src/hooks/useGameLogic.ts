@@ -11,7 +11,7 @@ const GRAVITY_ACCELERATION = 0.4;
 const MAX_FALL_SPEED = -8; 
 const HERO_BASE_SPEED = 3.0; 
 const PLATFORM_GENERAL_SPEED = 1.0; 
-const JUMP_STRENGTH = 13; 
+const JUMP_STRENGTH = 8; // Adjusted jump strength
 
 const HERO_WIDTH = 30;
 
@@ -187,7 +187,8 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         currentLevelPlatformsConfig = currentLevelPlatformsConfig.map(p => {
              if (p.id === 'platform_ground') return {...p, width: newEffectiveGameArea.width + 200, x: -100, y:PLATFORM_GROUND_Y, height: PLATFORM_GROUND_THICKNESS };
              if (p.isMoving && p.moveAxis === 'x' && p.moveRange) { 
-                return { ...p, moveRange: { min: 0, max: newEffectiveGameArea.width - p.width } };
+                const initialPlatformConfig = level1Platforms.find(cfg => cfg.id === p.id)!;
+                return { ...initialPlatformConfig, x: initialPlatformConfig.x, moveRange: { min: 0, max: newEffectiveGameArea.width - initialPlatformConfig.width } };
              }
              return p;
         });
@@ -327,7 +328,6 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         if (nextHero.x < 0) nextHero.x = 0;
         if (nextHero.x + nextHero.width > gameArea.width) nextHero.x = gameArea.width - nextHero.width;
         
-        // Adjusted reset condition: if hero's bottom (nextHero.y) goes below PLATFORM_GROUND_Y
         if (nextHero.y < PLATFORM_GROUND_Y) { 
           const resetHeroState = {
               ...initialHeroState, 
@@ -339,14 +339,35 @@ function gameReducer(state: GameState, action: GameAction): GameState {
               currentSpeedX: 0,
               action: 'idle',
           };
+
+          // Fully reset platforms to their initial configurations for the current gameArea size
+          let newLevelPlatforms = level1Platforms.map(lp => ({...lp}));
+          newLevelPlatforms = newLevelPlatforms.map(p => {
+               if (p.id === 'platform_ground') {
+                  // Get base properties from level1Platforms, then adapt width and ensure Y
+                  const groundBaseConfig = level1Platforms.find(cfg => cfg.id === 'platform_ground')!;
+                  return {
+                      ...groundBaseConfig,
+                      width: gameArea.width + 200, // Current adapted width
+                      x: -100, // Static X for ground
+                      y: PLATFORM_GROUND_Y // Ensure Y is from constant
+                  };
+               }
+               if (p.isMoving && p.moveAxis === 'x' && p.moveRange) {
+                  // Reset to their initial X, speed, direction from level1Platforms, and re-calc moveRange
+                  const initialPlatformConfig = level1Platforms.find(cfg => cfg.id === p.id)!;
+                  return {
+                      ...initialPlatformConfig, // This includes original x, speed, direction
+                      moveRange: { min: 0, max: gameArea.width - initialPlatformConfig.width } // Recalculate moveRange
+                  };
+               }
+               return p; // For any other non-moving platforms (though not expected in level1)
+          });
+          
           return { 
               ...state, 
               hero: resetHeroState,
-              platforms: nextPlatforms.map(p => { 
-                if (p.id === 'platform1') return {...p, x: INITIAL_PLATFORM1_X, direction: 1};
-                if (p.id === 'platform2') return {...p, x: INITIAL_PLATFORM2_X, direction: -1};
-                return p;
-              }), 
+              platforms: newLevelPlatforms, 
               coins: generateCoins(NUM_COINS, gameArea, COIN_SIZE), 
               score: 0, 
               gameOver: false, 
