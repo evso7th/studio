@@ -44,7 +44,7 @@ const level1Platforms: PlatformType[] = [
     color: 'hsl(var(--platform-color))', isMoving: false, speed: 0, direction: 1, moveAxis: 'x',
   },
   {
-    id: 'platform1', x: 100, y: 200, width: PLATFORM_DEFAULT_WIDTH, height: PLATFORM_DEFAULT_HEIGHT,
+    id: 'platform1', x: 100, y: 150, width: PLATFORM_DEFAULT_WIDTH, height: PLATFORM_DEFAULT_HEIGHT, // Lowered by 50px (was 200)
     color: 'hsl(var(--platform-color))', isMoving: true, speed: PLATFORM_SPEED, direction: 1, moveAxis: 'x',
     moveRange: { min: 50, max: 400 }
   },
@@ -239,6 +239,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         const horizontalOverlap = heroLeft < platformRight && heroRight > platformLeft;
 
         if (horizontalOverlap) {
+          // Landing on a platform
           if (newVelY <= 0 && 
               heroOldBottom >= platformTopSurface && 
               heroNewBottom <= platformTopSurface) { 
@@ -252,12 +253,14 @@ function gameReducer(state: GameState, action: GameAction): GameState {
             }
             break; 
           }
+          // Hitting a platform from below
           const heroOldTop = hero.y + hero.height;
           if (newVelY > 0 && 
               heroOldTop <= platformBottomSurface && 
               heroNewTop >= platformBottomSurface) { 
              newPosY = platformBottomSurface - hero.height; 
-             finalVelY = -GRAVITY_ACCELERATION * 0.5; 
+             finalVelY = -GRAVITY_ACCELERATION * 0.5; // Bonk head, start falling
+             // No break here, allow checking other platforms for landing in the same frame if bonk leads to immediate fall.
           }
         }
       }
