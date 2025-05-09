@@ -36,7 +36,7 @@ export function ControlPanel({ dispatch, onExit, disabled = false }: ControlPane
       <Button
         variant="ghost"
         size="lg"
-        className="text-foreground hover:bg-primary/20 active:bg-primary/30 p-3 h-16 w-16 rounded-full"
+        className="text-destructive-foreground bg-destructive/80 hover:bg-destructive active:bg-destructive/90 p-3 h-16 w-16 rounded-full"
         onMouseDown={() => handleMoveStart('MOVE_LEFT_START')}
         onMouseUp={() => handleMoveStop('MOVE_LEFT_STOP')}
         onTouchStart={() => handleMoveStart('MOVE_LEFT_START')}
@@ -49,7 +49,7 @@ export function ControlPanel({ dispatch, onExit, disabled = false }: ControlPane
       <Button
         variant="ghost"
         size="lg"
-        className="text-foreground hover:bg-primary/20 active:bg-primary/30 p-3 h-16 w-16 rounded-full"
+        className="text-destructive-foreground bg-destructive/80 hover:bg-destructive active:bg-destructive/90 p-3 h-16 w-16 rounded-full"
         onClick={() => handleAction('JUMP')}
         aria-label="Jump"
         disabled={disabled}
@@ -59,7 +59,7 @@ export function ControlPanel({ dispatch, onExit, disabled = false }: ControlPane
       <Button
         variant="ghost"
         size="lg"
-        className="text-foreground hover:bg-primary/20 active:bg-primary/30 p-3 h-16 w-16 rounded-full"
+        className="text-destructive-foreground bg-destructive/80 hover:bg-destructive active:bg-destructive/90 p-3 h-16 w-16 rounded-full"
         onMouseDown={() => handleMoveStart('MOVE_RIGHT_START')}
         onMouseUp={() => handleMoveStop('MOVE_RIGHT_STOP')}
         onTouchStart={() => handleMoveStart('MOVE_RIGHT_START')}
