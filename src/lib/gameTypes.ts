@@ -1,3 +1,4 @@
+
 export interface Position {
   x: number;
   y: number;
@@ -53,6 +54,7 @@ export interface GameState {
   gameOver: boolean;
   gameArea: Size;
   isGameInitialized: boolean; // Added for initial setup
+  paddingTop: number; // Added to store container's paddingTop for rendering offset
   debugMode?: boolean; // Optional for showing collision boxes etc.
 }
 
@@ -63,6 +65,5 @@ export type GameAction =
   | { type: 'MOVE_RIGHT_STOP' }
   | { type: 'JUMP' }
   | { type: 'EXIT_GAME' }
-  | { type: 'UPDATE_GAME_AREA', payload: Size }
+  | { type: 'UPDATE_GAME_AREA', payload: { width: number; height: number; paddingTop: number; } }
   | { type: 'GAME_TICK', payload: { gameArea: Size } };
-

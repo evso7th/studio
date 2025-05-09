@@ -1,3 +1,4 @@
+
 // @ts-nocheck
 "use client";
 
@@ -16,8 +17,18 @@ const GameScreen = () => {
 
   const updateGameAreaSize = useCallback(() => {
     if (gameAreaRef.current) {
-      const { offsetWidth, offsetHeight } = gameAreaRef.current;
-      dispatch({ type: 'UPDATE_GAME_AREA', payload: { width: offsetWidth, height: offsetHeight } });
+      const { clientWidth, clientHeight } = gameAreaRef.current;
+      const style = window.getComputedStyle(gameAreaRef.current);
+      const paddingTop = parseFloat(style.paddingTop) || 0;
+      const paddingBottom = parseFloat(style.paddingBottom) || 0;
+      // Assuming horizontal padding is not affecting game logic's X coordinates or handled internally if needed.
+      // const paddingLeft = parseFloat(style.paddingLeft) || 0;
+      // const paddingRight = parseFloat(style.paddingRight) || 0;
+
+      const effectiveWidth = clientWidth; // Game logic uses this as its width (can be clientWidth - pL - pR if needed)
+      const effectiveHeight = clientHeight - paddingTop - paddingBottom;
+      
+      dispatch({ type: 'UPDATE_GAME_AREA', payload: { width: effectiveWidth, height: effectiveHeight, paddingTop: paddingTop } });
     }
   }, [dispatch]);
 
@@ -29,9 +40,8 @@ const GameScreen = () => {
 
   useEffect(() => {
     const loop = () => {
-      // Ensure gameArea is initialized before starting game ticks
-      if (gameState.gameArea.width > 0 && gameState.gameArea.height > 0 && gameState.isGameInitialized) {
-         gameTick(gameState.gameArea);
+      if (gameState.isGameInitialized && gameState.gameArea.width > 0 && gameState.gameArea.height > 0) {
+         gameTick(); // gameArea is taken from gameState inside reducer
       }
       animationFrameId.current = requestAnimationFrame(loop);
     };
@@ -41,17 +51,15 @@ const GameScreen = () => {
         cancelAnimationFrame(animationFrameId.current);
       }
     };
-  }, [gameTick, gameState.gameArea, gameState.isGameInitialized]);
+  }, [gameTick, gameState.isGameInitialized, gameState.gameArea.width, gameState.gameArea.height]); // Added width/height dependencies for safety
 
   // Keyboard controls
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Standard browser functions we don't want to impede
       if (event.key === 'F5' || (event.ctrlKey && event.key.toLowerCase() === 'r')) return;
       if ((event.ctrlKey && event.shiftKey && event.key.toLowerCase() === 'i') || 
-          (event.metaKey && event.altKey && event.key.toLowerCase() === 'i') || // macOS dev tools
+          (event.metaKey && event.altKey && event.key.toLowerCase() === 'i') || 
           event.key === 'F12') return;
-
 
       let handled = false;
       switch (event.key.toLowerCase()) {
@@ -67,7 +75,7 @@ const GameScreen = () => {
           break;
         case 'arrowup':
         case 'w':
-        case ' ': // Space bar
+        case ' ': 
           dispatch({ type: 'JUMP' });
           handled = true;
           break;
@@ -102,7 +110,6 @@ const GameScreen = () => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
-      // Stop movement when navigating away or component unmounts
       dispatch({ type: 'MOVE_LEFT_STOP' });
       dispatch({ type: 'MOVE_RIGHT_STOP' });
     };
@@ -125,12 +132,12 @@ const GameScreen = () => {
       <div ref={gameAreaRef} className="flex-grow relative w-full overflow-hidden pt-16 pb-20">
         {gameState.isGameInitialized && gameState.gameArea.height > 0 && (
           <>
-            <HeroComponent hero={gameState.hero} gameAreaHeight={gameState.gameArea.height} />
+            <HeroComponent hero={gameState.hero} gameAreaHeight={gameState.gameArea.height} paddingTop={gameState.paddingTop} />
             {gameState.platforms.map(platform => (
-              <PlatformComponent key={platform.id} platform={platform} gameAreaHeight={gameState.gameArea.height} />
+              <PlatformComponent key={platform.id} platform={platform} gameAreaHeight={gameState.gameArea.height} paddingTop={gameState.paddingTop} />
             ))}
             {gameState.coins.map(coin => (
-              <CoinComponent key={coin.id} coin={coin} gameAreaHeight={gameState.gameArea.height} />
+              <CoinComponent key={coin.id} coin={coin} gameAreaHeight={gameState.gameArea.height} paddingTop={gameState.paddingTop} />
             ))}
           </>
         )}
@@ -142,4 +149,3 @@ const GameScreen = () => {
 };
 
 export default GameScreen;
-
