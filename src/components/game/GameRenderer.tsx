@@ -22,9 +22,10 @@ interface GameObjectStylePropsBase {
   appearanceProps?: AppearanceProps;
   shape?: 'rect' | 'circle';
   isHero?: boolean; 
+  isPlatform?: boolean; // Added to identify platforms specifically
 }
 
-function getGameObjectStyle({ x, y, width, height, gameAreaHeight, paddingTop, color, heroAction, heroFacingDirection, appearanceProps, shape = 'rect', isHero = false }: GameObjectStylePropsBase): React.CSSProperties {
+function getGameObjectStyle({ x, y, width, height, gameAreaHeight, paddingTop, color, heroAction, heroFacingDirection, appearanceProps, shape = 'rect', isHero = false, isPlatform = false }: GameObjectStylePropsBase): React.CSSProperties {
   const topInEffectiveArea = gameAreaHeight - y - height;
   const finalCssTop = paddingTop + topInEffectiveArea;
   
@@ -37,7 +38,7 @@ function getGameObjectStyle({ x, y, width, height, gameAreaHeight, paddingTop, c
     objectFit: 'fill', 
   };
 
-  if (!isHero) { 
+  if (!isHero && !isPlatform) { // Apply shadow only if not hero and not platform
     dynamicStyles.boxShadow = '2px 2px 4px rgba(0,0,0,0.3)';
   }
 
@@ -150,7 +151,8 @@ export function PlatformComponent({ platform, gameAreaHeight, paddingTop }: { pl
     gameAreaHeight, 
     paddingTop, 
     color: undefined, // Platform image will be used
-    shape: 'rect' 
+    shape: 'rect',
+    isPlatform: true, // Indicate that this is a platform
   });
   
   const platformStyle: React.CSSProperties = {
