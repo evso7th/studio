@@ -26,13 +26,14 @@ import {
     // COINS_PER_PAIR, // Not directly used in this file after initial calculations
     COIN_SPAWN_EXPLOSION_DURATION_MS,
     MIN_DISTANCE_BETWEEN_PAIR_COINS_X_FACTOR,
+    MIN_DISTANCE_BETWEEN_PAIR_COINS_Y_FACTOR,
     COIN_ZONE_TOP_OFFSET,
     COIN_SPAWN_DELAY_MS,
 } from '@/lib/gameTypes'; 
 
 const GRAVITY_ACCELERATION = 0.4; 
 const MAX_FALL_SPEED = -8; 
-const HERO_BASE_SPEED = 0.375; // Halved as per previous request
+const HERO_BASE_SPEED = 0.375; 
 
 const JUMP_STRENGTH = (-GRAVITY_ACCELERATION + Math.sqrt(GRAVITY_ACCELERATION * GRAVITY_ACCELERATION + 8 * GRAVITY_ACCELERATION * TARGET_JUMP_HEIGHT_PX)) / 2;
 
@@ -71,17 +72,11 @@ function spawnNextCoinPair(gameArea: Size, coinSize: number, currentPairId: numb
   if (!gameArea.width || !gameArea.height) return [];
   const newPair: CoinType[] = [];
   
-  // Calculate the Y-coordinate of the top surface of platform1 (the lower moving platform)
   const platform1TopActualY = PLATFORM_GROUND_Y + PLATFORM_GROUND_THICKNESS + PLATFORM1_Y_OFFSET + PLATFORM_NON_GROUND_HEIGHT;
-
-  // Define the highest possible Y for the coin's bottom edge (constrained by COIN_ZONE_TOP_OFFSET from game top)
   const coinSpawnZoneCeilingY = gameArea.height - COIN_ZONE_TOP_OFFSET - coinSize;
-  
-  // Define the lowest possible Y for the coin's bottom edge (must be above platform1's top surface)
   const coinSpawnZoneFloorY = platform1TopActualY;
 
-  // Determine effective spawn range for the coin's bottom Y-coordinate
-  let effectiveMinSpawnY = Math.max(PLATFORM_GROUND_Y + PLATFORM_GROUND_THICKNESS, coinSpawnZoneFloorY); // Cannot be below ground, must be at or above platform1's top
+  let effectiveMinSpawnY = Math.max(PLATFORM_GROUND_Y + PLATFORM_GROUND_THICKNESS, coinSpawnZoneFloorY);
   let effectiveMaxSpawnY = coinSpawnZoneCeilingY;
 
   if (effectiveMinSpawnY >= effectiveMaxSpawnY) {
@@ -89,16 +84,14 @@ function spawnNextCoinPair(gameArea: Size, coinSize: number, currentPairId: numb
         effectiveMinSpawnY = platform1TopActualY + 1; 
         effectiveMaxSpawnY = effectiveMinSpawnY;    
     } else {
-        // Fallback if platform1 is too high or restrictive offsets. Spawn just above ground.
         effectiveMinSpawnY = PLATFORM_GROUND_Y + PLATFORM_GROUND_THICKNESS + 1;
         effectiveMaxSpawnY = effectiveMinSpawnY;
-        // console.warn("Coin spawn zone invalid due to platform1 height/offsets. Spawning above ground.");
     }
   }
   
   const yRandomFactorRange = effectiveMaxSpawnY - effectiveMinSpawnY;
-
   const minDistanceX = gameArea.width * MIN_DISTANCE_BETWEEN_PAIR_COINS_X_FACTOR;
+  const minDistanceY = gameArea.height * MIN_DISTANCE_BETWEEN_PAIR_COINS_Y_FACTOR;
 
   // Spawn first coin
   const x1 = Math.random() * (gameArea.width - coinSize);
@@ -107,7 +100,7 @@ function spawnNextCoinPair(gameArea: Size, coinSize: number, currentPairId: numb
     id: `coin_p${currentPairId}_0_${Date.now()}`,
     x: x1, y: y1, width: coinSize, height: coinSize,
     color: 'hsl(var(--coin-color))', collected: false, isExploding: false, explosionProgress: 0,
-    isSpawning: true, // Starts spawning animation
+    isSpawning: true, 
     spawnExplosionProgress: 0,
     pairId: currentPairId,
     isPendingSpawn: false, 
@@ -119,16 +112,16 @@ function spawnNextCoinPair(gameArea: Size, coinSize: number, currentPairId: numb
   let attempts = 0;
   do {
     x2 = Math.random() * (gameArea.width - coinSize);
+    y2 = effectiveMinSpawnY + (yRandomFactorRange > 0 ? (Math.random() * yRandomFactorRange) : 0);
     attempts++;
-  } while (Math.abs(x2 - x1) < minDistanceX && attempts < 20); 
+  } while ( (Math.abs(x2 - x1) < minDistanceX || Math.abs(y2 - y1) < minDistanceY) && attempts < 20); 
+  // If after 20 attempts we couldn't find a suitable spot, we just take the last one.
   
-  y2 = effectiveMinSpawnY + (yRandomFactorRange > 0 ? (Math.random() * yRandomFactorRange) : 0);
-
   newPair.push({
     id: `coin_p${currentPairId}_1_${Date.now()}`,
     x: x2, y: y2, width: coinSize, height: coinSize,
     color: 'hsl(var(--coin-color))', collected: false, isExploding: false, explosionProgress: 0,
-    isSpawning: false, // Does not start spawning animation immediately
+    isSpawning: false, 
     spawnExplosionProgress: 0, 
     pairId: currentPairId,
     isPendingSpawn: true,

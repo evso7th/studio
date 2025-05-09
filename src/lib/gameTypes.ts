@@ -85,6 +85,7 @@ export const COIN_ZONE_TOP_OFFSET = 50;
 export const TOTAL_COINS_PER_LEVEL = 10;
 export const COINS_PER_PAIR = 2;
 export const MIN_DISTANCE_BETWEEN_PAIR_COINS_X_FACTOR = 0.25; // Min horizontal distance as % of game area width
+export const MIN_DISTANCE_BETWEEN_PAIR_COINS_Y_FACTOR = 0.15; // Min vertical distance as % of game area height
 
 
 export interface GameState {
@@ -113,4 +114,5 @@ export type GameAction =
   | { type: 'EXIT_GAME' }
   | { type: 'UPDATE_GAME_AREA', payload: { width: number; height: number; paddingTop: number; } }
   | { type: 'GAME_TICK', payload: { gameArea: Size, deltaTime: number } };
+
 
