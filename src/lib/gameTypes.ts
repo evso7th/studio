@@ -49,8 +49,10 @@ export interface LevelData {
 export const HERO_APPEARANCE_DURATION_MS = 1000; // 1 second for hero to appear
 export const PLATFORM_GROUND_Y = 0; // Y position of the bottom of the ground platform
 export const PLATFORM_GROUND_THICKNESS = 1; // Thickness of the ground platform
-export const HERO_HEIGHT = 60; // Increased by 50% from 40
+export const HERO_HEIGHT = 60; // Height of the hero
 export const COIN_SIZE = 20;
+export const PLATFORM_DEFAULT_WIDTH = 130; // Default width for non-ground platforms
+export const PLATFORM_NON_GROUND_HEIGHT = 24; // Default height for non-ground platforms
 
 
 export interface GameState {
@@ -77,6 +79,3 @@ export type GameAction =
   | { type: 'EXIT_GAME' }
   | { type: 'UPDATE_GAME_AREA', payload: { width: number; height: number; paddingTop: number; } }
   | { type: 'GAME_TICK', payload: { gameArea: Size } };
-
-
-

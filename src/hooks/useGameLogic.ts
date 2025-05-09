@@ -5,18 +5,17 @@
 import type { Reducer } from 'react';
 import { useReducer, useCallback, useRef } from 'react';
 import type { GameState, GameAction, HeroType, PlatformType, CoinType, Size, Position } from '@/lib/gameTypes';
-import { HERO_APPEARANCE_DURATION_MS, PLATFORM_GROUND_Y, PLATFORM_GROUND_THICKNESS, HERO_HEIGHT, COIN_SIZE } from '@/lib/gameTypes'; 
+import { HERO_APPEARANCE_DURATION_MS, PLATFORM_GROUND_Y, PLATFORM_GROUND_THICKNESS, HERO_HEIGHT, COIN_SIZE, PLATFORM_NON_GROUND_HEIGHT, PLATFORM_DEFAULT_WIDTH } from '@/lib/gameTypes'; 
 
 // Game constants
 const GRAVITY_ACCELERATION = 0.4; 
 const MAX_FALL_SPEED = -8; 
-const JUMP_STRENGTH = 13; // Further increased jump height (was 12)
-const HERO_BASE_SPEED = 0.75; 
+const HERO_BASE_SPEED = 1.5; // Doubled from 0.75
 const PLATFORM_SPEED = 1.0; 
+const JUMP_STRENGTH = 17; // Increased from 13 (13 -> 15 -> 17)
 
 const HERO_WIDTH = 30;
-const PLATFORM_NON_GROUND_HEIGHT = 24; 
-const PLATFORM_DEFAULT_WIDTH = 130;
+
 
 const NUM_COINS = 10;
 
@@ -30,7 +29,7 @@ const initialHeroState: HeroType = {
   x: 0, 
   y: PLATFORM_GROUND_Y + PLATFORM_GROUND_THICKNESS, // Hero's bottom edge starts at the top of the ground platform
   width: HERO_WIDTH,
-  height: HERO_HEIGHT, // Uses imported HERO_HEIGHT
+  height: HERO_HEIGHT, 
   velocity: { x: 0, y: 0 },
   action: 'idle',
   isOnPlatform: true, 
@@ -168,7 +167,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       
       if (!isGameInitialized && newEffectiveGameArea.width > 0 && newEffectiveGameArea.height > 0) {
         hero = {
-          ...initialHeroState, // initialHeroState already uses imported HERO_HEIGHT
+          ...initialHeroState, 
           x: newEffectiveGameArea.width / 2 - initialHeroState.width / 2, 
           y: PLATFORM_GROUND_Y + PLATFORM_GROUND_THICKNESS, 
           isOnPlatform: true,
@@ -271,7 +270,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
           const heroLeft = newPosX;
           const heroRight = newPosX + nextHero.width;
           const heroProjectedBottom = newPosY; 
-          const heroProjectedTop = newPosY + nextHero.height; // Uses updated hero.height
+          const heroProjectedTop = newPosY + nextHero.height; 
 
           const platformTopSurface = platform.y + platform.height;
           const platformBottomSurface = platform.y;
@@ -321,10 +320,9 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         if (nextHero.x < 0) nextHero.x = 0;
         if (nextHero.x + nextHero.width > gameArea.width) nextHero.x = gameArea.width - nextHero.width;
         
-        // Fall detection logic uses imported HERO_HEIGHT through nextHero.height
         if (nextHero.y < (PLATFORM_GROUND_Y - nextHero.height * 1.5) ) { 
           const resetHeroState = {
-              ...initialHeroState, // initialHeroState uses imported HERO_HEIGHT
+              ...initialHeroState, 
               x: gameArea.width / 2 - initialHeroState.width / 2,
               y: PLATFORM_GROUND_Y + PLATFORM_GROUND_THICKNESS, 
               isOnPlatform: true,
@@ -351,7 +349,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
             if (nextHero.x < coin.x + coin.width &&
                 nextHero.x + nextHero.width > coin.x &&
                 nextHero.y < coin.y + coin.height &&
-                nextHero.y + nextHero.height > coin.y) { // Uses updated nextHero.height
+                nextHero.y + nextHero.height > coin.y) { 
               collectedSomething = true;
               return { ...coin, collected: true };
             }
@@ -393,4 +391,3 @@ export function useGameLogic() {
   
   return { gameState, dispatch: handleGameAction, gameTick };
 }
-
