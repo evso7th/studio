@@ -107,3 +107,20 @@
     height: 100%;
   }
 }
+
+@layer utilities {
+  @keyframes rotate-y {
+    0% {
+      transform: rotateY(0deg);
+    }
+    50% {
+      transform: rotateY(180deg);
+    }
+    100% {
+      transform: rotateY(360deg);
+    }
+  }
+  .animate-rotate-y {
+    animation: rotate-y 2s linear infinite;
+  }
+}
