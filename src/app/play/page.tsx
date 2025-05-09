@@ -125,7 +125,7 @@ const GameScreen = () => {
       style={{ 
         backgroundImage: 'url("https://neurostaffing.online/wp-content/uploads/2025/05/BackGround-003.png")',
         backgroundSize: 'cover',
-        backgroundPosition: 'top left', // Changed from 'center'
+        backgroundPosition: 'center left', 
         backgroundRepeat: 'no-repeat',
         backgroundColor: 'hsl(var(--game-bg))', // Fallback color
       }}

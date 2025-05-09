@@ -46,7 +46,7 @@ export function ControlPanel({ dispatch, onExit, disabled = false }: ControlPane
         aria-label="Move Left"
         disabled={disabled}
       >
-        <ArrowLeftCircle className="h-32 w-32 text-foreground" />
+        <ArrowLeftCircle className="h-16 w-16 text-foreground" />
       </Button>
       <Button
         variant="ghost"
@@ -56,7 +56,7 @@ export function ControlPanel({ dispatch, onExit, disabled = false }: ControlPane
         aria-label="Jump"
         disabled={disabled}
       >
-        <ArrowUpCircle className="h-32 w-32 text-foreground" />
+        <ArrowUpCircle className="h-16 w-16 text-foreground" />
       </Button>
       <Button
         variant="ghost"
@@ -69,7 +69,7 @@ export function ControlPanel({ dispatch, onExit, disabled = false }: ControlPane
         aria-label="Move Right"
         disabled={disabled}
       >
-        <ArrowRightCircle className="h-32 w-32 text-foreground" />
+        <ArrowRightCircle className="h-16 w-16 text-foreground" />
       </Button>
       <Button
         variant="ghost"
@@ -79,7 +79,7 @@ export function ControlPanel({ dispatch, onExit, disabled = false }: ControlPane
         aria-label="Exit Game"
         // Exit button should ideally not be disabled by game state
       >
-        <LogOut className="h-32 w-32 text-foreground" />
+        <LogOut className="h-16 w-16 text-foreground" />
       </Button>
     </div>
   );
