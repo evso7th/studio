@@ -3,6 +3,9 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    @apply overflow-hidden; /* Prevent scrolling on html element */
+  }
   :root {
     --background: 220 30% 10%; /* Darker Blue-Gray */
     --foreground: 210 40% 95%; /* Light Gray/Off-White */
@@ -97,7 +100,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-sans; /* Use font-sans which will be set by Geist/Roboto */
+    @apply bg-background text-foreground font-sans overflow-hidden; /* Use font-sans, add overflow-hidden */
     overscroll-behavior: none; /* Prevent pull-to-refresh and other overscroll behaviors */
   }
   html, body, #__next {
