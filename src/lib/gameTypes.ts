@@ -1,5 +1,4 @@
 
-
 export interface Position {
   x: number;
   y: number;
@@ -47,8 +46,13 @@ export interface LevelData {
 }
 
 export const HERO_APPEARANCE_DURATION_MS = 1000; // 1 second for hero to appear
-export const PLATFORM_GROUND_Y = 0; // Y position of the bottom of the ground platform
+// PLATFORM_GROUND_Y defines the Y-coordinate of the BOTTOM of the ground platform.
+// The hero will stand at PLATFORM_GROUND_Y + PLATFORM_GROUND_THICKNESS.
+// If set to 64, the ground platform's bottom will be 64 units above the game world's absolute bottom (y=0).
+// Its top surface (where the hero stands) will be at 64 + PLATFORM_GROUND_THICKNESS.
+export const PLATFORM_GROUND_Y = 64; 
 export const PLATFORM_GROUND_THICKNESS = 1; // Thickness of the ground platform
+
 export const HERO_HEIGHT = 60; // Height of the hero
 export const COIN_SIZE = 20;
 export const PLATFORM_DEFAULT_WIDTH = 130; // Default width for non-ground platforms
