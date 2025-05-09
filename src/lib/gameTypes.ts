@@ -52,6 +52,7 @@ export interface GameState {
   currentLevel: number;
   gameOver: boolean;
   gameArea: Size;
+  isGameInitialized: boolean; // Added for initial setup
   debugMode?: boolean; // Optional for showing collision boxes etc.
 }
 
@@ -64,3 +65,4 @@ export type GameAction =
   | { type: 'EXIT_GAME' }
   | { type: 'UPDATE_GAME_AREA', payload: Size }
   | { type: 'GAME_TICK', payload: { gameArea: Size } };
+
