@@ -32,7 +32,7 @@ export function ControlPanel({ dispatch, onExit, disabled = false }: ControlPane
 
   return (
     <div
-      className="fixed bottom-0 left-0 right-0 h-20 bg-[hsl(var(--control-panel-bg))] bg-opacity-20 backdrop-blur-sm shadow-lg p-2 flex items-center justify-around z-50 touch-manipulation"
+      className="fixed bottom-0 left-0 right-0 h-20 backdrop-blur-sm shadow-lg p-2 flex items-center justify-around z-50 touch-manipulation"
       style={{ WebkitBackdropFilter: 'blur(4px)' }}
     >
       <Button
