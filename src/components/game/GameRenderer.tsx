@@ -1,4 +1,3 @@
-
 "use client";
 import type { HeroType, PlatformType, CoinType } from "@/lib/gameTypes";
 import { cn } from "@/lib/utils";
@@ -37,9 +36,14 @@ function getGameObjectStyle({ x, y, width, height, gameAreaHeight, paddingTop, c
         break;
       case 'run_left':
       case 'run_right':
+        // Reset transform if it was previously set by jump/fall, ensuring smooth transition back to normal
+        dynamicStyles.transform = 'none';
+        dynamicStyles.transition = 'transform 0.1s ease-out';
         break;
       default: 
         dynamicStyles.transform = 'none';
+        // Add a default transition for transform to ensure smooth reset from other states
+        dynamicStyles.transition = 'transform 0.1s ease-in-out';
         break;
     }
   }
@@ -66,7 +70,8 @@ export function HeroComponent({ hero, gameAreaHeight, paddingTop }: { hero: Hero
   return (
     <div
       style={getGameObjectStyle({ ...hero, gameAreaHeight, paddingTop, color: `hsl(var(--hero-color))`, heroAction: hero.action })}
-      className="transition-all duration-50 ease-linear"
+      // Removed className="transition-all duration-50 ease-linear" to let JS handle positional updates directly.
+      // Specific transitions for 'transform' (e.g. jump/fall animations) are handled by getGameObjectStyle.
       role="img"
       aria-label="Hero"
     />
@@ -94,3 +99,4 @@ export function CoinComponent({ coin, gameAreaHeight, paddingTop }: { coin: Coin
     />
   );
 }
+
