@@ -121,7 +121,7 @@
     }
   }
   .animate-rotate-y {
-    animation: rotate-y 2s linear infinite;
+    animation: rotate-y 1.8s linear infinite; /* Adjusted speed from 2s to 1.8s */
   }
 
   @keyframes coin-glow {
