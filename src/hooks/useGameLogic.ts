@@ -33,7 +33,7 @@ import {
 
 const GRAVITY_ACCELERATION = 0.4; 
 const MAX_FALL_SPEED = -8; 
-const HERO_BASE_SPEED = 0.46875; // Increased by 25% from 0.375
+const HERO_BASE_SPEED = 0.5859375; // Increased by 25% from 0.46875
 
 const JUMP_STRENGTH = (-GRAVITY_ACCELERATION + Math.sqrt(GRAVITY_ACCELERATION * GRAVITY_ACCELERATION + 8 * GRAVITY_ACCELERATION * TARGET_JUMP_HEIGHT_PX)) / 2;
 
@@ -508,4 +508,5 @@ export function useGameLogic() {
 
   return { gameState, dispatch: handleGameAction, gameTick };
 }
+
 
