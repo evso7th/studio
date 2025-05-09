@@ -38,10 +38,6 @@ function getGameObjectStyle({ x, y, width, height, gameAreaHeight, paddingTop, c
     objectFit: 'fill', 
   };
 
-  if (!isHero && !isPlatform) { // Apply shadow only if not hero and not platform
-    // dynamicStyles.boxShadow = '2px 2px 4px rgba(0,0,0,0.3)'; // Shadow removed for platforms and hero
-  }
-
   if (color) { 
     dynamicStyles.backgroundColor = color;
   }
@@ -66,6 +62,8 @@ function getGameObjectStyle({ x, y, width, height, gameAreaHeight, paddingTop, c
   } else {
     if (shape === 'circle') {
       dynamicStyles.borderRadius = '50%';
+      // Add a 2px darker border to simulate thickness for coins
+      dynamicStyles.boxShadow = '0 0 0 2px hsl(50 100% 45%)'; 
     } else {
       dynamicStyles.borderRadius = '2px'; 
     }
@@ -163,7 +161,6 @@ export function PlatformComponent({ platform, gameAreaHeight, paddingTop }: { pl
     backgroundSize: platform.id === 'platform_ground' ? 'auto 100%' : '100% 100%', // Ground repeats, others stretch
     backgroundPosition: platform.id === 'platform_ground' ? 'left bottom' : 'center', // Ground tiles from left
     backgroundRepeat: platform.id === 'platform_ground' ? 'repeat-x' : 'no-repeat', 
-    // boxShadow: 'none', // Explicitly remove box shadow for platforms
   };
 
   return (
@@ -268,7 +265,7 @@ export function CoinComponent({ coin, gameAreaHeight, paddingTop }: { coin: Coin
       <img
         src="https://neurostaffing.online/wp-content/uploads/2025/04/Спасибка1.png"
         alt="Coin"
-        className="animate-rotate-y" // Removed animate-coin-glow
+        className="animate-rotate-y"
         style={baseStyle} 
         role="img" 
         aria-label="Coin"
