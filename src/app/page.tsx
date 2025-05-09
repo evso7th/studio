@@ -2,7 +2,7 @@
 "use client";
 
 import type { useEffect } from 'react';
-import { useRef, useCallback, useEffect as useReactEffect } from 'react'; // Renamed to avoid conflict
+import { useRef, useCallback, useEffect as useReactEffect, useState } from 'react'; // Renamed to avoid conflict & added useState
 import { useRouter } from 'next/navigation';
 import { useGameLogic } from '@/hooks/useGameLogic';
 import { ControlPanel } from '@/components/game/ControlPanel';
@@ -16,6 +16,10 @@ export default function HomePage() {
   const gameAreaRef = useRef<HTMLDivElement>(null);
   const animationFrameId = useRef<number>();
   const router = useRouter();
+
+  const [parallaxBgX, setParallaxBgX] = useState(0);
+  const initialHeroXRef = useRef<number | null>(null);
+  const PARALLAX_FACTOR = 0.2; // Background moves 20% of hero speed
 
   const updateGameAreaSize = useCallback(() => {
     if (gameAreaRef.current) {
@@ -36,6 +40,20 @@ export default function HomePage() {
     window.addEventListener('resize', updateGameAreaSize);
     return () => window.removeEventListener('resize', updateGameAreaSize);
   }, [updateGameAreaSize]);
+
+  useReactEffect(() => {
+    if (gameState.isGameInitialized && gameState.gameArea.width > 0 && initialHeroXRef.current === null && gameState.hero) {
+      initialHeroXRef.current = gameState.hero.x; // Store initial hero X based on its actual starting position
+    }
+  }, [gameState.isGameInitialized, gameState.gameArea.width, gameState.hero]);
+
+  useReactEffect(() => {
+    if (gameState.isGameInitialized && initialHeroXRef.current !== null && gameState.hero) {
+      const heroDisplacement = gameState.hero.x - initialHeroXRef.current;
+      setParallaxBgX(-heroDisplacement * PARALLAX_FACTOR);
+    }
+  }, [gameState.hero?.x, gameState.isGameInitialized]);
+
 
   useReactEffect(() => {
     const loop = () => {
@@ -117,16 +135,11 @@ export default function HomePage() {
   }, [dispatch, gameState.heroAppearance]); 
   
   const handleExit = () => {
-    // Since this page is now the root, "exiting" might mean reloading the game
-    // or navigating to a different conceptual "home" if one were to be re-introduced.
-    // For now, pushing to '/' will reload/re-initialize the game.
     router.push('/');
   };
 
   useReactEffect(() => {
-    if (gameState.gameOver) { // gameOver is true when level is completed
-      // Optionally, add a delay or a "Level Complete" message before navigating
-      // Navigating to '/' will now effectively restart the game at level 1.
+    if (gameState.gameOver) { 
       router.push('/');
     }
   }, [gameState.gameOver, router]);
@@ -153,14 +166,14 @@ export default function HomePage() {
         style={{
           backgroundImage: 'url("https://neurostaffing.online/wp-content/uploads/2025/05/BackGroundBase.png")',
           backgroundSize: 'cover',
-          backgroundPosition: 'center left', 
+          backgroundPosition: `${parallaxBgX}px center`, 
           backgroundRepeat: 'no-repeat',
           backgroundColor: 'hsl(var(--game-bg))',
-          perspective: '1000px', // Added for 3D transforms of children
+          perspective: '1000px', 
         }}
         data-ai-hint="abstract pattern"
       >
-        {gameState.isGameInitialized && gameState.gameArea.height > 0 && (
+        {gameState.isGameInitialized && gameState.gameArea.height > 0 && gameState.hero && (
           <>
             <HeroComponent 
               hero={gameState.hero} 

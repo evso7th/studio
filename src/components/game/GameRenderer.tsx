@@ -56,14 +56,13 @@ function getGameObjectStyle({ x, y, width, height, gameAreaHeight, paddingTop, c
   if (appearanceProps?.type === 'heroAppear') {
     const progress = appearanceProps.progress;
     dynamicStyles.opacity = progress;
-    animationTransform = `scale(${progress})`; // This scale is for appearance, not related to jump/fall x-squash
+    animationTransform = `scale(${progress})`; 
     dynamicStyles.transformOrigin = 'center bottom'; 
     dynamicStyles.borderRadius = '2px'; 
   } else {
     if (shape === 'circle') {
       dynamicStyles.borderRadius = '50%';
-      // Add a 2px darker border to simulate thickness for coins
-      dynamicStyles.boxShadow = '0 0 0 2px hsl(50 100% 45%)'; 
+      dynamicStyles.boxShadow = '0 0 0 2px hsl(var(--coin-color) / 0.7)'; // Darker border for coins to simulate thickness
     } else {
       dynamicStyles.borderRadius = '2px'; 
     }
@@ -71,19 +70,17 @@ function getGameObjectStyle({ x, y, width, height, gameAreaHeight, paddingTop, c
     if (heroAction) {
       switch (heroAction) {
         case 'jump_up':
-          // The scaleX here is for the jump animation itself, applied after directional flip
           animationTransform = `scaleY(0.95) translateY(-3px) scaleX(1.05)`; 
           dynamicStyles.transition = 'transform 0.1s ease-out';
           break;
         case 'fall_down':
-          // The scaleX here is for the fall animation
           animationTransform = `scaleY(1.05) translateY(1px) scaleX(0.95)`; 
           dynamicStyles.transition = 'transform 0.1s ease-in';
           break;
         case 'run_left':
         case 'run_right':
         case 'idle':
-          animationTransform = ''; // No additional animation transform for these states
+          animationTransform = ''; 
           break;
         default: 
           animationTransform = '';
@@ -121,9 +118,19 @@ export function HeroComponent({ hero, gameAreaHeight, paddingTop, heroAppearance
     appearanceProps = { type: 'heroAppear', progress };
   }
 
+  const heroImageSrc = "https://neurostaffing.online/wp-content/uploads/2025/05/HeroJeans3.png";
+  let heroImageHint = "character fantasy";
+
+  if (hero.action === 'run_left' || hero.action === 'run_right') {
+    heroImageHint = "character running";
+  } else if (hero.action === 'jump_up' || hero.action === 'fall_down') {
+    heroImageHint = "character jumping";
+  }
+
+
   return (
     <img
-      src="https://neurostaffing.online/wp-content/uploads/2025/05/HeroJeans3.png"
+      src={heroImageSrc}
       alt="Hero"
       style={getGameObjectStyle({ 
         ...hero, 
@@ -136,7 +143,7 @@ export function HeroComponent({ hero, gameAreaHeight, paddingTop, heroAppearance
       })}
       role="img"
       aria-label="Hero"
-      data-ai-hint="character fantasy"
+      data-ai-hint={heroImageHint}
     />
   );
 }
@@ -148,9 +155,9 @@ export function PlatformComponent({ platform, gameAreaHeight, paddingTop }: { pl
     ...platform, 
     gameAreaHeight, 
     paddingTop, 
-    color: undefined, // Platform image will be used
+    color: undefined, 
     shape: 'rect',
-    isPlatform: true, // Indicate that this is a platform
+    isPlatform: true, 
   });
   
   const platformStyle: React.CSSProperties = {
@@ -158,8 +165,8 @@ export function PlatformComponent({ platform, gameAreaHeight, paddingTop }: { pl
     backgroundImage: platform.id === 'platform_ground' 
       ? 'url("https://neurostaffing.online/wp-content/uploads/2025/05/GroundFloor.png")' 
       : 'url("https://neurostaffing.online/wp-content/uploads/2025/05/PlatformGrassShort.png")',
-    backgroundSize: platform.id === 'platform_ground' ? 'auto 100%' : '100% 100%', // Ground repeats, others stretch
-    backgroundPosition: platform.id === 'platform_ground' ? 'left bottom' : 'center', // Ground tiles from left
+    backgroundSize: platform.id === 'platform_ground' ? 'auto 100%' : '100% 100%', 
+    backgroundPosition: platform.id === 'platform_ground' ? 'left bottom' : 'center', 
     backgroundRepeat: platform.id === 'platform_ground' ? 'repeat-x' : 'no-repeat', 
   };
 
@@ -201,7 +208,7 @@ export function CoinComponent({ coin, gameAreaHeight, paddingTop }: { coin: Coin
         top: `calc(50% + ${particleY}px - ${PARTICLE_SIZE / 2}px)`,  
         width: `${PARTICLE_SIZE}px`,
         height: `${PARTICLE_SIZE}px`,
-        backgroundColor: 'hsl(var(--accent))', // Use a different color for spawn, e.g., accent
+        backgroundColor: 'hsl(var(--accent))', 
         borderRadius: '50%',
         opacity: 1 - coin.spawnExplosionProgress, 
         transform: `scale(${1 - coin.spawnExplosionProgress})`, 
