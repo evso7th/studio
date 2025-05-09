@@ -40,6 +40,8 @@ export interface CoinType extends GameObject {
   isSpawning?: boolean; // True when the coin is in its appearance animation
   spawnExplosionProgress?: number; // 0 to 1 for appearance explosion
   pairId?: number; // To identify which pair a coin belongs to
+  isPendingSpawn?: boolean; // True if the coin is waiting for a delay before spawning
+  spawnDelayMs?: number; // Remaining delay in milliseconds before spawning
 }
 
 export interface LevelData {
@@ -53,10 +55,12 @@ export interface LevelData {
 export const HERO_APPEARANCE_DURATION_MS = 1000; // 1 second for hero to appear
 export const COIN_EXPLOSION_DURATION_MS = 500; // 0.5 seconds for coin collection explosion
 export const COIN_SPAWN_EXPLOSION_DURATION_MS = 300; // 0.3 seconds for coin spawn explosion
+export const COIN_SPAWN_DELAY_MS = 100; // 0.1 seconds delay for the second coin in a pair
 
 export const PLATFORM_GROUND_Y = 55; 
 export const PLATFORM_GROUND_THICKNESS = 1; 
 
+export const HERO_WIDTH = 30;
 export const HERO_HEIGHT = 80; 
 export const COIN_SIZE = 20;
 export const PLATFORM_DEFAULT_WIDTH = 130; 
@@ -75,7 +79,8 @@ export const INITIAL_PLATFORM2_SPEED = 0.25;
 
 // Coin Spawning Zone constants (from top of game area)
 export const COIN_ZONE_TOP_OFFSET = 50; 
-export const COIN_ZONE_BOTTOM_OFFSET = 250;
+// export const COIN_ZONE_BOTTOM_OFFSET = 250; // This was effectively PLATFORM1_Y_OFFSET + PLATFORM_NON_GROUND_HEIGHT
+
 
 export const TOTAL_COINS_PER_LEVEL = 10;
 export const COINS_PER_PAIR = 2;
@@ -108,3 +113,4 @@ export type GameAction =
   | { type: 'EXIT_GAME' }
   | { type: 'UPDATE_GAME_AREA', payload: { width: number; height: number; paddingTop: number; } }
   | { type: 'GAME_TICK', payload: { gameArea: Size, deltaTime: number } };
+

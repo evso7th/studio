@@ -9,6 +9,7 @@ import {
     HERO_APPEARANCE_DURATION_MS, 
     PLATFORM_GROUND_Y, 
     PLATFORM_GROUND_THICKNESS, 
+    HERO_WIDTH,
     HERO_HEIGHT, 
     COIN_SIZE,
     PLATFORM_NON_GROUND_HEIGHT,
@@ -22,20 +23,18 @@ import {
     INITIAL_PLATFORM2_SPEED,
     COIN_EXPLOSION_DURATION_MS,
     TOTAL_COINS_PER_LEVEL,
-    COINS_PER_PAIR,
+    // COINS_PER_PAIR, // Not directly used in this file after initial calculations
     COIN_SPAWN_EXPLOSION_DURATION_MS,
     MIN_DISTANCE_BETWEEN_PAIR_COINS_X_FACTOR,
     COIN_ZONE_TOP_OFFSET,
-    // COIN_ZONE_BOTTOM_OFFSET, // This will be effectively overridden by platform1's height
+    COIN_SPAWN_DELAY_MS,
 } from '@/lib/gameTypes'; 
 
 const GRAVITY_ACCELERATION = 0.4; 
 const MAX_FALL_SPEED = -8; 
-const HERO_BASE_SPEED = 0.75; 
+const HERO_BASE_SPEED = 0.375; // Halved as per previous request
 
 const JUMP_STRENGTH = (-GRAVITY_ACCELERATION + Math.sqrt(GRAVITY_ACCELERATION * GRAVITY_ACCELERATION + 8 * GRAVITY_ACCELERATION * TARGET_JUMP_HEIGHT_PX)) / 2;
-
-const HERO_WIDTH = 30;
 
 const initialHeroState: HeroType = {
   id: 'hero',
@@ -71,8 +70,7 @@ const getLevel1Platforms = (gameAreaWidth: number): PlatformType[] => [
 function spawnNextCoinPair(gameArea: Size, coinSize: number, currentPairId: number): CoinType[] {
   if (!gameArea.width || !gameArea.height) return [];
   const newPair: CoinType[] = [];
-  const groundPlatformTopY = PLATFORM_GROUND_Y + PLATFORM_GROUND_THICKNESS;
-
+  
   // Calculate the Y-coordinate of the top surface of platform1 (the lower moving platform)
   const platform1TopActualY = PLATFORM_GROUND_Y + PLATFORM_GROUND_THICKNESS + PLATFORM1_Y_OFFSET + PLATFORM_NON_GROUND_HEIGHT;
 
@@ -83,38 +81,40 @@ function spawnNextCoinPair(gameArea: Size, coinSize: number, currentPairId: numb
   const coinSpawnZoneFloorY = platform1TopActualY;
 
   // Determine effective spawn range for the coin's bottom Y-coordinate
-  let effectiveMinSpawnY = Math.max(groundPlatformTopY, coinSpawnZoneFloorY); // Cannot be below ground, cannot be below platform1 top
+  let effectiveMinSpawnY = Math.max(PLATFORM_GROUND_Y + PLATFORM_GROUND_THICKNESS, coinSpawnZoneFloorY); // Cannot be below ground, must be at or above platform1's top
   let effectiveMaxSpawnY = coinSpawnZoneCeilingY;
 
-  // Adjust if min is greater than or equal to max (no valid range or single point for random generation)
   if (effectiveMinSpawnY >= effectiveMaxSpawnY) {
-    // Attempt to place just above platform1 if there's any space at all below the absolute ceiling of the game area
-    // Check if there's at least 1px space for the coin (plus its size) above platform1's top surface and below the very top of the game area.
     if (platform1TopActualY + coinSize < gameArea.height -1 ) { 
-        effectiveMinSpawnY = platform1TopActualY + 1; // Place 1px above platform1 top
-        effectiveMaxSpawnY = effectiveMinSpawnY;    // Spawn at a fixed height, so yRandomFactorRange will be 0
+        effectiveMinSpawnY = platform1TopActualY + 1; 
+        effectiveMaxSpawnY = effectiveMinSpawnY;    
     } else {
-        console.warn("Coin spawn zone invalid: Platform1 is too high or COIN_ZONE_TOP_OFFSET is too restrictive. No space to spawn coins.");
-        return []; // Cannot spawn
+        // Fallback if platform1 is too high or restrictive offsets. Spawn just above ground.
+        effectiveMinSpawnY = PLATFORM_GROUND_Y + PLATFORM_GROUND_THICKNESS + 1;
+        effectiveMaxSpawnY = effectiveMinSpawnY;
+        // console.warn("Coin spawn zone invalid due to platform1 height/offsets. Spawning above ground.");
     }
   }
   
-  const yRandomFactorRange = effectiveMaxSpawnY - effectiveMinSpawnY; // This can be 0 if effectiveMinSpawnY === effectiveMaxSpawnY
+  const yRandomFactorRange = effectiveMaxSpawnY - effectiveMinSpawnY;
 
   const minDistanceX = gameArea.width * MIN_DISTANCE_BETWEEN_PAIR_COINS_X_FACTOR;
 
   // Spawn first coin
   const x1 = Math.random() * (gameArea.width - coinSize);
-  // If yRandomFactorRange is 0 or negative, coin spawns at effectiveMinSpawnY. Otherwise, random within range.
   const y1 = effectiveMinSpawnY + (yRandomFactorRange > 0 ? (Math.random() * yRandomFactorRange) : 0);
   newPair.push({
     id: `coin_p${currentPairId}_0_${Date.now()}`,
     x: x1, y: y1, width: coinSize, height: coinSize,
     color: 'hsl(var(--coin-color))', collected: false, isExploding: false, explosionProgress: 0,
-    isSpawning: true, spawnExplosionProgress: 0, pairId: currentPairId,
+    isSpawning: true, // Starts spawning animation
+    spawnExplosionProgress: 0,
+    pairId: currentPairId,
+    isPendingSpawn: false, 
+    spawnDelayMs: 0,
   });
 
-  // Spawn second coin, ensuring horizontal distance from the first
+  // Spawn second coin
   let x2, y2;
   let attempts = 0;
   do {
@@ -128,8 +128,11 @@ function spawnNextCoinPair(gameArea: Size, coinSize: number, currentPairId: numb
     id: `coin_p${currentPairId}_1_${Date.now()}`,
     x: x2, y: y2, width: coinSize, height: coinSize,
     color: 'hsl(var(--coin-color))', collected: false, isExploding: false, explosionProgress: 0,
-    isSpawning: true, spawnExplosionProgress: 0, 
+    isSpawning: false, // Does not start spawning animation immediately
+    spawnExplosionProgress: 0, 
     pairId: currentPairId,
+    isPendingSpawn: true,
+    spawnDelayMs: COIN_SPAWN_DELAY_MS,
   });
 
   return newPair;
@@ -201,6 +204,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
           ...initialHeroState, 
           x: newEffectiveGameArea.width / 2 - initialHeroState.width / 2, 
           y: PLATFORM_GROUND_Y + PLATFORM_GROUND_THICKNESS, 
+          width: HERO_WIDTH,
           height: HERO_HEIGHT,
           isOnPlatform: true,
           platformId: 'platform_ground',
@@ -248,7 +252,25 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       let nextScore = currentScore;
       let nextTotalCollected = currentTotalCollected;
       let nextPairIdx = currentPairIdx;
-      let levelComplete = false; // Becomes true if all coins collected
+      let levelComplete = false; 
+
+      // Process delayed coin spawns
+      nextActiveCoins = nextActiveCoins.map(coin => {
+        if (coin.isPendingSpawn && coin.spawnDelayMs !== undefined) {
+          const newDelay = coin.spawnDelayMs - deltaTime;
+          if (newDelay <= 0) {
+            return {
+              ...coin,
+              isPendingSpawn: false,
+              spawnDelayMs: 0,
+              isSpawning: true, // Start the spawn animation
+              spawnExplosionProgress: 0,
+            };
+          }
+          return { ...coin, spawnDelayMs: newDelay };
+        }
+        return coin;
+      });
 
       // Update SPAWNING coins (appearance explosion)
       nextActiveCoins = nextActiveCoins.map(coin => {
@@ -267,7 +289,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         if (coin.isExploding && coin.collected) {
           const newProgress = (coin.explosionProgress || 0) + (deltaTime / COIN_EXPLOSION_DURATION_MS);
           if (newProgress >= 1) {
-            return { ...coin, isExploding: false, explosionProgress: 1 }; // Mark as no longer exploding for removal later
+            return { ...coin, isExploding: false, explosionProgress: 1 }; 
           }
           return { ...coin, explosionProgress: newProgress };
         }
@@ -373,12 +395,11 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         if (nextHero.x < 0) nextHero.x = 0;
         if (nextHero.x + nextHero.width > gameArea.width) nextHero.x = gameArea.width - nextHero.width;
         
-        // Coin collection logic
         let collectedAnyCoinThisTick = false;
         let newlyCollectedCountThisTick = 0;
         
         nextActiveCoins = nextActiveCoins.map(coin => {
-          if (!coin.collected && !coin.isExploding && !coin.isSpawning) { // Can only collect fully spawned, non-exploding coins
+          if (!coin.collected && !coin.isExploding && !coin.isSpawning && !coin.isPendingSpawn) { 
             if (nextHero.x < coin.x + coin.width &&
                 nextHero.x + nextHero.width > coin.x &&
                 nextHero.y < coin.y + coin.height &&
@@ -396,19 +417,17 @@ function gameReducer(state: GameState, action: GameAction): GameState {
           nextScore += newlyCollectedCountThisTick;
           nextTotalCollected += newlyCollectedCountThisTick;
 
-          // Check if all coins of the current pair are collected
           const coinsOfCurrentPair = nextActiveCoins.filter(c => c.pairId === currentPairIdx);
           if (coinsOfCurrentPair.length > 0 && coinsOfCurrentPair.every(c => c.collected)) {
             if (nextTotalCollected < TOTAL_COINS_PER_LEVEL) {
               nextPairIdx = currentPairIdx + 1;
               shouldSpawnNextPair = true;
             } else {
-              levelComplete = true; // All coins collected
+              levelComplete = true; 
             }
           }
         }
 
-        // Remove coins that finished their collection explosion
         nextActiveCoins = nextActiveCoins.filter(coin => !(coin.collected && coin.isExploding === false && coin.explosionProgress === 1));
         
         if (shouldSpawnNextPair) {
@@ -416,12 +435,12 @@ function gameReducer(state: GameState, action: GameAction): GameState {
             nextActiveCoins = [...nextActiveCoins, ...nextPairCoins];
         }
 
-        // Hero falls off screen: Reset game state for the level
         if (nextHero.y < 0) { 
           const resetHeroState = {
               ...initialHeroState, 
               x: gameArea.width / 2 - initialHeroState.width / 2, 
               y: PLATFORM_GROUND_Y + PLATFORM_GROUND_THICKNESS, 
+              width: HERO_WIDTH,
               height: HERO_HEIGHT,
               isOnPlatform: true,
               platformId: 'platform_ground',
@@ -439,7 +458,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
               score: 0, 
               totalCoinsCollectedInLevel: 0,
               currentPairIndex: 0,
-              gameOver: false, // Game is not over, just reset level state
+              gameOver: false, 
               heroAppearance: 'appearing', 
               heroAppearElapsedTime: 0,
            }; 
@@ -456,7 +475,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         currentPairIndex: nextPairIdx,
         heroAppearance: nextHeroAppearance,
         heroAppearElapsedTime: nextHeroAppearElapsedTime,
-        gameOver: levelComplete, // gameOver becomes true when level is complete
+        gameOver: levelComplete, 
       };
     }
     default:
