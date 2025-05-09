@@ -32,8 +32,17 @@ export function ControlPanel({ dispatch, onExit, disabled = false }: ControlPane
 
   return (
     <div
-      className="fixed bottom-0 left-0 right-0 h-20 backdrop-blur-sm shadow-lg p-2 flex items-center justify-around z-50 touch-manipulation"
-      style={{ WebkitBackdropFilter: 'blur(4px)' }}
+      className="fixed bottom-0 left-0 right-0 h-20 shadow-lg p-2 flex items-center justify-around z-50 touch-manipulation"
+      style={{ 
+        backgroundImage: 'url("https://neurostaffing.online/wp-content/uploads/2025/05/GroundFloor.png")',
+        backgroundSize: 'cover', // Or 'contain', or specific dimensions
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        // WebkitBackdropFilter: 'blur(0px)', // Ensure no blur if it was overriding opacity
+        // backdropFilter: 'blur(0px)', // Ensure no blur
+        backgroundColor: 'hsl(var(--control-panel-bg))', // Fallback or underlying color
+       }}
+       data-ai-hint="stone texture"
     >
       <Button
         variant="ghost"
