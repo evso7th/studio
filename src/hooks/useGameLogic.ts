@@ -7,10 +7,10 @@ import { useReducer, useCallback, useRef } from 'react';
 import type { GameState, GameAction, HeroType, PlatformType, CoinType, Size, Position } from '@/lib/gameTypes';
 
 // Game constants
-const GRAVITY_ACCELERATION = 0.8; // Acceleration due to gravity (pixels per frame per frame)
-const MAX_FALL_SPEED = -15; // Max speed downwards (negative as Y increases upwards)
-const JUMP_STRENGTH = 15; // Initial upward velocity for a jump (positive as Y increases upwards)
-const HERO_BASE_SPEED = 5; // Horizontal speed (pixels per frame)
+const GRAVITY_ACCELERATION = 0.6; // Acceleration due to gravity (pixels per frame per frame) - Reduced from 0.8
+const MAX_FALL_SPEED = -12; // Max speed downwards (negative as Y increases upwards) - Reduced from -15
+const JUMP_STRENGTH = 12; // Initial upward velocity for a jump (positive as Y increases upwards) - Reduced from 15
+const HERO_BASE_SPEED = 3.5; // Horizontal speed (pixels per frame) - Reduced from 5
 const PLATFORM_SPEED = 1.5;
 
 const HERO_WIDTH = 30;
@@ -44,7 +44,7 @@ const level1Platforms: PlatformType[] = [
     color: 'hsl(var(--platform-color))', isMoving: false, speed: 0, direction: 1, moveAxis: 'x',
   },
   {
-    id: 'platform1', x: 100, y: 150, width: PLATFORM_DEFAULT_WIDTH, height: PLATFORM_DEFAULT_HEIGHT, // Lowered by 50px (was 200)
+    id: 'platform1', x: 100, y: 150, width: PLATFORM_DEFAULT_WIDTH, height: PLATFORM_DEFAULT_HEIGHT, 
     color: 'hsl(var(--platform-color))', isMoving: true, speed: PLATFORM_SPEED, direction: 1, moveAxis: 'x',
     moveRange: { min: 50, max: 400 }
   },
