@@ -56,7 +56,7 @@ export interface LevelData {
 export const HERO_APPEARANCE_DURATION_MS = 1000; // 1 second for hero to appear
 export const COIN_EXPLOSION_DURATION_MS = 500; // 0.5 seconds for coin collection explosion
 export const COIN_SPAWN_EXPLOSION_DURATION_MS = 300; // 0.3 seconds for coin spawn explosion
-export const COIN_SPAWN_DELAY_MS = 200; // 0.2 seconds delay for the second coin in a pair
+export const COIN_SPAWN_DELAY_MS = 500; // 0.5 seconds delay for the second coin in a pair
 
 export const PLATFORM_GROUND_Y_FROM_BOTTOM = 55; // Defines how far from the bottom the ground platform is.
 export const PLATFORM_GROUND_THICKNESS = 1; 
@@ -115,6 +115,7 @@ export type GameAction =
   | { type: 'EXIT_GAME' }
   | { type: 'UPDATE_GAME_AREA', payload: { width: number; height: number; paddingTop: number; } }
   | { type: 'GAME_TICK', payload: { gameArea: Size, deltaTime: number } };
+
 
 
 
