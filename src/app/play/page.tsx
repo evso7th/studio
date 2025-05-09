@@ -123,13 +123,8 @@ const GameScreen = () => {
     <div 
       className="h-screen w-screen flex flex-col overflow-hidden select-none"
       style={{ 
-        backgroundImage: 'url("https://neurostaffing.online/wp-content/uploads/2025/05/BackGround-003.png")',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center left', 
-        backgroundRepeat: 'no-repeat',
-        backgroundColor: 'hsl(var(--game-bg))', // Fallback color
+        backgroundColor: 'hsl(var(--background))', // Use theme background color for the overall screen
       }}
-      data-ai-hint="sky landscape"
       aria-label="Главное окно игры"
     >
       <header className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center z-10 pointer-events-none">
@@ -140,7 +135,18 @@ const GameScreen = () => {
         </div>
       </header>
       
-      <div ref={gameAreaRef} className="flex-grow relative w-full overflow-hidden pt-16 pb-20"> {/* Adjusted pt-16 to give space for header, pb-20 for control panel */}
+      <div 
+        ref={gameAreaRef} 
+        className="flex-grow relative w-full overflow-hidden pt-16 pb-20" 
+        style={{
+          backgroundImage: 'url("https://neurostaffing.online/wp-content/uploads/2025/05/BackGroundBase.png")',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center left', 
+          backgroundRepeat: 'no-repeat',
+          backgroundColor: 'hsl(var(--game-bg))', // Fallback color for game area specifically
+        }}
+        data-ai-hint="abstract pattern" // Hint for the new game area background
+      >
         {gameState.isGameInitialized && gameState.gameArea.height > 0 && (
           <>
             <HeroComponent 
@@ -167,4 +173,3 @@ const GameScreen = () => {
 };
 
 export default GameScreen;
-
