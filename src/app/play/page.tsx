@@ -8,6 +8,7 @@ import { useGameLogic } from '@/hooks/useGameLogic';
 import { ControlPanel } from '@/components/game/ControlPanel';
 import { HeroComponent, PlatformComponent, CoinComponent } from '@/components/game/GameRenderer';
 import type { GameState } from '@/lib/gameTypes'; 
+import { HERO_APPEARANCE_DURATION_MS } from '@/lib/gameTypes';
 
 const GameScreen = () => {
   const { gameState, dispatch, gameTick } = useGameLogic();
@@ -21,11 +22,8 @@ const GameScreen = () => {
       const style = window.getComputedStyle(gameAreaRef.current);
       const paddingTop = parseFloat(style.paddingTop) || 0;
       const paddingBottom = parseFloat(style.paddingBottom) || 0;
-      // Assuming horizontal padding is not affecting game logic's X coordinates or handled internally if needed.
-      // const paddingLeft = parseFloat(style.paddingLeft) || 0;
-      // const paddingRight = parseFloat(style.paddingRight) || 0;
-
-      const effectiveWidth = clientWidth; // Game logic uses this as its width (can be clientWidth - pL - pR if needed)
+      
+      const effectiveWidth = clientWidth; 
       const effectiveHeight = clientHeight - paddingTop - paddingBottom;
       
       dispatch({ type: 'UPDATE_GAME_AREA', payload: { width: effectiveWidth, height: effectiveHeight, paddingTop: paddingTop } });
@@ -41,7 +39,7 @@ const GameScreen = () => {
   useEffect(() => {
     const loop = () => {
       if (gameState.isGameInitialized && gameState.gameArea.width > 0 && gameState.gameArea.height > 0) {
-         gameTick(); // gameArea is taken from gameState inside reducer
+         gameTick(); 
       }
       animationFrameId.current = requestAnimationFrame(loop);
     };
@@ -51,11 +49,12 @@ const GameScreen = () => {
         cancelAnimationFrame(animationFrameId.current);
       }
     };
-  }, [gameTick, gameState.isGameInitialized, gameState.gameArea.width, gameState.gameArea.height]); // Added width/height dependencies for safety
+  }, [gameTick, gameState.isGameInitialized, gameState.gameArea.width, gameState.gameArea.height]); 
 
-  // Keyboard controls
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (gameState.heroAppearance === 'appearing') return; // Disable controls during appearance
+
       if (event.key === 'F5' || (event.ctrlKey && event.key.toLowerCase() === 'r')) return;
       if ((event.ctrlKey && event.shiftKey && event.key.toLowerCase() === 'i') || 
           (event.metaKey && event.altKey && event.key.toLowerCase() === 'i') || 
@@ -86,6 +85,7 @@ const GameScreen = () => {
     };
 
     const handleKeyUp = (event: KeyboardEvent) => {
+      if (gameState.heroAppearance === 'appearing') return; // Disable controls during appearance
       let handled = false;
       switch (event.key.toLowerCase()) {
         case 'arrowleft':
@@ -110,10 +110,11 @@ const GameScreen = () => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
+      // Ensure movement stops if component unmounts or heroAppearance changes
       dispatch({ type: 'MOVE_LEFT_STOP' });
       dispatch({ type: 'MOVE_RIGHT_STOP' });
     };
-  }, [dispatch]);
+  }, [dispatch, gameState.heroAppearance]); // Add gameState.heroAppearance to dependencies
   
   const handleExit = () => {
     router.push('/');
@@ -132,7 +133,14 @@ const GameScreen = () => {
       <div ref={gameAreaRef} className="flex-grow relative w-full overflow-hidden pt-16 pb-20">
         {gameState.isGameInitialized && gameState.gameArea.height > 0 && (
           <>
-            <HeroComponent hero={gameState.hero} gameAreaHeight={gameState.gameArea.height} paddingTop={gameState.paddingTop} />
+            <HeroComponent 
+              hero={gameState.hero} 
+              gameAreaHeight={gameState.gameArea.height} 
+              paddingTop={gameState.paddingTop}
+              heroAppearance={gameState.heroAppearance}
+              heroAppearElapsedTime={gameState.heroAppearElapsedTime}
+              heroAppearanceDuration={HERO_APPEARANCE_DURATION_MS}
+            />
             {gameState.platforms.map(platform => (
               <PlatformComponent key={platform.id} platform={platform} gameAreaHeight={gameState.gameArea.height} paddingTop={gameState.paddingTop} />
             ))}
@@ -143,7 +151,7 @@ const GameScreen = () => {
         )}
       </div>
 
-      <ControlPanel dispatch={dispatch} onExit={handleExit} />
+      <ControlPanel dispatch={dispatch} onExit={handleExit} disabled={gameState.heroAppearance === 'appearing'} />
     </div>
   );
 };

@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { GameAction } from "@/lib/gameTypes";
@@ -8,19 +9,22 @@ import type { Dispatch } from 'react';
 interface ControlPanelProps {
   dispatch: Dispatch<GameAction>;
   onExit: () => void;
+  disabled?: boolean; // Added to disable controls
 }
 
-export function ControlPanel({ dispatch, onExit }: ControlPanelProps) {
+export function ControlPanel({ dispatch, onExit, disabled = false }: ControlPanelProps) {
   const handleAction = (type: GameAction['type']) => {
+    if (disabled) return;
     dispatch({ type });
   };
 
-  // Use onMouseDown/onTouchStart and onMouseUp/onTouchEnd for continuous movement
   const handleMoveStart = (type: 'MOVE_LEFT_START' | 'MOVE_RIGHT_START') => {
+    if (disabled) return;
     dispatch({ type });
   };
 
   const handleMoveStop = (type: 'MOVE_LEFT_STOP' | 'MOVE_RIGHT_STOP') => {
+    // Stop actions should still be processed even if disabled mid-action, to prevent sticky keys
     dispatch({ type });
   };
 
@@ -38,6 +42,7 @@ export function ControlPanel({ dispatch, onExit }: ControlPanelProps) {
         onTouchStart={() => handleMoveStart('MOVE_LEFT_START')}
         onTouchEnd={() => handleMoveStop('MOVE_LEFT_STOP')}
         aria-label="Move Left"
+        disabled={disabled}
       >
         <ArrowLeftCircle className="h-10 w-10" />
       </Button>
@@ -47,6 +52,7 @@ export function ControlPanel({ dispatch, onExit }: ControlPanelProps) {
         className="text-foreground hover:bg-primary/20 active:bg-primary/30 p-3 h-16 w-16 rounded-full"
         onClick={() => handleAction('JUMP')}
         aria-label="Jump"
+        disabled={disabled}
       >
         <ArrowUpCircle className="h-10 w-10" />
       </Button>
@@ -59,6 +65,7 @@ export function ControlPanel({ dispatch, onExit }: ControlPanelProps) {
         onTouchStart={() => handleMoveStart('MOVE_RIGHT_START')}
         onTouchEnd={() => handleMoveStop('MOVE_RIGHT_STOP')}
         aria-label="Move Right"
+        disabled={disabled}
       >
         <ArrowRightCircle className="h-10 w-10" />
       </Button>
@@ -68,6 +75,7 @@ export function ControlPanel({ dispatch, onExit }: ControlPanelProps) {
         className="text-destructive-foreground bg-destructive/80 hover:bg-destructive active:bg-destructive/90 p-3 h-16 w-16 rounded-full"
         onClick={onExit}
         aria-label="Exit Game"
+        // Exit button should ideally not be disabled by game state
       >
         <LogOut className="h-8 w-8" />
       </Button>

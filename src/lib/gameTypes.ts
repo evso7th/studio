@@ -45,6 +45,8 @@ export interface LevelData {
   gameBackgroundColor: string; // CSS class like 'bg-blue-700' or HSL string
 }
 
+export const HERO_APPEARANCE_DURATION_MS = 1000; // 1 second for hero to appear
+
 export interface GameState {
   hero: HeroType;
   platforms: PlatformType[];
@@ -55,6 +57,8 @@ export interface GameState {
   gameArea: Size;
   isGameInitialized: boolean; // Added for initial setup
   paddingTop: number; // Added to store container's paddingTop for rendering offset
+  heroAppearance: 'appearing' | 'visible'; // For intro animation
+  heroAppearElapsedTime: number; // Milliseconds elapsed in hero appearance animation
   debugMode?: boolean; // Optional for showing collision boxes etc.
 }
 
@@ -67,3 +71,4 @@ export type GameAction =
   | { type: 'EXIT_GAME' }
   | { type: 'UPDATE_GAME_AREA', payload: { width: number; height: number; paddingTop: number; } }
   | { type: 'GAME_TICK', payload: { gameArea: Size } };
+
