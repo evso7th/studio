@@ -53,8 +53,8 @@ const initialHeroState: HeroType = {
 };
 
 // Platform Y offsets and calculated positions
-const PLATFORM1_Y_OFFSET = 150; 
-const PLATFORM2_Y_OFFSET = 270; 
+const PLATFORM1_Y_OFFSET = 120; // Was 150, lowered by 30
+const PLATFORM2_Y_OFFSET = 240; // Was 270, lowered by 30
 
 const PLATFORM1_Y = PLATFORM_GROUND_Y + PLATFORM_GROUND_THICKNESS + PLATFORM1_Y_OFFSET;
 const PLATFORM2_Y = PLATFORM_GROUND_Y + PLATFORM_GROUND_THICKNESS + PLATFORM2_Y_OFFSET;
