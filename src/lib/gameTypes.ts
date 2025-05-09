@@ -1,4 +1,5 @@
 
+
 export interface Position {
   x: number;
   y: number;
@@ -46,6 +47,10 @@ export interface LevelData {
 }
 
 export const HERO_APPEARANCE_DURATION_MS = 1000; // 1 second for hero to appear
+export const PLATFORM_DEFAULT_HEIGHT = 24;
+export const HERO_HEIGHT = 40;
+export const COIN_SIZE = 20;
+
 
 export interface GameState {
   hero: HeroType;
@@ -71,4 +76,5 @@ export type GameAction =
   | { type: 'EXIT_GAME' }
   | { type: 'UPDATE_GAME_AREA', payload: { width: number; height: number; paddingTop: number; } }
   | { type: 'GAME_TICK', payload: { gameArea: Size } };
+
 
