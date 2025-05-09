@@ -47,7 +47,7 @@ export interface LevelData {
 }
 
 export const HERO_APPEARANCE_DURATION_MS = 1000; // 1 second for hero to appear
-export const PLATFORM_DEFAULT_HEIGHT = 24;
+export const PLATFORM_DEFAULT_HEIGHT = 1; // Thickness of platforms, ground platform will use this.
 export const HERO_HEIGHT = 40;
 export const COIN_SIZE = 20;
 
