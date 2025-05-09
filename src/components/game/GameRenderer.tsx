@@ -1,7 +1,8 @@
 
 "use client";
 import type { HeroType, PlatformType, CoinType } from "@/lib/gameTypes";
-import type React from 'react'; // Ensure React is imported for JSX
+import { COIN_SPAWN_EXPLOSION_DURATION_MS } from "@/lib/gameTypes"; // Import if not already
+import type React from 'react'; 
 
 interface AppearanceProps {
   type: 'heroAppear';
@@ -15,11 +16,11 @@ interface GameObjectStylePropsBase {
   height: number;
   gameAreaHeight: number; 
   paddingTop: number; 
-  color?: string; // Optional: used for fallback or non-image elements
+  color?: string; 
   heroAction?: HeroType['action'];
   appearanceProps?: AppearanceProps;
   shape?: 'rect' | 'circle';
-  isHero?: boolean; // Added to identify hero for specific styling
+  isHero?: boolean; 
 }
 
 function getGameObjectStyle({ x, y, width, height, gameAreaHeight, paddingTop, color, heroAction, appearanceProps, shape = 'rect', isHero = false }: GameObjectStylePropsBase): React.CSSProperties {
@@ -32,15 +33,14 @@ function getGameObjectStyle({ x, y, width, height, gameAreaHeight, paddingTop, c
     top: `${finalCssTop}px`, 
     width: `${width}px`,
     height: `${height}px`,
-    objectFit: 'fill', // For img tags, to fill the dimensions
+    objectFit: 'fill', 
   };
 
-  if (!isHero) { // Apply shadow only if not hero
+  if (!isHero) { 
     dynamicStyles.boxShadow = '2px 2px 4px rgba(0,0,0,0.3)';
   }
 
-
-  if (color) { // Only set if color is provided and it's not an image that will cover it
+  if (color) { 
     dynamicStyles.backgroundColor = color;
   }
 
@@ -57,18 +57,16 @@ function getGameObjectStyle({ x, y, width, height, gameAreaHeight, paddingTop, c
       dynamicStyles.borderRadius = '2px'; 
     }
 
-    // Action-based animations (primarily for hero if it were a div, might be less relevant for img)
     if (heroAction) {
       switch (heroAction) {
         case 'jump_up':
-          dynamicStyles.transform = `scaleY(0.95) translateY(-3px) scaleX(1.05)`; // Adjusted for image
+          dynamicStyles.transform = `scaleY(0.95) translateY(-3px) scaleX(1.05)`; 
           dynamicStyles.transition = 'transform 0.1s ease-out';
           break;
         case 'fall_down':
-          dynamicStyles.transform = `scaleY(1.05) translateY(1px) scaleX(0.95)`; // Adjusted for image
+          dynamicStyles.transform = `scaleY(1.05) translateY(1px) scaleX(0.95)`; 
           dynamicStyles.transition = 'transform 0.1s ease-in';
           break;
-        // Running animations might be better handled by swapping images or CSS sprite if available
         case 'run_left':
         case 'run_right':
           dynamicStyles.transform = 'none'; 
@@ -112,11 +110,9 @@ export function HeroComponent({ hero, gameAreaHeight, paddingTop, heroAppearance
         ...hero, 
         gameAreaHeight, 
         paddingTop, 
-        // No color prop, image is used
         heroAction: hero.action,
         appearanceProps,
-        isHero: true, // Identify as hero
-        // shape: 'rect' // borderRadius will be applied from default
+        isHero: true, 
       })}
       role="img"
       aria-label="Hero"
@@ -128,22 +124,20 @@ export function HeroComponent({ hero, gameAreaHeight, paddingTop, heroAppearance
 export function PlatformComponent({ platform, gameAreaHeight, paddingTop }: { platform: PlatformType } & GameObjectComponentProps) {
   if (!gameAreaHeight && gameAreaHeight !== 0) return null;
   
-  // Pass undefined for color to prevent getGameObjectStyle from setting a backgroundColor
-  // that might interfere with the backgroundImage.
   const baseStyle = getGameObjectStyle({ 
     ...platform, 
     gameAreaHeight, 
     paddingTop, 
-    color: undefined, // Explicitly no color for textured platforms
+    color: undefined, 
     shape: 'rect' 
   });
   
   const platformStyle: React.CSSProperties = {
     ...baseStyle,
     backgroundImage: 'url("https://neurostaffing.online/wp-content/uploads/2025/05/PlatformGrassShort.png")',
-    backgroundSize: '100% 100%', // Stretch to fit the platform dimensions
+    backgroundSize: '100% 100%', 
     backgroundPosition: 'center',
-    backgroundRepeat: 'no-repeat', // Ensure texture doesn't repeat if it's smaller
+    backgroundRepeat: 'no-repeat', 
   };
 
   return (
@@ -167,44 +161,74 @@ export function CoinComponent({ coin, gameAreaHeight, paddingTop }: { coin: Coin
     ...coin, 
     gameAreaHeight, 
     paddingTop, 
-    // No color for the image itself
-    shape: 'circle' // Affects borderRadius of the img tag
+    shape: 'circle' 
   });
 
-  if (coin.isExploding && coin.explosionProgress != null && coin.explosionProgress < 1) {
+  // SPAWN EXPLOSION
+  if (coin.isSpawning && coin.spawnExplosionProgress != null && coin.spawnExplosionProgress < 1) {
     const particles = [];
     for (let i = 0; i < NUM_PARTICLES; i++) {
       const angle = (i / NUM_PARTICLES) * 2 * Math.PI + (Math.random() - 0.5) * 0.5; 
-      const distance = EXPLOSION_SPREAD_RADIUS * coin.explosionProgress * (0.5 + Math.random() * 0.5); 
-
+      const distance = EXPLOSION_SPREAD_RADIUS * coin.spawnExplosionProgress * (0.5 + Math.random() * 0.5); 
       const particleX = Math.cos(angle) * distance;
       const particleY = Math.sin(angle) * distance;
-
       const particleStyle: React.CSSProperties = {
         position: 'absolute',
         left: `calc(50% + ${particleX}px - ${PARTICLE_SIZE / 2}px)`, 
         top: `calc(50% + ${particleY}px - ${PARTICLE_SIZE / 2}px)`,  
         width: `${PARTICLE_SIZE}px`,
         height: `${PARTICLE_SIZE}px`,
-        backgroundColor: 'hsl(var(--coin-color))', // Particles retain a color
+        backgroundColor: 'hsl(var(--accent))', // Use a different color for spawn, e.g., accent
         borderRadius: '50%',
-        opacity: 1 - coin.explosionProgress, 
-        transform: `scale(${1 - coin.explosionProgress})`, 
+        opacity: 1 - coin.spawnExplosionProgress, 
+        transform: `scale(${1 - coin.spawnExplosionProgress})`, 
         transition: 'opacity 0.1s ease-out, transform 0.1s ease-out', 
       };
-      particles.push(<div key={i} style={particleStyle} />);
+      particles.push(<div key={`spawn_particle_${i}`} style={particleStyle} />);
     }
-
-    // Position the particle container where the coin was
     const explosionContainerStyle: React.CSSProperties = {
         position: 'absolute',
         left: baseStyle.left,
         top: baseStyle.top,
         width: baseStyle.width,
         height: baseStyle.height,
-        // Particles are absolutely positioned relative to this container
     };
-
+    return (
+      <div style={explosionContainerStyle} aria-label="Coin Spawning" data-ai-hint="sparkle effect"> 
+        {particles}
+      </div>
+    );
+  }
+  
+  // COLLECTION EXPLOSION
+  if (coin.isExploding && coin.collected && coin.explosionProgress != null && coin.explosionProgress < 1) {
+    const particles = [];
+    for (let i = 0; i < NUM_PARTICLES; i++) {
+      const angle = (i / NUM_PARTICLES) * 2 * Math.PI + (Math.random() - 0.5) * 0.5; 
+      const distance = EXPLOSION_SPREAD_RADIUS * coin.explosionProgress * (0.5 + Math.random() * 0.5); 
+      const particleX = Math.cos(angle) * distance;
+      const particleY = Math.sin(angle) * distance;
+      const particleStyle: React.CSSProperties = {
+        position: 'absolute',
+        left: `calc(50% + ${particleX}px - ${PARTICLE_SIZE / 2}px)`, 
+        top: `calc(50% + ${particleY}px - ${PARTICLE_SIZE / 2}px)`,  
+        width: `${PARTICLE_SIZE}px`,
+        height: `${PARTICLE_SIZE}px`,
+        backgroundColor: 'hsl(var(--coin-color))', 
+        borderRadius: '50%',
+        opacity: 1 - coin.explosionProgress, 
+        transform: `scale(${1 - coin.explosionProgress})`, 
+        transition: 'opacity 0.1s ease-out, transform 0.1s ease-out', 
+      };
+      particles.push(<div key={`collect_particle_${i}`} style={particleStyle} />);
+    }
+    const explosionContainerStyle: React.CSSProperties = {
+        position: 'absolute',
+        left: baseStyle.left,
+        top: baseStyle.top,
+        width: baseStyle.width,
+        height: baseStyle.height,
+    };
     return (
       <div style={explosionContainerStyle} aria-label="Coin Exploding" data-ai-hint="gold sparkle"> 
         {particles}
@@ -212,13 +236,14 @@ export function CoinComponent({ coin, gameAreaHeight, paddingTop }: { coin: Coin
     );
   }
   
-  if (!coin.collected) { // Render coin image if not collected and not exploding
+  // RENDER COIN IMAGE (only if not collected and fully spawned)
+  if (!coin.collected && !coin.isSpawning) { 
     return (
       <img
         src="https://neurostaffing.online/wp-content/uploads/2025/04/Спасибка1.png"
         alt="Coin"
-        style={baseStyle} // Applies position, size, and 'circle' border radius
-        role="img" // Changed from button to img
+        style={baseStyle} 
+        role="img" 
         aria-label="Coin"
         data-ai-hint="gold coin"
       />
@@ -227,4 +252,3 @@ export function CoinComponent({ coin, gameAreaHeight, paddingTop }: { coin: Coin
 
   return null; 
 }
-

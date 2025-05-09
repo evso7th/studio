@@ -119,11 +119,18 @@ const GameScreen = () => {
     router.push('/');
   };
 
+  useEffect(() => {
+    if (gameState.gameOver) { // gameOver is true when level is completed
+      // Optionally, add a delay or a "Level Complete" message before navigating
+      router.push('/');
+    }
+  }, [gameState.gameOver, router]);
+
   return (
     <div 
       className="h-screen w-screen flex flex-col overflow-hidden select-none"
       style={{ 
-        backgroundColor: 'hsl(var(--background))', // Use theme background color for the overall screen
+        backgroundColor: 'hsl(var(--background))', 
       }}
       aria-label="Главное окно игры"
     >
@@ -143,9 +150,9 @@ const GameScreen = () => {
           backgroundSize: 'cover',
           backgroundPosition: 'center left', 
           backgroundRepeat: 'no-repeat',
-          backgroundColor: 'hsl(var(--game-bg))', // Fallback color for game area specifically
+          backgroundColor: 'hsl(var(--game-bg))', 
         }}
-        data-ai-hint="abstract pattern" // Hint for the new game area background
+        data-ai-hint="abstract pattern"
       >
         {gameState.isGameInitialized && gameState.gameArea.height > 0 && (
           <>
@@ -160,7 +167,7 @@ const GameScreen = () => {
             {gameState.platforms.map(platform => (
               <PlatformComponent key={platform.id} platform={platform} gameAreaHeight={gameState.gameArea.height} paddingTop={gameState.paddingTop} />
             ))}
-            {gameState.coins.map(coin => (
+            {gameState.activeCoins.map(coin => (
               <CoinComponent key={coin.id} coin={coin} gameAreaHeight={gameState.gameArea.height} paddingTop={gameState.paddingTop} />
             ))}
           </>
