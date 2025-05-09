@@ -1,4 +1,3 @@
-
 // @ts-nocheck
 "use client";
 
@@ -10,9 +9,9 @@ import { HERO_APPEARANCE_DURATION_MS, PLATFORM_GROUND_Y, PLATFORM_GROUND_THICKNE
 // Game constants
 const GRAVITY_ACCELERATION = 0.4; 
 const MAX_FALL_SPEED = -8; 
-const HERO_BASE_SPEED = 3.0; // Doubled from 1.5 in a previous request
+const HERO_BASE_SPEED = 3.0; 
 const PLATFORM_GENERAL_SPEED = 1.0; 
-const JUMP_STRENGTH = 13; // Reduced from 17 to decrease jump height (approx by 100px effect)
+const JUMP_STRENGTH = 13; 
 
 const HERO_WIDTH = 30;
 
@@ -54,19 +53,19 @@ const INITIAL_PLATFORM2_SPEED = PLATFORM_GENERAL_SPEED;
 
 const level1Platforms: PlatformType[] = [
   {
-    id: 'platform_ground', x: -100, y: PLATFORM_GROUND_Y, // x is -100 to ensure it covers screen edges
-    width: 1000, height: PLATFORM_GROUND_THICKNESS, // width is large, updated dynamically
+    id: 'platform_ground', x: -100, y: PLATFORM_GROUND_Y, 
+    width: 1000, height: PLATFORM_GROUND_THICKNESS, 
     color: 'hsl(var(--platform-color))', isMoving: false, speed: 0, direction: 1, moveAxis: 'x',
   },
   {
     id: 'platform1', x: INITIAL_PLATFORM1_X, y: platform1_Y, width: PLATFORM_DEFAULT_WIDTH, height: PLATFORM_NON_GROUND_HEIGHT, 
     color: 'hsl(var(--platform-color))', isMoving: true, speed: INITIAL_PLATFORM1_SPEED, direction: 1, moveAxis: 'x',
-    moveRange: { min: 50, max: 400 } // Initial placeholder, updated dynamically
+    moveRange: { min: 50, max: 400 } 
   },
   {
     id: 'platform2', x: INITIAL_PLATFORM2_X, y: platform2_Y, width: PLATFORM_DEFAULT_WIDTH, height: PLATFORM_NON_GROUND_HEIGHT,
     color: 'hsl(var(--platform-color))', isMoving: true, speed: INITIAL_PLATFORM2_SPEED, direction: -1, moveAxis: 'x',
-    moveRange: { min: 200, max: 500} // Initial placeholder, updated dynamically
+    moveRange: { min: 200, max: 500} 
   },
 ];
 
@@ -184,11 +183,10 @@ function gameReducer(state: GameState, action: GameAction): GameState {
           action: 'idle',
         };
         
-        // Use the already defined level1Platforms and then update ground/dynamic ranges
-        let currentLevelPlatformsConfig = level1Platforms.map(lp => ({...lp})); // Make a fresh copy
+        let currentLevelPlatformsConfig = level1Platforms.map(lp => ({...lp})); 
         currentLevelPlatformsConfig = currentLevelPlatformsConfig.map(p => {
              if (p.id === 'platform_ground') return {...p, width: newEffectiveGameArea.width + 200, x: -100, y:PLATFORM_GROUND_Y, height: PLATFORM_GROUND_THICKNESS };
-             if (p.isMoving && p.moveAxis === 'x' && p.moveRange) { // Check p.moveRange exists
+             if (p.isMoving && p.moveAxis === 'x' && p.moveRange) { 
                 return { ...p, moveRange: { min: 0, max: newEffectiveGameArea.width - p.width } };
              }
              return p;
@@ -208,7 +206,6 @@ function gameReducer(state: GameState, action: GameAction): GameState {
           heroAppearElapsedTime: 0,
         };
       }
-      // If already initialized, just update gameArea, paddingTop and platform dynamic properties
       return { ...state, gameArea: newEffectiveGameArea, paddingTop: newPaddingTop, platforms };
     }
     case 'GAME_TICK': {
@@ -238,7 +235,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
           }
           return { ...p, x: platformNewX, velocity: { x: platformVelX, y: 0 } };
         }
-        return { ...p, velocity: {x: 0, y: 0}}; // Ensure non-moving platforms have zero velocity for consistency
+        return { ...p, velocity: {x: 0, y: 0}}; 
       });
 
       if (state.heroAppearance === 'appearing') {
@@ -315,7 +312,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         
         nextHero.x = newPosX;
         nextHero.y = newPosY;
-        nextHero.velocity = { x: (nextHero.velocity?.x ?? 0), y: finalVelY }; // Retain x velocity if needed for other physics
+        nextHero.velocity = { x: (nextHero.velocity?.x ?? 0), y: finalVelY }; 
         nextHero.isOnPlatform = resolvedOnPlatform;
         nextHero.platformId = resolvedPlatformId;
 
@@ -330,7 +327,8 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         if (nextHero.x < 0) nextHero.x = 0;
         if (nextHero.x + nextHero.width > gameArea.width) nextHero.x = gameArea.width - nextHero.width;
         
-        if (nextHero.y < (PLATFORM_GROUND_Y - nextHero.height * 1.5) ) { 
+        // Adjusted reset condition: if hero's bottom (nextHero.y) goes below PLATFORM_GROUND_Y
+        if (nextHero.y < PLATFORM_GROUND_Y) { 
           const resetHeroState = {
               ...initialHeroState, 
               x: gameArea.width / 2 - initialHeroState.width / 2,
@@ -344,7 +342,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
           return { 
               ...state, 
               hero: resetHeroState,
-              platforms: nextPlatforms.map(p => { // Reset platform positions too on fall
+              platforms: nextPlatforms.map(p => { 
                 if (p.id === 'platform1') return {...p, x: INITIAL_PLATFORM1_X, direction: 1};
                 if (p.id === 'platform2') return {...p, x: INITIAL_PLATFORM2_X, direction: -1};
                 return p;
@@ -405,6 +403,3 @@ export function useGameLogic() {
   
   return { gameState, dispatch: handleGameAction, gameTick };
 }
-
-
-    
