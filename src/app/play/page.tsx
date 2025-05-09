@@ -120,7 +120,18 @@ const GameScreen = () => {
   };
 
   return (
-    <div className="h-screen w-screen flex flex-col overflow-hidden bg-game-bg select-none">
+    <div 
+      className="h-screen w-screen flex flex-col overflow-hidden select-none"
+      style={{ 
+        backgroundImage: 'url("https://neurostaffing.online/wp-content/uploads/2025/05/BackGround-003.png")',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        backgroundColor: 'hsl(var(--game-bg))', // Fallback color
+      }}
+      data-ai-hint="sky landscape"
+      aria-label="Главное окно игры"
+    >
       <header className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center z-10 pointer-events-none">
         <h1 className="text-xs font-normal text-white font-roboto shadow-md">IPO Mad Racing</h1>
         <div className="flex flex-col items-end">
