@@ -2,10 +2,18 @@
 // @ts-nocheck
 "use client";
 
-import type { Reducer } from 'react';
-import { useReducer, useCallback, useEffect } from 'react';
+import type { Reducer} from 'react';
+import { useReducer, useCallback, useEffect, useRef } from 'react';
 import type { GameState, GameAction, HeroType, PlatformType, CoinType, Size, Position } from '@/lib/gameTypes';
-import { HERO_APPEARANCE_DURATION_MS, PLATFORM_GROUND_Y, PLATFORM_GROUND_THICKNESS, HERO_HEIGHT, COIN_SIZE, PLATFORM_NON_GROUND_HEIGHT, PLATFORM_DEFAULT_WIDTH } from '@/lib/gameTypes'; 
+import { 
+    HERO_APPEARANCE_DURATION_MS, 
+    PLATFORM_GROUND_Y, 
+    PLATFORM_GROUND_THICKNESS, 
+    HERO_HEIGHT, 
+    COIN_SIZE,
+    PLATFORM_NON_GROUND_HEIGHT,
+    PLATFORM_DEFAULT_WIDTH
+} from '@/lib/gameTypes'; 
 
 // Game constants
 const GRAVITY_ACCELERATION = 0.4; 
@@ -14,7 +22,7 @@ const HERO_BASE_SPEED = 3.0;
 const PLATFORM_GENERAL_SPEED = 1.0; 
 
 // Target jump height in pixels
-const TARGET_JUMP_HEIGHT_PX = 150; 
+const TARGET_JUMP_HEIGHT_PX = 180; 
 // Calculate JUMP_STRENGTH based on TARGET_JUMP_HEIGHT_PX and GRAVITY_ACCELERATION
 // Formula derived from H = V^2 / (2G) + V / 2  => V^2 + GV - 2GH = 0
 // V = (-G + sqrt(G^2 + 8GH)) / 2
@@ -431,7 +439,6 @@ export function useGameLogic() {
     if (gameState.gameArea.width > 0 && gameState.gameArea.height > 0 && !gameState.isGameInitialized) {
       // This will trigger the initialization logic within the UPDATE_GAME_AREA case
       // if it hasn't run yet due to initial gameArea being 0,0.
-      // Or, if you want a more explicit re-initialization call here for some reason:
       dispatch({ 
         type: 'UPDATE_GAME_AREA', 
         payload: { 
