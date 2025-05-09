@@ -26,7 +26,7 @@ import {
     COIN_SPAWN_EXPLOSION_DURATION_MS,
     MIN_DISTANCE_BETWEEN_PAIR_COINS_X_FACTOR,
     COIN_ZONE_TOP_OFFSET,
-    COIN_ZONE_BOTTOM_OFFSET,
+    // COIN_ZONE_BOTTOM_OFFSET, // This will be effectively overridden by platform1's height
 } from '@/lib/gameTypes'; 
 
 const GRAVITY_ACCELERATION = 0.4; 
@@ -73,28 +73,40 @@ function spawnNextCoinPair(gameArea: Size, coinSize: number, currentPairId: numb
   const newPair: CoinType[] = [];
   const groundPlatformTopY = PLATFORM_GROUND_Y + PLATFORM_GROUND_THICKNESS;
 
-  // Y-coordinate for the BOTTOM of the coin
-  let coinSpawnMinY = Math.max(groundPlatformTopY, gameArea.height - COIN_ZONE_BOTTOM_OFFSET);
-  let coinSpawnMaxY = gameArea.height - COIN_ZONE_TOP_OFFSET - coinSize;
-  let yRange = coinSpawnMaxY - coinSpawnMinY;
+  // Calculate the Y-coordinate of the top surface of platform1 (the lower moving platform)
+  const platform1TopActualY = PLATFORM_GROUND_Y + PLATFORM_GROUND_THICKNESS + PLATFORM1_Y_OFFSET + PLATFORM_NON_GROUND_HEIGHT;
 
-  if (yRange <= 0) { // Invalid spawn zone height or constraint violation
-    // Fallback: spawn coins in a fixed small area above ground
-    const fallbackMinY = groundPlatformTopY + gameArea.height * 0.1;
-    const fallbackMaxY = groundPlatformTopY + gameArea.height * 0.3 - coinSize;
-    coinSpawnMinY = fallbackMinY;
-    yRange = fallbackMaxY - fallbackMinY;
-    if (yRange <= 0) {
-      console.warn("Cannot spawn coins even in fallback area. Game area might be too small or misconfigured.");
-      return []; // Cannot spawn
+  // Define the highest possible Y for the coin's bottom edge (constrained by COIN_ZONE_TOP_OFFSET from game top)
+  const coinSpawnZoneCeilingY = gameArea.height - COIN_ZONE_TOP_OFFSET - coinSize;
+  
+  // Define the lowest possible Y for the coin's bottom edge (must be above platform1's top surface)
+  const coinSpawnZoneFloorY = platform1TopActualY;
+
+  // Determine effective spawn range for the coin's bottom Y-coordinate
+  let effectiveMinSpawnY = Math.max(groundPlatformTopY, coinSpawnZoneFloorY); // Cannot be below ground, cannot be below platform1 top
+  let effectiveMaxSpawnY = coinSpawnZoneCeilingY;
+
+  // Adjust if min is greater than or equal to max (no valid range or single point for random generation)
+  if (effectiveMinSpawnY >= effectiveMaxSpawnY) {
+    // Attempt to place just above platform1 if there's any space at all below the absolute ceiling of the game area
+    // Check if there's at least 1px space for the coin (plus its size) above platform1's top surface and below the very top of the game area.
+    if (platform1TopActualY + coinSize < gameArea.height -1 ) { 
+        effectiveMinSpawnY = platform1TopActualY + 1; // Place 1px above platform1 top
+        effectiveMaxSpawnY = effectiveMinSpawnY;    // Spawn at a fixed height, so yRandomFactorRange will be 0
+    } else {
+        console.warn("Coin spawn zone invalid: Platform1 is too high or COIN_ZONE_TOP_OFFSET is too restrictive. No space to spawn coins.");
+        return []; // Cannot spawn
     }
   }
   
+  const yRandomFactorRange = effectiveMaxSpawnY - effectiveMinSpawnY; // This can be 0 if effectiveMinSpawnY === effectiveMaxSpawnY
+
   const minDistanceX = gameArea.width * MIN_DISTANCE_BETWEEN_PAIR_COINS_X_FACTOR;
 
   // Spawn first coin
   const x1 = Math.random() * (gameArea.width - coinSize);
-  const y1 = coinSpawnMinY + Math.random() * yRange;
+  // If yRandomFactorRange is 0 or negative, coin spawns at effectiveMinSpawnY. Otherwise, random within range.
+  const y1 = effectiveMinSpawnY + (yRandomFactorRange > 0 ? (Math.random() * yRandomFactorRange) : 0);
   newPair.push({
     id: `coin_p${currentPairId}_0_${Date.now()}`,
     x: x1, y: y1, width: coinSize, height: coinSize,
@@ -108,15 +120,15 @@ function spawnNextCoinPair(gameArea: Size, coinSize: number, currentPairId: numb
   do {
     x2 = Math.random() * (gameArea.width - coinSize);
     attempts++;
-  } while (Math.abs(x2 - x1) < minDistanceX && attempts < 20); // Try to space them out, give up after 20 tries for X
+  } while (Math.abs(x2 - x1) < minDistanceX && attempts < 20); 
   
-  y2 = coinSpawnMinY + Math.random() * yRange; // Y can be random within the zone for the second coin as well
+  y2 = effectiveMinSpawnY + (yRandomFactorRange > 0 ? (Math.random() * yRandomFactorRange) : 0);
 
   newPair.push({
     id: `coin_p${currentPairId}_1_${Date.now()}`,
     x: x2, y: y2, width: coinSize, height: coinSize,
     color: 'hsl(var(--coin-color))', collected: false, isExploding: false, explosionProgress: 0,
-    isSpawning: true, spawnExplosionProgress: 0, // Both start spawning animation together
+    isSpawning: true, spawnExplosionProgress: 0, 
     pairId: currentPairId,
   });
 
@@ -484,3 +496,4 @@ export function useGameLogic() {
 
   return { gameState, dispatch: handleGameAction, gameTick };
 }
+
