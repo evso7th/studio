@@ -39,7 +39,7 @@ function getGameObjectStyle({ x, y, width, height, gameAreaHeight, paddingTop, c
   };
 
   if (!isHero && !isPlatform) { // Apply shadow only if not hero and not platform
-    dynamicStyles.boxShadow = '2px 2px 4px rgba(0,0,0,0.3)';
+    // dynamicStyles.boxShadow = '2px 2px 4px rgba(0,0,0,0.3)'; // Shadow removed for platforms and hero
   }
 
   if (color) { 
@@ -163,6 +163,7 @@ export function PlatformComponent({ platform, gameAreaHeight, paddingTop }: { pl
     backgroundSize: platform.id === 'platform_ground' ? 'auto 100%' : '100% 100%', // Ground repeats, others stretch
     backgroundPosition: platform.id === 'platform_ground' ? 'left bottom' : 'center', // Ground tiles from left
     backgroundRepeat: platform.id === 'platform_ground' ? 'repeat-x' : 'no-repeat', 
+    // boxShadow: 'none', // Explicitly remove box shadow for platforms
   };
 
   return (
