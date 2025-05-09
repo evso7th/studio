@@ -46,11 +46,12 @@ export interface LevelData {
 }
 
 export const HERO_APPEARANCE_DURATION_MS = 1000; // 1 second for hero to appear
+
 // PLATFORM_GROUND_Y defines the Y-coordinate of the BOTTOM of the ground platform.
-// The hero will stand at PLATFORM_GROUND_Y + PLATFORM_GROUND_THICKNESS.
-// If set to 64, the ground platform's bottom will be 64 units above the game world's absolute bottom (y=0).
-// Its top surface (where the hero stands) will be at 64 + PLATFORM_GROUND_THICKNESS.
-export const PLATFORM_GROUND_Y = 64; 
+// It is measured from the bottom of the game area.
+// So, if gameArea.height is 600 and PLATFORM_GROUND_Y is 60, the platform's bottom edge will be at y=60.
+// Its top surface (where the hero stands) will be at y = 60 + PLATFORM_GROUND_THICKNESS.
+export const PLATFORM_GROUND_Y = 60; 
 export const PLATFORM_GROUND_THICKNESS = 1; // Thickness of the ground platform
 
 export const HERO_HEIGHT = 60; // Height of the hero
@@ -83,3 +84,4 @@ export type GameAction =
   | { type: 'EXIT_GAME' }
   | { type: 'UPDATE_GAME_AREA', payload: { width: number; height: number; paddingTop: number; } }
   | { type: 'GAME_TICK', payload: { gameArea: Size } };
+
