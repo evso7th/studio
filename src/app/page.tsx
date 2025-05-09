@@ -1,4 +1,3 @@
-
 // @ts-nocheck
 "use client";
 
@@ -156,7 +155,8 @@ export default function HomePage() {
           backgroundSize: 'cover',
           backgroundPosition: 'center left', 
           backgroundRepeat: 'no-repeat',
-          backgroundColor: 'hsl(var(--game-bg))', 
+          backgroundColor: 'hsl(var(--game-bg))',
+          perspective: '1000px', // Added for 3D transforms of children
         }}
         data-ai-hint="abstract pattern"
       >
