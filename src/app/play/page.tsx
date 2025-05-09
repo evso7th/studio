@@ -123,7 +123,7 @@ const GameScreen = () => {
   return (
     <div className="h-screen w-screen flex flex-col overflow-hidden bg-[hsl(var(--game-bg))] select-none">
       <header className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center z-10 pointer-events-none">
-        <h1 className="text-2xl font-bold text-white font-roboto shadow-md">IPO Mad Racing</h1>
+        <h1 className="text-2xl font-bold text-white font-roboto shadow-md">Главное окно игры</h1>
         <div className="flex flex-col items-end">
             <p className="text-lg font-bold text-white font-roboto shadow-md">Level: {gameState.currentLevel}</p>
             <p className="text-lg font-bold text-white font-roboto shadow-md">Спасибки: {gameState.score}</p>
