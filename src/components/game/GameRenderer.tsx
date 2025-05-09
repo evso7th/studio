@@ -268,7 +268,7 @@ export function CoinComponent({ coin, gameAreaHeight, paddingTop }: { coin: Coin
       <img
         src="https://neurostaffing.online/wp-content/uploads/2025/04/Спасибка1.png"
         alt="Coin"
-        className="animate-rotate-y animate-coin-glow"
+        className="animate-rotate-y" // Removed animate-coin-glow
         style={baseStyle} 
         role="img" 
         aria-label="Coin"
