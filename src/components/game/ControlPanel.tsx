@@ -28,7 +28,7 @@ export function ControlPanel({ dispatch, onExit, disabled = false }: ControlPane
     dispatch({ type });
   };
 
-  const commonButtonStyles = "p-3 h-16 w-16 rounded-full text-destructive-foreground bg-destructive/80 hover:bg-destructive active:bg-destructive/90 disabled:opacity-100 disabled:bg-transparent disabled:border disabled:border-destructive disabled:text-destructive disabled:text-opacity-70";
+  const commonButtonStyles = "p-3 h-16 w-16 rounded-full text-destructive-foreground bg-destructive shadow-md hover:bg-destructive/90 hover:shadow-lg active:bg-destructive/80 active:shadow-inner disabled:opacity-100 disabled:bg-transparent disabled:border disabled:border-destructive disabled:text-destructive disabled:text-opacity-70 disabled:shadow-none";
 
   return (
     <div
@@ -36,11 +36,9 @@ export function ControlPanel({ dispatch, onExit, disabled = false }: ControlPane
       style={{ 
         backgroundImage: 'url("https://neurostaffing.online/wp-content/uploads/2025/05/GroundFloor.png")',
         backgroundSize: 'cover', // Or 'contain', or specific dimensions
-        backgroundPosition: 'center',
+        backgroundPosition: 'center left',
         backgroundRepeat: 'no-repeat',
-        // WebkitBackdropFilter: 'blur(0px)', // Ensure no blur if it was overriding opacity
-        // backdropFilter: 'blur(0px)', // Ensure no blur
-        backgroundColor: 'hsl(var(--control-panel-bg))', // Fallback or underlying color
+        backgroundColor: 'transparent', 
        }}
        data-ai-hint="stone texture"
     >
