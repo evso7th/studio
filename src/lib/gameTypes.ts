@@ -52,7 +52,6 @@ export interface PlatformType extends GameObject {
 }
 
 export interface CoinType extends GameObject {
-  color: string; 
   collected: boolean;
   isExploding?: boolean;
   explosionProgress?: number; 
@@ -70,6 +69,11 @@ export interface EnemyType extends GameObject {
   moveAxis: 'x' | 'y';
   moveRange?: { min: number; max: number };
   collisionRadius: number;
+  isDefeated?: boolean;
+  defeatTimer?: number;
+  defeatExplosionProgress?: number;
+  isFrozen?: boolean;
+  frozenTimer?: number;
 }
 
 
@@ -97,9 +101,8 @@ export const PLATFORM_NON_GROUND_HEIGHT = 24;
 
 export const TARGET_JUMP_HEIGHT_PX = 180; 
 
-// Platform 1 is the lower moving platform, Platform 2 is the higher one.
-export const PLATFORM1_Y_OFFSET = 136; // 116 + 20 (global lift) + 0 (lower platform specific lift)
-export const PLATFORM2_Y_OFFSET = 275; // 235 + 20 (global lift) + 20 (upper platform specific lift)
+export const PLATFORM1_Y_OFFSET = 136; 
+export const PLATFORM2_Y_OFFSET = 275; 
 
 
 export const INITIAL_PLATFORM_SPEED = 0.75; 
@@ -119,9 +122,12 @@ export const HERO_BASE_SPEED = 1.25;
 
 export const ENEMY_WIDTH = 48;
 export const ENEMY_HEIGHT = 48;
-export const ENEMY_COLLISION_RADIUS = 24;
+export const ENEMY_COLLISION_RADIUS = 24; // Half of width/height
 export const ENEMY_IMAGE_SRC = "/assets/images/bearFace.png";
-export const ENEMY_DEFAULT_SPEED = 0.5; // Changed from INITIAL_PLATFORM_SPEED * 0.8
+export const ENEMY_DEFAULT_SPEED = 0.4; 
+export const ENEMY_DEFEAT_DURATION_MS = 5000; // 5 seconds
+export const ENEMY_DEFEAT_EXPLOSION_DURATION_MS = 500; // 0.5 seconds for explosion animation
+export const ENEMY_FREEZE_DURATION_MS = 5000; // 5 seconds
 
 export interface GameState {
   hero: HeroType;
@@ -141,6 +147,7 @@ export interface GameState {
   currentPairIndex: number; 
   debugMode?: boolean; 
   levelCompleteScreenActive: boolean;
+  isEnemyDefeated?: boolean; // Tracks if the dynamic enemy in level 2 has been defeated once
 }
 
 export type GameAction =
@@ -179,5 +186,3 @@ export const heroAnimationsConfig: HeroAnimations = {
     height: HERO_HEIGHT,
   },
 };
-
-
