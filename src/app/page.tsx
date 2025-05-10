@@ -135,14 +135,34 @@ export default function HomePage() {
   }, [dispatch, gameState.heroAppearance]); 
   
   const handleExit = () => {
-    router.push('/');
+    // For now, re-initialize the game which effectively restarts it.
+    // Or, navigate to a different page if a main menu or similar exists.
+    if (gameAreaRef.current) {
+        const { clientWidth, clientHeight } = gameAreaRef.current;
+        const style = window.getComputedStyle(gameAreaRef.current);
+        const paddingTop = parseFloat(style.paddingTop) || 0;
+        const effectiveWidth = clientWidth;
+        const effectiveHeight = clientHeight - paddingTop - (parseFloat(style.paddingBottom) || 0);
+        dispatch({ type: 'UPDATE_GAME_AREA', payload: { width: effectiveWidth, height: effectiveHeight, paddingTop: paddingTop } });
+    }
+    // router.push('/'); // If you have a separate landing page
   };
 
   useReactEffect(() => {
     if (gameState.gameOver) { 
-      router.push('/');
+      // Potentially show a game over screen/modal here before resetting
+      // For now, just re-initialize.
+        if (gameAreaRef.current) {
+            const { clientWidth, clientHeight } = gameAreaRef.current;
+            const style = window.getComputedStyle(gameAreaRef.current);
+            const paddingTop = parseFloat(style.paddingTop) || 0;
+            const effectiveWidth = clientWidth;
+            const effectiveHeight = clientHeight - paddingTop - (parseFloat(style.paddingBottom) || 0);
+            dispatch({ type: 'UPDATE_GAME_AREA', payload: { width: effectiveWidth, height: effectiveHeight, paddingTop: paddingTop } });
+        }
+      // router.push('/'); // If you have a separate landing/game over page
     }
-  }, [gameState.gameOver, router]);
+  }, [gameState.gameOver, dispatch]); // Added dispatch to dependency array
 
   return (
     <div 
@@ -150,7 +170,7 @@ export default function HomePage() {
       style={{ 
         backgroundColor: 'hsl(var(--background))', 
       }}
-      aria-label="Главное окно игры"
+      aria-label="IPO Mad Racing Game Screen"
     >
       <header className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center z-10 pointer-events-none">
         <h1 className="text-xs font-normal text-white font-roboto shadow-md">IPO Mad Racing</h1>
@@ -166,7 +186,7 @@ export default function HomePage() {
         style={{
           backgroundImage: 'url("https://neurostaffing.online/wp-content/uploads/2025/05/BackGroundBase.png")',
           backgroundSize: 'cover',
-          backgroundPosition: `${parallaxBgX}px center`, 
+          backgroundPosition: `${parallaxBgX + 100}px center`, 
           backgroundRepeat: 'no-repeat',
           backgroundColor: 'hsl(var(--game-bg))',
           perspective: '1000px', 
