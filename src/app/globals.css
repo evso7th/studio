@@ -9,16 +9,16 @@
     touch-action: none; /* Disable browser handling of touch actions like pinch-zoom */
   }
   :root {
-    --background: 220 30% 10%; /* Darker Blue-Gray */
+    --background: 190 35% 12%; /* Dark Teal-ish Blue */
     --foreground: 210 40% 95%; /* Light Gray/Off-White */
 
-    --muted: 220 30% 20%;
+    --muted: 190 30% 18%; /* Darker Teal for muted */
     --muted-foreground: 210 30% 65%;
 
-    --popover: 220 30% 7%;
+    --popover: 190 30% 9%; /* Very Dark Teal for popover */
     --popover-foreground: 210 40% 95%;
 
-    --card: 220 30% 12%;
+    --card: 190 30% 15%; /* Dark Teal for card */
     --card-foreground: 210 40% 95%;
 
     --border: 220 30% 25%;
@@ -45,10 +45,10 @@
     --coin-color: 50 100% 60%; /* Yellow */
     --hero-color: 340 80% 60%; /* Magenta/Pink for Hero */
 
-    --control-panel-bg: 220 30% 8%; /* Very dark blue for control panel */
+    --control-panel-bg: 190 25% 10%; /* Dark Teal for control panel */
 
      /* Sidebar variables (keeping them for shadcn compatibility, may not be used directly by game) */
-    --sidebar-background: 220 30% 12%;
+    --sidebar-background: 190 30% 15%;
     --sidebar-foreground: 210 40% 90%;
     --sidebar-primary: 200 85% 55%;
     --sidebar-primary-foreground: 0 0% 98%;
@@ -60,13 +60,13 @@
 
   .dark {
     /* Keeping dark variables same as root for now, as we are designing a dark-first game UI */
-    --background: 220 30% 10%;
+    --background: 190 35% 12%;
     --foreground: 210 40% 95%;
-    --muted: 220 30% 20%;
+    --muted: 190 30% 18%;
     --muted-foreground: 210 30% 65%;
-    --popover: 220 30% 7%;
+    --popover: 190 30% 9%;
     --popover-foreground: 210 40% 95%;
-    --card: 220 30% 12%;
+    --card: 190 30% 15%;
     --card-foreground: 210 40% 95%;
     --border: 220 30% 25%;
     --input: 220 30% 22%;
@@ -84,9 +84,9 @@
     --platform-color: 145 60% 45%;
     --coin-color: 50 100% 60%;
     --hero-color: 340 80% 60%;
-    --control-panel-bg: 220 30% 8%;
+    --control-panel-bg: 190 25% 10%;
 
-    --sidebar-background: 220 30% 12%;
+    --sidebar-background: 190 30% 15%;
     --sidebar-foreground: 210 40% 90%;
     --sidebar-primary: 200 85% 55%;
     --sidebar-primary-foreground: 0 0% 98%;
