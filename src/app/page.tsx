@@ -131,7 +131,7 @@ export default function EntryPage() {
         ))}
       </div>
 
-      <div className="text-center space-y-6 w-full h-full flex flex-col items-center justify-center relative z-10 p-0 shadow-xl pt-5">
+      <div className="text-center space-y-6 w-full h-full flex flex-col items-center justify-center relative z-10 p-0 shadow-xl pt-2"> {/* Changed pt-5 to pt-2 */}
         <div className="max-w-2xl w-full pt-1 px-6 pb-6"> 
           <h1 className="text-[42px] font-bold text-primary pt-1 whitespace-nowrap pr-1 mr-1 ml-[-5px]">IPO Mad Racing</h1>
           <p className="text-xl md:text-2xl text-foreground/90 mt-[-10px]">
