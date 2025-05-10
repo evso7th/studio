@@ -105,6 +105,7 @@
   }
   html, body, #__next {
     height: 100%;
+    @apply overflow-hidden; /* Ensure #__next also has overflow-hidden for good measure */
   }
 }
 
