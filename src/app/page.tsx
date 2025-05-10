@@ -24,6 +24,14 @@ export default function HomePage() {
   const initialHeroXRef = useRef<number | null>(null);
   const PARALLAX_FACTOR = 0.2; 
 
+  // TEMPORARY: For debugging - start with level complete screen active
+  useReactEffect(() => {
+    if (dispatch) { // Ensure dispatch is available
+      dispatch({ type: 'SET_DEBUG_LEVEL_COMPLETE', payload: true });
+    }
+  }, [dispatch]);
+
+
   const updateGameAreaSize = useCallback(() => {
     if (gameAreaRef.current) {
       const { clientWidth, clientHeight } = gameAreaRef.current;
@@ -223,4 +231,3 @@ export default function HomePage() {
     </div>
   );
 }
-

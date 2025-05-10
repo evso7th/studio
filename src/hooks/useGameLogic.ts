@@ -4,7 +4,7 @@
 
 import type { Reducer} from 'react';
 import { useReducer, useCallback, useEffect, useRef } from 'react'; 
-import type { GameState, GameAction, HeroType, PlatformType, CoinType, Size, Position, HeroAnimations } from '@/lib/gameTypes'; 
+import type { GameState, GameAction, HeroType, PlatformType, CoinType, Size } from '@/lib/gameTypes'; 
 import { 
     HERO_APPEARANCE_DURATION_MS, 
     PLATFORM_GROUND_Y_FROM_BOTTOM, 
@@ -17,8 +17,8 @@ import {
     TARGET_JUMP_HEIGHT_PX,
     PLATFORM1_Y_OFFSET,
     PLATFORM2_Y_OFFSET,
+    INITIAL_PLATFORM_SPEED,
     INITIAL_PLATFORM1_X_PERCENT,
-    INITIAL_PLATFORM_SPEED, 
     INITIAL_PLATFORM2_X_PERCENT,
     COIN_EXPLOSION_DURATION_MS,
     TOTAL_COINS_PER_LEVEL,
@@ -70,19 +70,21 @@ const getLevelPlatforms = (gameAreaWidth: number, gameAreaHeight: number, level:
     },
     {
       id: 'platform1', 
-      x: gameAreaWidth * INITIAL_PLATFORM1_X_PERCENT - PLATFORM_DEFAULT_WIDTH, // Start from right edge
+      x: gameAreaWidth * INITIAL_PLATFORM1_X_PERCENT - PLATFORM_DEFAULT_WIDTH, 
       y: groundPlatformY + PLATFORM_GROUND_THICKNESS + PLATFORM1_Y_OFFSET, 
       width: PLATFORM_DEFAULT_WIDTH, height: PLATFORM_NON_GROUND_HEIGHT, 
-      isMoving: true, speed: INITIAL_PLATFORM_SPEED, direction: 1, moveAxis: 'x',
+      isMoving: true, speed: INITIAL_PLATFORM_SPEED, direction: -1, // Start moving left from right edge
+      moveAxis: 'x',
       moveRange: { min: 0, max: gameAreaWidth - PLATFORM_DEFAULT_WIDTH },
       imageSrc: "https://neurostaffing.online/wp-content/uploads/2025/05/PlatformGrassShort.png",
     },
     {
       id: 'platform2', 
-      x: gameAreaWidth * INITIAL_PLATFORM2_X_PERCENT, // Start from left edge
+      x: gameAreaWidth * INITIAL_PLATFORM2_X_PERCENT, 
       y: groundPlatformY + PLATFORM_GROUND_THICKNESS + PLATFORM2_Y_OFFSET, 
       width: PLATFORM_DEFAULT_WIDTH, height: PLATFORM_NON_GROUND_HEIGHT,
-      isMoving: true, speed: INITIAL_PLATFORM_SPEED, direction: -1, moveAxis: 'x',
+      isMoving: true, speed: INITIAL_PLATFORM_SPEED, direction: 1, // Start moving right from left edge
+      moveAxis: 'x',
       moveRange: { min: 0, max: gameAreaWidth - PLATFORM_DEFAULT_WIDTH },
       imageSrc: "https://neurostaffing.online/wp-content/uploads/2025/05/PlatformGrassShort.png",
     },
@@ -224,7 +226,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
     }
      case 'RESTART_LEVEL': {
       const { width, height } = state.gameArea;
-      const newState = getDefaultInitialGameState(width, height, state.currentLevel); // Restart current level
+      const newState = getDefaultInitialGameState(width, height, state.currentLevel); 
       return {
         ...newState,
         isGameInitialized: true,
@@ -239,6 +241,12 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         ...newState,
         isGameInitialized: true,
         paddingTop: state.paddingTop,
+      };
+    }
+    case 'SET_DEBUG_LEVEL_COMPLETE': {
+      return {
+        ...state,
+        levelCompleteScreenActive: action.payload,
       };
     }
     case 'GAME_TICK': {
@@ -516,4 +524,3 @@ export function useGameLogic() {
 
   return { gameState, dispatch: handleGameAction, gameTick };
 }
-

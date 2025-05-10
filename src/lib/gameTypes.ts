@@ -28,7 +28,7 @@ export interface HeroSpriteInfo {
 export interface HeroAnimations {
   idle: HeroSpriteInfo;
   run: HeroSpriteInfo;
-  jump: HeroSpriteInfo; // Single frame for jump/fall often suffices or can be expanded
+  jump: HeroSpriteInfo; 
 }
 
 export interface HeroType extends GameObject {
@@ -48,7 +48,7 @@ export interface PlatformType extends GameObject {
   direction: 1 | -1; 
   moveAxis: 'x' | 'y';
   moveRange?: { min: number; max: number };
-  imageSrc?: string; // Optional image for platform
+  imageSrc?: string;
 }
 
 export interface CoinType extends GameObject {
@@ -88,11 +88,11 @@ export const PLATFORM_NON_GROUND_HEIGHT = 24;
 export const TARGET_JUMP_HEIGHT_PX = 180; 
 
 // Platform 1 is the lower moving platform, Platform 2 is the higher one.
-export const PLATFORM1_Y_OFFSET = 88; // Was 80, increased by 8
-export const PLATFORM2_Y_OFFSET = 220; 
+export const PLATFORM1_Y_OFFSET = 68; 
+export const PLATFORM2_Y_OFFSET = 175; 
 
-export const INITIAL_PLATFORM1_X_PERCENT = 1.0; 
 export const INITIAL_PLATFORM_SPEED = 0.75; 
+export const INITIAL_PLATFORM1_X_PERCENT = 1.0; 
 export const INITIAL_PLATFORM2_X_PERCENT = 0.0;
 
 
@@ -112,8 +112,8 @@ export interface GameState {
   activeCoins: CoinType[]; 
   score: number;
   currentLevel: number;
-  gameOver: boolean; // True when level is completed
-  gameLost: boolean; // True when hero falls off screen
+  gameOver: boolean; 
+  gameLost: boolean; 
   gameArea: Size;
   isGameInitialized: boolean; 
   paddingTop: number; 
@@ -131,15 +131,16 @@ export type GameAction =
   | { type: 'MOVE_RIGHT_START' }
   | { type: 'MOVE_RIGHT_STOP' }
   | { type: 'JUMP' }
-  | { type: 'EXIT_GAME' } // For handling exit/reset from control panel
-  | { type: 'RESTART_LEVEL' } // Specifically for restarting the current level
-  | { type: 'NEXT_LEVEL' } // For advancing to the next level from complete screen
+  | { type: 'EXIT_GAME' } 
+  | { type: 'RESTART_LEVEL' } 
+  | { type: 'NEXT_LEVEL' } 
   | { type: 'UPDATE_GAME_AREA', payload: { width: number; height: number; paddingTop: number; } }
-  | { type: 'GAME_TICK', payload: { deltaTime: number } };
+  | { type: 'GAME_TICK', payload: { deltaTime: number } }
+  | { type: 'SET_DEBUG_LEVEL_COMPLETE', payload: boolean }; // New action for debugging
 
 export const heroAnimationsConfig: HeroAnimations = {
   idle: {
-    src: "https://neurostaffing.online/wp-content/uploads/2025/05/HeroJeans3.png", // Assuming this is a single frame for idle
+    src: "https://neurostaffing.online/wp-content/uploads/2025/05/HeroJeans3.png", 
     frames: 1,
     fps: 1,
     width: HERO_WIDTH, 
@@ -160,5 +161,3 @@ export const heroAnimationsConfig: HeroAnimations = {
     height: HERO_HEIGHT,
   },
 };
-
-
