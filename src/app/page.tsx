@@ -131,18 +131,18 @@ export default function EntryPage() {
         ))}
       </div>
 
-      <div className="text-center space-y-6 w-full h-full flex flex-col items-center justify-center relative z-10 p-0 shadow-xl">
+      <div className="text-center space-y-6 w-full h-full flex flex-col items-center justify-center relative z-10 p-0 shadow-xl pt-5">
         <div className="max-w-2xl w-full pt-1 px-6 pb-6"> 
-          <h1 className="text-[32px] font-bold text-primary pt-6 whitespace-nowrap pr-1 mr-1">IPO Mad Racing</h1>
-          <p className="text-xl md:text-2xl text-foreground/90 mt-2">
+          <h1 className="text-[42px] font-bold text-primary pt-1 whitespace-nowrap pr-1 mr-1 ml-[-5px]">IPO Mad Racing</h1>
+          <p className="text-xl md:text-2xl text-foreground/90 mt-[-10px]">
             Специальное издание <br />
             в честь Дня Рождения
           </p>
-          <p className="text-2xl md:text-3xl font-semibold text-accent mt-2">
+          <p className="text-2xl md:text-3xl font-semibold text-accent mt-[-10px]">
             Руслана Гайнанова
           </p>
 
-          <div className="relative w-full max-w-md mx-auto aspect-[4/3] mt-2 mb-0">
+          <div className="relative w-full max-w-md mx-auto aspect-[4/3] mt-[-10px] mb-0">
             <Image
               src="/assets/images/RelaxMan.png"
               alt="Relaxing Man"
@@ -157,16 +157,16 @@ export default function EntryPage() {
             onClick={() => router.push('/play')}
             variant="destructive"
             size="lg"
-            className="w-full max-w-xs text-xl py-4 rounded-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 mt-2 mb-3" // Reduced mb-5 to mb-3
+            className="w-full max-w-xs text-xl py-4 rounded-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 mt-2 mb-3" 
           >
             Начать игру
           </Button>
 
-          <div className="mt-0 mb-3">  {/* Reduced mt-2 to mt-0 and mb-5 to mb-3 */}
+          <div className="mt-0 mb-3 pt-12">  
              <CreditsDialog />
           </div>
           
-          <p className="text-md md:text-lg text-muted-foreground pt-3 pb-6 mt-0"> {/* Changed pt-6 to pt-3 */}
+          <p className="text-md md:text-lg text-muted-foreground pt-3 pb-6 mt-[-2px]"> 
             Собери все монетки и выйди на IPO!
             <br />
             Опасайся медведей!
