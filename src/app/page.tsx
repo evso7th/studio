@@ -89,7 +89,7 @@ export default function EntryPage() {
   }
 
   return (
-    <div className="min-h-screen w-screen flex flex-col items-center justify-center text-foreground p-4 overflow-hidden relative">
+    <div className="min-h-screen w-screen flex flex-col items-center justify-center text-foreground overflow-hidden relative">
       {/* Fullscreen Background Image */}
       <Image
         src="/assets/images/Wallpaper2.jpg" 
