@@ -126,34 +126,48 @@
   }
   .animate-rotate-y {
     animation: rotate-y 1.8s linear infinite; 
-    transform-style: preserve-3d; /* Added for 3D effect */
+    transform-style: preserve-3d; 
   }
 
-  /* Fireworks animation for LevelCompleteScreen and EntryPage background */
   .firework-particle {
     position: absolute;
-    border-radius: 50%;
+    /* Uses background-color from inline style */
+    /* Initial width & height are set by --particle-initial-size, then animated */
+    width: var(--particle-initial-size);
+    height: var(--particle-initial-size);
+    border-radius: 50%; /* Start as a circle */
     animation-name: firework-explode;
     animation-timing-function: ease-out;
     animation-fill-mode: forwards;
-    will-change: transform, opacity; /* Optimization hint */
+    will-change: transform, opacity, width, height, border-radius; /* Properties animated */
+    transform-origin: center center; /* Rotate around its center */
   }
 
   @keyframes firework-explode {
     0% {
-      transform: scale(0.3) translate(0, 0); /* Start smaller at origin */
+      /* Start small, circular, and rotated to its future path */
+      transform: scale(0.3) translate(0,0) rotate(var(--trail-angle, 0deg));
+      width: var(--particle-initial-size);
+      height: var(--particle-initial-size);
       opacity: 1;
+      border-radius: 50%;
+    }
+    50% {
+      /* Mid-flight: stretch into a trail, move partway */
+      transform: scale(0.8) translate(calc(var(--tx) * 0.5), calc(var(--ty) * 0.5)) rotate(var(--trail-angle, 0deg));
+      /* Height becomes length, width becomes thickness, relative to initial size */
+      width: calc(var(--particle-initial-size) * 0.3); /* Thinner streak */
+      height: calc(var(--particle-initial-size) * 2.0); /* Longer streak */
+      opacity: 0.9;
+      border-radius: calc(var(--particle-initial-size) * 0.15); /* Rounded ends for the streak */
     }
     100% {
-      transform: scale(1.2) translate(var(--tx), var(--ty)); /* Explode outwards using CSS variables */
+      /* End of life: small, circular, faded, at destination */
+      transform: scale(1.2) translate(var(--tx), var(--ty)) rotate(var(--trail-angle, 0deg));
+      width: calc(var(--particle-initial-size) * 0.1);
+      height: calc(var(--particle-initial-size) * 0.1);
       opacity: 0;
+      border-radius: 50%;
     }
   }
-  
-  /* Example usage of CSS variables for varied particle paths - needs to be set inline for each particle */
-  /*
-  .particle-1 { --tx: -50px; --ty: -120px; }
-  .particle-2 { --tx: 50px; --ty: -80px; }
-  */
-
 }

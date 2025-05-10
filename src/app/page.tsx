@@ -18,6 +18,7 @@ interface FireworkParticle {
   color: string;
   delay: number;
   duration: number;
+  trailAngle: number; // For trail effect
 }
 
 const FIREWORK_COLORS = [
@@ -56,22 +57,27 @@ export default function EntryPage() {
 
         for (let j = 0; j < PARTICLES_PER_BACKGROUND_FIREWORK; j++) {
           const angle = Math.random() * Math.PI * 2;
-          // Make explosion radius vary for more dynamic look
-          const radius = Math.random() * 25 + 15; // Explosion radius in viewport % (e.g., 15% to 40% of viewport smaller dimension)
+          const radius = Math.random() * 25 + 15; 
           
-          const targetOffsetX = Math.cos(angle) * radius;
-          const targetOffsetY = Math.sin(angle) * radius;
+          const targetOffsetXNum = Math.cos(angle) * radius;
+          const targetOffsetYNum = Math.sin(angle) * radius;
+
+          // Calculate trail angle: angle of motion vector (targetOffsetX, targetOffsetY)
+          //旋转精灵使其Y轴（高度）与运动方向对齐
+          const particleTrailAngleDeg = (Math.atan2(targetOffsetYNum, targetOffsetXNum) * (180 / Math.PI)) - 90;
+
 
           newFireworks.push({
             id: Date.now() + i * PARTICLES_PER_BACKGROUND_FIREWORK + j + Math.random(),
             originX: `${originXNum}%`,
             originY: `${originYNum}%`,
-            targetOffsetX: `${targetOffsetX}vmin`, // Use vmin for radius relative to smaller viewport dimension
-            targetOffsetY: `${targetOffsetY}vmin`,
-            size: 2 + Math.random() * 2.5, // Particle size
+            targetOffsetX: `${targetOffsetXNum}vmin`, 
+            targetOffsetY: `${targetOffsetYNum}vmin`,
+            size: (2 + Math.random() * 2.5) * 2, // Particle size DOUBLED
             color: FIREWORK_COLORS[Math.floor(Math.random() * FIREWORK_COLORS.length)],
-            delay: Math.random() * (FIREWORK_REGENERATION_INTERVAL / 1000 / 2), // Delay spread over half the interval
-            duration: 1.5 + Math.random() * 1, // Duration of particle animation
+            delay: Math.random() * (FIREWORK_REGENERATION_INTERVAL / 1000 / 2), 
+            duration: 1.5 + Math.random() * 1, 
+            trailAngle: particleTrailAngleDeg,
           });
         }
       }
@@ -85,46 +91,44 @@ export default function EntryPage() {
   }, [isMounted]);
 
   if (!isMounted) {
-    return null; // Or a loading spinner
+    return null; 
   }
 
   return (
     <div className="min-h-screen w-screen flex flex-col items-center justify-center text-foreground overflow-hidden relative p-0 m-0">
-      {/* Fullscreen Background Image */}
       <Image
         src="/assets/images/Wallpaper2.jpg" 
         alt="Background Wallpaper"
         fill
-        style={{ objectFit: 'cover', zIndex: -10, objectPosition: 'center center' }} // Ensure it's behind everything
+        style={{ objectFit: 'cover', zIndex: -10, objectPosition: 'center center' }} 
         priority
         data-ai-hint="starry sky space"
       />
       
-      {/* Fireworks Container (z-0 by default as it's later in DOM, or explicitly z-0/positive if needed) */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
         {backgroundFireworks.map((particle) => (
           <div
             key={particle.id}
-            className="firework-particle" // Use existing class from globals.css
+            className="firework-particle" 
             style={{
               left: particle.originX,
               top: particle.originY,
-              width: `${particle.size}px`,
-              height: `${particle.size}px`,
+              width: `${particle.size}px`, // Initial width, referenced by CSS var
+              height: `${particle.size}px`, // Initial height, referenced by CSS var
               backgroundColor: particle.color,
-              // CSS variables for the 'firework-explode' animation
               '--tx': particle.targetOffsetX,
               '--ty': particle.targetOffsetY,
               animationDelay: `${particle.delay}s`,
               animationDuration: `${particle.duration}s`,
-            } as React.CSSProperties} // Type assertion for CSS variables
+              '--particle-initial-size': `${particle.size}px`, // Pass initial size
+              '--trail-angle': `${particle.trailAngle}deg`,     // Pass trail angle
+            } as React.CSSProperties} 
           />
         ))}
       </div>
 
-      {/* Main Content (needs to be above fireworks) */}
       <div className="text-center space-y-6 w-full h-full flex flex-col items-center justify-center relative z-10 bg-background/70 p-0 shadow-xl">
-        <div className="max-w-2xl w-full p-6"> {/* Added inner container for content max-width and padding */}
+        <div className="max-w-2xl w-full p-6"> 
           <h1 className="text-5xl md:text-7xl font-bold text-primary pt-6">IPO Mad Racing</h1>
           <p className="text-xl md:text-2xl text-foreground/90">
             Специальное издание <br />
@@ -166,4 +170,3 @@ export default function EntryPage() {
     </div>
   );
 }
-
