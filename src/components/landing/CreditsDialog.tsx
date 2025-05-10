@@ -27,7 +27,7 @@ export function CreditsDialog() {
           <AlertDialogDescription>
             <ul className="list-disc space-y-2 pl-5 text-left mt-4">
               <li>
-                <strong>Идея подарить игру:</strong> Наталья Пугачова
+                <strong>Идея подарить игру:</strong> Наталья Пугачева
               </li>
               <li>
                 <strong>GameDev:</strong> Евгений Сомов
@@ -45,3 +45,4 @@ export function CreditsDialog() {
     </AlertDialog>
   );
 }
+
