@@ -126,9 +126,10 @@
   }
   .animate-rotate-y {
     animation: rotate-y 1.8s linear infinite; 
+    transform-style: preserve-3d; /* Added for 3D effect */
   }
 
-  /* Fireworks animation for LevelCompleteScreen */
+  /* Fireworks animation for LevelCompleteScreen and EntryPage background */
   .firework-particle {
     position: absolute;
     border-radius: 50%;
@@ -140,14 +141,11 @@
 
   @keyframes firework-explode {
     0% {
-      transform: scale(0.5) translate(0, 20px); /* Start slightly bigger and lower */
-      opacity: 1;
-    }
-    50% {
+      transform: scale(0.3) translate(0, 0); /* Start smaller at origin */
       opacity: 1;
     }
     100% {
-      transform: scale(1) translate(var(--tx, 0), var(--ty, -100px)); /* Use CSS vars for varied paths */
+      transform: scale(1.2) translate(var(--tx), var(--ty)); /* Explode outwards using CSS variables */
       opacity: 0;
     }
   }
@@ -159,4 +157,3 @@
   */
 
 }
-
