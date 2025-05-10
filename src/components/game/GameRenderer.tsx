@@ -1,6 +1,6 @@
 
 "use client";
-import type { HeroType, PlatformType, CoinType } from "@/lib/gameTypes";
+import type { HeroType, PlatformType, CoinType, EnemyType } from "@/lib/gameTypes";
 // import { COIN_SPAWN_EXPLOSION_DURATION_MS } from "@/lib/gameTypes"; // Not directly used, COIN_EXPLOSION_DURATION_MS is used
 import type React from 'react'; 
 
@@ -22,10 +22,11 @@ interface GameObjectStylePropsBase {
   appearanceProps?: AppearanceProps;
   shape?: 'rect' | 'circle';
   isHero?: boolean; 
-  isPlatform?: boolean; // Added to identify platforms specifically
+  isPlatform?: boolean; 
+  isEnemy?: boolean;
 }
 
-function getGameObjectStyle({ x, y, width, height, gameAreaHeight, paddingTop, color, heroAction, heroFacingDirection, appearanceProps, shape = 'rect', isHero = false, isPlatform = false }: GameObjectStylePropsBase): React.CSSProperties {
+function getGameObjectStyle({ x, y, width, height, gameAreaHeight, paddingTop, color, heroAction, heroFacingDirection, appearanceProps, shape = 'rect', isHero = false, isPlatform = false, isEnemy = false }: GameObjectStylePropsBase): React.CSSProperties {
   const topInEffectiveArea = gameAreaHeight - y - height;
   const finalCssTop = paddingTop + topInEffectiveArea;
   
@@ -38,7 +39,7 @@ function getGameObjectStyle({ x, y, width, height, gameAreaHeight, paddingTop, c
     objectFit: 'fill', 
   };
 
-  if (color) { 
+  if (color && !isEnemy) { // Enemies use image, no background color needed
     dynamicStyles.backgroundColor = color;
   }
   
@@ -62,8 +63,8 @@ function getGameObjectStyle({ x, y, width, height, gameAreaHeight, paddingTop, c
   } else {
     if (shape === 'circle') {
       dynamicStyles.borderRadius = '50%';
-      dynamicStyles.boxShadow = '0 0 0 2px hsl(var(--coin-color) / 0.7)'; // Darker border for coins to simulate thickness
-    } else {
+      dynamicStyles.boxShadow = '0 0 0 2px hsl(var(--coin-color) / 0.7)'; 
+    } else if (!isEnemy) { // Enemies don't need border radius unless specified for their image
       dynamicStyles.borderRadius = '2px'; 
     }
 
@@ -126,10 +127,10 @@ export function HeroComponent({ hero, gameAreaHeight, paddingTop, heroAppearance
   let heroImageHint = "character fantasy";
 
   if (hero.action === 'run_left' || hero.action === 'run_right') {
-    currentHeroImageSrc = heroRunSrc; // This would be a sprite sheet
+    currentHeroImageSrc = heroRunSrc; 
     heroImageHint = "character running";
   } else if (hero.action === 'jump_up' || hero.action === 'fall_down') {
-    currentHeroImageSrc = heroJumpSrc; // This would be a sprite sheet
+    currentHeroImageSrc = heroJumpSrc; 
     heroImageHint = "character jumping";
   }
 
@@ -170,7 +171,7 @@ export function PlatformComponent({ platform, gameAreaHeight, paddingTop }: { pl
     ...baseStyle,
     backgroundImage: platform.id === 'platform_ground' 
       ? 'url("https://neurostaffing.online/wp-content/uploads/2025/05/GroundFloor.png")' 
-      : 'url("/assets/images/PlatformGrass.png")', 
+      : `url(${platform.imageSrc || "/assets/images/PlatformGrass.png"})`, 
     backgroundSize: platform.id === 'platform_ground' ? 'auto 100%' : '100% 100%', 
     backgroundPosition: platform.id === 'platform_ground' ? 'left bottom' : 'center', 
     backgroundRepeat: platform.id === 'platform_ground' ? 'repeat-x' : 'no-repeat', 
@@ -200,7 +201,6 @@ export function CoinComponent({ coin, gameAreaHeight, paddingTop }: { coin: Coin
     shape: 'circle' 
   });
 
-  // SPAWN EXPLOSION
   if (coin.isSpawning && coin.spawnExplosionProgress != null && coin.spawnExplosionProgress < 1) {
     const particles = [];
     for (let i = 0; i < NUM_PARTICLES; i++) {
@@ -236,7 +236,6 @@ export function CoinComponent({ coin, gameAreaHeight, paddingTop }: { coin: Coin
     );
   }
   
-  // COLLECTION EXPLOSION
   if (coin.isExploding && coin.collected && coin.explosionProgress != null && coin.explosionProgress < 1) {
     const particles = [];
     for (let i = 0; i < NUM_PARTICLES; i++) {
@@ -272,7 +271,6 @@ export function CoinComponent({ coin, gameAreaHeight, paddingTop }: { coin: Coin
     );
   }
   
-  // RENDER COIN IMAGE (only if not collected and fully spawned)
   if (!coin.collected && !coin.isSpawning) { 
     return (
       <img
@@ -281,10 +279,8 @@ export function CoinComponent({ coin, gameAreaHeight, paddingTop }: { coin: Coin
         className="animate-rotate-y" 
         style={{
           ...baseStyle,
-          // Simulating 3D effect with drop shadow and slight perspective
-          transformStyle: 'preserve-3d', // Important for 3D effects on children if any
-          // transform: `rotateY(${coin.rotationY || 0}deg) translateZ(1px)`, // Example rotation
-          boxShadow: '2px 2px 3px rgba(0,0,0,0.2), inset 0 0 2px rgba(255,255,255,0.3)', // Inset shadow for top highlight
+          transformStyle: 'preserve-3d', 
+          boxShadow: '2px 2px 3px rgba(0,0,0,0.2), inset 0 0 2px rgba(255,255,255,0.3)', 
         }}
         role="img" 
         aria-label="Coin"
@@ -296,4 +292,29 @@ export function CoinComponent({ coin, gameAreaHeight, paddingTop }: { coin: Coin
   return null; 
 }
 
+interface EnemyComponentProps extends GameObjectComponentProps {
+  enemy: EnemyType;
+}
+
+export function EnemyComponent({ enemy, gameAreaHeight, paddingTop }: EnemyComponentProps) {
+  if (!gameAreaHeight && gameAreaHeight !== 0) return null;
+
+  const enemyStyle = getGameObjectStyle({
+    ...enemy,
+    gameAreaHeight,
+    paddingTop,
+    isEnemy: true,
+  });
+
+  return (
+    <img
+      src={enemy.imageSrc}
+      alt="Enemy"
+      style={enemyStyle}
+      role="img"
+      aria-label="Enemy"
+      data-ai-hint="bear face" // Or a more generic hint if multiple enemy types
+    />
+  );
+}
 

@@ -7,7 +7,7 @@ import { useRef, useCallback, useEffect as useReactEffect, useState } from 'reac
 import { useRouter } from 'next/navigation';
 import { useGameLogic } from '@/hooks/useGameLogic';
 import { ControlPanel } from '@/components/game/ControlPanel';
-import { HeroComponent, PlatformComponent, CoinComponent } from '@/components/game/GameRenderer';
+import { HeroComponent, PlatformComponent, CoinComponent, EnemyComponent } from '@/components/game/GameRenderer';
 import { LevelCompleteScreen } from '@/components/game/LevelCompleteScreen';
 import type { GameState } from '@/lib/gameTypes'; 
 import { HERO_APPEARANCE_DURATION_MS } from '@/lib/gameTypes';
@@ -25,11 +25,11 @@ export default function HomePage() {
   const PARALLAX_FACTOR = 0.2; 
 
   // TEMPORARY: For debugging - start with level complete screen active
-  // useReactEffect(() => {
-  //   if (dispatch) { // Ensure dispatch is available
-  //     dispatch({ type: 'SET_DEBUG_LEVEL_COMPLETE', payload: true });
-  //   }
-  // }, [dispatch]);
+  useReactEffect(() => {
+    if (dispatch) { 
+      dispatch({ type: 'SET_DEBUG_LEVEL_COMPLETE', payload: true });
+    }
+  }, [dispatch]);
 
 
   const updateGameAreaSize = useCallback(() => {
@@ -219,6 +219,9 @@ export default function HomePage() {
             {gameState.activeCoins.map(coin => (
               <CoinComponent key={coin.id} coin={coin} gameAreaHeight={gameState.gameArea.height} paddingTop={gameState.paddingTop} />
             ))}
+            {gameState.enemies.map(enemy => (
+              <EnemyComponent key={enemy.id} enemy={enemy} gameAreaHeight={gameState.gameArea.height} paddingTop={gameState.paddingTop} />
+            ))}
           </>
         )}
       </div>
@@ -231,4 +234,3 @@ export default function HomePage() {
     </div>
   );
 }
-

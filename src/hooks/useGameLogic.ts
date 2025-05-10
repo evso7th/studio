@@ -4,7 +4,7 @@
 
 import type { Reducer} from 'react';
 import { useReducer, useCallback, useEffect, useRef } from 'react'; 
-import type { GameState, GameAction, HeroType, PlatformType, CoinType, Size } from '@/lib/gameTypes'; 
+import type { GameState, GameAction, HeroType, PlatformType, CoinType, Size, EnemyType } from '@/lib/gameTypes'; 
 import { 
     HERO_APPEARANCE_DURATION_MS, 
     PLATFORM_GROUND_Y_FROM_BOTTOM, 
@@ -29,6 +29,11 @@ import {
     COIN_SPAWN_DELAY_MS,
     HERO_BASE_SPEED,
     heroAnimationsConfig,
+    ENEMY_WIDTH,
+    ENEMY_HEIGHT,
+    ENEMY_COLLISION_RADIUS,
+    ENEMY_IMAGE_SRC,
+    ENEMY_DEFAULT_SPEED,
 } from '@/lib/gameTypes'; 
 
 const GRAVITY_ACCELERATION = 0.4; 
@@ -73,21 +78,51 @@ const getLevelPlatforms = (gameAreaWidth: number, gameAreaHeight: number, level:
       x: gameAreaWidth * INITIAL_PLATFORM1_X_PERCENT - PLATFORM_DEFAULT_WIDTH, 
       y: groundPlatformY + PLATFORM_GROUND_THICKNESS + PLATFORM1_Y_OFFSET, 
       width: PLATFORM_DEFAULT_WIDTH, height: PLATFORM_NON_GROUND_HEIGHT, 
-      isMoving: true, speed: INITIAL_PLATFORM_SPEED, direction: -1, // Start moving left from right edge
+      isMoving: true, speed: INITIAL_PLATFORM_SPEED, direction: -1, 
       moveAxis: 'x',
       moveRange: { min: 0, max: gameAreaWidth - PLATFORM_DEFAULT_WIDTH },
-      imageSrc: "https://neurostaffing.online/wp-content/uploads/2025/05/PlatformGrassShort.png",
+      imageSrc: "/assets/images/PlatformGrass.png",
     },
     {
       id: 'platform2', 
       x: gameAreaWidth * INITIAL_PLATFORM2_X_PERCENT, 
       y: groundPlatformY + PLATFORM_GROUND_THICKNESS + PLATFORM2_Y_OFFSET, 
       width: PLATFORM_DEFAULT_WIDTH, height: PLATFORM_NON_GROUND_HEIGHT,
-      isMoving: true, speed: INITIAL_PLATFORM_SPEED, direction: 1, // Start moving right from left edge
+      isMoving: true, speed: INITIAL_PLATFORM_SPEED, direction: 1, 
       moveAxis: 'x',
       moveRange: { min: 0, max: gameAreaWidth - PLATFORM_DEFAULT_WIDTH },
-      imageSrc: "https://neurostaffing.online/wp-content/uploads/2025/05/PlatformGrassShort.png",
+      imageSrc: "/assets/images/PlatformGrass.png",
     },
+  ];
+};
+
+const getLevelEnemies = (gameAreaWidth: number, gameAreaHeight: number, level: number, platforms: PlatformType[]): EnemyType[] => {
+  if (level !== 2) return [];
+
+  const platform1 = platforms.find(p => p.id === 'platform1');
+  const platform2 = platforms.find(p => p.id === 'platform2');
+
+  if (!platform1 || !platform2) return [];
+
+  const lowerPlatformTop = platform1.y + platform1.height;
+  const upperPlatformBottom = platform2.y;
+  const midPointY = lowerPlatformTop + (upperPlatformBottom - lowerPlatformTop) / 2;
+  const enemyY = midPointY - ENEMY_HEIGHT / 2;
+
+  return [
+    {
+      id: 'enemy1_level2',
+      x: gameAreaWidth / 3, // Start somewhere in the middle
+      y: enemyY,
+      width: ENEMY_WIDTH,
+      height: ENEMY_HEIGHT,
+      imageSrc: ENEMY_IMAGE_SRC,
+      speed: ENEMY_DEFAULT_SPEED,
+      direction: 1,
+      moveAxis: 'x',
+      moveRange: { min: 0, max: gameAreaWidth - ENEMY_WIDTH },
+      collisionRadius: ENEMY_COLLISION_RADIUS,
+    }
   ];
 };
 
@@ -160,6 +195,7 @@ function spawnNextCoinPair(gameArea: Size, coinSize: number, currentPairId: numb
 const getDefaultInitialGameState = (gameAreaWidth = 800, gameAreaHeight = 600, level = 1): GameState => {
   const groundPlatformY = calculatePlatformGroundY(gameAreaHeight);
   const platforms = getLevelPlatforms(gameAreaWidth, gameAreaHeight, level);
+  const enemies = getLevelEnemies(gameAreaWidth, gameAreaHeight, level, platforms);
   return {
     hero: {
       ...initialHeroState,
@@ -168,6 +204,7 @@ const getDefaultInitialGameState = (gameAreaWidth = 800, gameAreaHeight = 600, l
     },
     platforms: platforms,
     activeCoins: spawnNextCoinPair({ width: gameAreaWidth, height: gameAreaHeight }, COIN_SIZE, 0, platforms),
+    enemies: enemies,
     score: 0,
     currentLevel: level,
     gameOver: false,
@@ -253,7 +290,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       if (!state.isGameInitialized || state.levelCompleteScreenActive || state.gameLost) return state;
       const { deltaTime } = action.payload;
 
-      let { hero: heroState, platforms: currentPlatforms, activeCoins: currentActiveCoins, score: currentScore, totalCoinsCollectedInLevel: currentTotalCollected, currentPairIndex: currentPairIdx } = state;
+      let { hero: heroState, platforms: currentPlatforms, activeCoins: currentActiveCoins, enemies: currentEnemies, score: currentScore, totalCoinsCollectedInLevel: currentTotalCollected, currentPairIndex: currentPairIdx } = state;
       const gameArea = state.gameArea;
       let nextHeroAppearance = state.heroAppearance;
       let nextHeroAppearElapsedTime = state.heroAppearElapsedTime;
@@ -261,11 +298,13 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       let nextPlatforms = currentPlatforms.map(p => ({ ...p }));
       let nextHero = { ...heroState, velocity: { ...heroState.velocity }, animations: { ...heroState.animations} }; 
       let nextActiveCoins = currentActiveCoins.map(c => ({ ...c }));
+      let nextEnemies = currentEnemies.map(e => ({ ...e }));
       let nextScore = currentScore;
       let nextTotalCollected = currentTotalCollected;
       let nextPairIdx = currentPairIdx;
       let levelComplete = false; 
       let gameLostThisTick = false;
+      let heroHitByEnemy = false;
 
       const currentAnimationKey = nextHero.action === 'run_left' || nextHero.action === 'run_right' ? 'run' : (nextHero.action === 'jump_up' || nextHero.action === 'fall_down' ? 'jump' : 'idle');
       const currentAnimation = nextHero.animations[currentAnimationKey];
@@ -337,6 +376,22 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         }
         return { ...p, velocity: {x: 0, y: 0}}; 
       });
+
+      // Move Enemies
+      nextEnemies = nextEnemies.map(enemy => {
+        let enemyNewX = enemy.x;
+        let enemyVelX = enemy.speed * enemy.direction;
+        if (enemy.moveAxis === 'x' && enemy.moveRange) {
+          enemyNewX += enemyVelX * (deltaTime / (1000 / 60));
+          if (enemyNewX <= enemy.moveRange.min || enemyNewX + enemy.width >= enemy.moveRange.max + enemy.width) {
+            enemy.direction *= -1;
+            enemyVelX *= -1;
+            enemyNewX = Math.max(enemy.moveRange.min, Math.min(enemyNewX, enemy.moveRange.max));
+          }
+        }
+        return { ...enemy, x: enemyNewX, velocity: { x: enemyVelX, y: 0 } };
+      });
+
 
       if (state.heroAppearance === 'appearing') {
         nextHeroAppearElapsedTime += deltaTime; 
@@ -425,47 +480,81 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         if (nextHero.x < 0) nextHero.x = 0;
         if (nextHero.x + nextHero.width > gameArea.width) nextHero.x = gameArea.width - nextHero.width;
         
+        // Hero-Enemy Collision
+        for (const enemy of nextEnemies) {
+            const enemyCenterX = enemy.x + enemy.width / 2;
+            const enemyCenterY = enemy.y + enemy.height / 2;
+
+            // Find closest point on hero's AABB to enemy's circle center
+            const closestX = Math.max(nextHero.x, Math.min(enemyCenterX, nextHero.x + nextHero.width));
+            const closestY = Math.max(nextHero.y, Math.min(enemyCenterY, nextHero.y + nextHero.height));
+
+            const distanceX = enemyCenterX - closestX;
+            const distanceY = enemyCenterY - closestY;
+            const distanceSquared = (distanceX * distanceX) + (distanceY * distanceY);
+
+            if (distanceSquared < (enemy.collisionRadius * enemy.collisionRadius)) {
+                heroHitByEnemy = true;
+                break;
+            }
+        }
+
+        if (heroHitByEnemy) {
+            nextHero.y = groundPlatformY + PLATFORM_GROUND_THICKNESS;
+            nextHero.x = gameArea.width / 2 - nextHero.width / 2;
+            nextHero.velocity = { x: 0, y: 0 };
+            nextHero.isOnPlatform = true;
+            nextHero.platformId = 'platform_ground';
+            nextHero.action = 'idle';
+            nextHeroAppearance = 'appearing';
+            nextHeroAppearElapsedTime = 0;
+        }
+
+
         let collectedAnyCoinThisTick = false;
         let newlyCollectedCountThisTick = 0;
         
-        nextActiveCoins = nextActiveCoins.map(coin => {
-          if (!coin.collected && !coin.isExploding && !coin.isSpawning && !coin.isPendingSpawn) { 
-            if (nextHero.x < coin.x + coin.width &&
-                nextHero.x + nextHero.width > coin.x &&
-                nextHero.y < coin.y + coin.height &&
-                nextHero.y + nextHero.height > coin.y) { 
-              collectedAnyCoinThisTick = true;
-              newlyCollectedCountThisTick++;
-              return { ...coin, collected: true, isExploding: true, explosionProgress: 0 };
-            }
-          }
-          return coin;
-        });
+        if (!heroHitByEnemy) { // Only process coins if not hit by enemy this tick
+            nextActiveCoins = nextActiveCoins.map(coin => {
+              if (!coin.collected && !coin.isExploding && !coin.isSpawning && !coin.isPendingSpawn) { 
+                if (nextHero.x < coin.x + coin.width &&
+                    nextHero.x + nextHero.width > coin.x &&
+                    nextHero.y < coin.y + coin.height &&
+                    nextHero.y + nextHero.height > coin.y) { 
+                  collectedAnyCoinThisTick = true;
+                  newlyCollectedCountThisTick++;
+                  return { ...coin, collected: true, isExploding: true, explosionProgress: 0 };
+                }
+              }
+              return coin;
+            });
 
-        let shouldSpawnNextPair = false;
-        if (collectedAnyCoinThisTick) {
-          nextScore += newlyCollectedCountThisTick;
-          nextTotalCollected += newlyCollectedCountThisTick;
+            let shouldSpawnNextPair = false;
+            if (collectedAnyCoinThisTick) {
+              nextScore += newlyCollectedCountThisTick;
+              nextTotalCollected += newlyCollectedCountThisTick;
 
-          const coinsOfCurrentPair = nextActiveCoins.filter(c => c.pairId === currentPairIdx);
-          if (coinsOfCurrentPair.length > 0 && coinsOfCurrentPair.every(c => c.collected)) {
-            if (nextTotalCollected < TOTAL_COINS_PER_LEVEL) {
-              nextPairIdx = currentPairIdx + 1;
-              shouldSpawnNextPair = true;
-            } else {
-              levelComplete = true; 
+              const coinsOfCurrentPair = nextActiveCoins.filter(c => c.pairId === currentPairIdx);
+              if (coinsOfCurrentPair.length > 0 && coinsOfCurrentPair.every(c => c.collected)) {
+                if (nextTotalCollected < TOTAL_COINS_PER_LEVEL) {
+                  nextPairIdx = currentPairIdx + 1;
+                  shouldSpawnNextPair = true;
+                } else {
+                  levelComplete = true; 
+                }
+              }
             }
-          }
+
+            nextActiveCoins = nextActiveCoins.filter(coin => !(coin.collected && coin.isExploding === false && coin.explosionProgress === 1));
+            
+            if (shouldSpawnNextPair) {
+                const nextPairCoins = spawnNextCoinPair(gameArea, COIN_SIZE, nextPairIdx, nextPlatforms);
+                nextActiveCoins = [...nextActiveCoins, ...nextPairCoins];
+            }
         }
 
-        nextActiveCoins = nextActiveCoins.filter(coin => !(coin.collected && coin.isExploding === false && coin.explosionProgress === 1));
-        
-        if (shouldSpawnNextPair) {
-            const nextPairCoins = spawnNextCoinPair(gameArea, COIN_SIZE, nextPairIdx, nextPlatforms);
-            nextActiveCoins = [...nextActiveCoins, ...nextPairCoins];
-        }
 
-        if (nextHero.y < 0 && !levelComplete) { 
+        if (nextHero.y < 0 && !levelComplete && !heroHitByEnemy) { 
           gameLostThisTick = true;
         }
       } 
@@ -475,14 +564,15 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         hero: nextHero, 
         platforms: nextPlatforms, 
         activeCoins: nextActiveCoins, 
+        enemies: nextEnemies,
         score: nextScore,
         totalCoinsCollectedInLevel: nextTotalCollected,
         currentPairIndex: nextPairIdx,
         heroAppearance: nextHeroAppearance,
         heroAppearElapsedTime: nextHeroAppearElapsedTime,
-        gameOver: levelComplete, 
-        gameLost: gameLostThisTick, 
-        levelCompleteScreenActive: levelComplete && !gameLostThisTick, 
+        gameOver: levelComplete && !heroHitByEnemy, 
+        gameLost: gameLostThisTick && !heroHitByEnemy, 
+        levelCompleteScreenActive: levelComplete && !gameLostThisTick && !heroHitByEnemy, 
       };
     }
     case 'EXIT_GAME': 

@@ -63,6 +63,16 @@ export interface CoinType extends GameObject {
   spawnDelayMs?: number; 
 }
 
+export interface EnemyType extends GameObject {
+  imageSrc: string;
+  speed: number;
+  direction: 1 | -1;
+  moveAxis: 'x' | 'y';
+  moveRange?: { min: number; max: number };
+  collisionRadius: number;
+}
+
+
 export interface LevelData {
   id: number;
   name: string;
@@ -106,10 +116,17 @@ export const COIN_ZONE_TOP_OFFSET = 50;
 
 export const HERO_BASE_SPEED = 1.25; 
 
+export const ENEMY_WIDTH = 48;
+export const ENEMY_HEIGHT = 48;
+export const ENEMY_COLLISION_RADIUS = 24;
+export const ENEMY_IMAGE_SRC = "/assets/images/BearFace.png";
+export const ENEMY_DEFAULT_SPEED = INITIAL_PLATFORM_SPEED * 0.8; // Slightly slower than platforms
+
 export interface GameState {
   hero: HeroType;
   platforms: PlatformType[];
   activeCoins: CoinType[]; 
+  enemies: EnemyType[];
   score: number;
   currentLevel: number;
   gameOver: boolean; 
@@ -147,20 +164,17 @@ export const heroAnimationsConfig: HeroAnimations = {
     height: HERO_HEIGHT, 
   },
   run: {
-    src: "/assets/images/HeroJeans3.png", // Using the same image for now as per request. For true animation, this would be a sprite sheet.
-    frames: 1, // Assuming 1 frame if it's a static image, change if it becomes a sprite sheet
+    src: "/assets/images/HeroJeans3.png", 
+    frames: 1, 
     fps: 10, 
     width: HERO_WIDTH, 
     height: HERO_HEIGHT,
   },
   jump: {
-    src: "/assets/images/HeroJeans3.png", // Using the same image for now.
-    frames: 1, // Assuming 1 frame.
+    src: "/assets/images/HeroJeans3.png", 
+    frames: 1, 
     fps: 1,
     width: HERO_WIDTH,
     height: HERO_HEIGHT,
   },
 };
-
-
-
