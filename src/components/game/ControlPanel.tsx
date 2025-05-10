@@ -9,7 +9,7 @@ import type { Dispatch } from 'react';
 interface ControlPanelProps {
   dispatch: Dispatch<GameAction>;
   onExit: () => void;
-  disabled?: boolean; // Added to disable controls
+  disabled?: boolean;
 }
 
 export function ControlPanel({ dispatch, onExit, disabled = false }: ControlPanelProps) {
@@ -24,18 +24,18 @@ export function ControlPanel({ dispatch, onExit, disabled = false }: ControlPane
   };
 
   const handleMoveStop = (type: 'MOVE_LEFT_STOP' | 'MOVE_RIGHT_STOP') => {
-    // Stop actions should still be processed even if disabled mid-action, to prevent sticky keys
     dispatch({ type });
   };
 
-  const commonButtonStyles = "p-3 h-16 w-16 rounded-full text-destructive-foreground bg-destructive shadow-md hover:bg-destructive/90 hover:shadow-lg active:bg-destructive/80 active:shadow-inner disabled:opacity-100 disabled:bg-transparent disabled:border disabled:border-destructive disabled:text-destructive disabled:text-opacity-70 disabled:shadow-none";
+  const commonButtonStyles = "p-3 h-16 w-16 rounded-full text-foreground shadow-lg hover:shadow-xl active:shadow-lg active:translate-y-px transition-all duration-150 ease-in-out disabled:opacity-70 disabled:bg-transparent disabled:border disabled:border-destructive disabled:text-destructive disabled:shadow-none";
+  const radialGradientStyle = !disabled ? { backgroundImage: 'radial-gradient(circle, #f48c25, #e74210)' } : {};
 
   return (
     <div
       className="fixed bottom-0 left-0 right-0 h-20 shadow-lg p-2 flex items-center justify-around z-50 touch-manipulation"
       style={{ 
         backgroundImage: 'url("https://neurostaffing.online/wp-content/uploads/2025/05/GroundFloor.png")',
-        backgroundSize: 'cover', // Or 'contain', or specific dimensions
+        backgroundSize: 'cover',
         backgroundPosition: 'center left',
         backgroundRepeat: 'no-repeat',
         backgroundColor: 'transparent', 
@@ -46,6 +46,7 @@ export function ControlPanel({ dispatch, onExit, disabled = false }: ControlPane
         variant="ghost"
         size="lg"
         className={commonButtonStyles}
+        style={radialGradientStyle}
         onMouseDown={() => handleMoveStart('MOVE_LEFT_START')}
         onMouseUp={() => handleMoveStop('MOVE_LEFT_STOP')}
         onTouchStart={() => handleMoveStart('MOVE_LEFT_START')}
@@ -53,22 +54,24 @@ export function ControlPanel({ dispatch, onExit, disabled = false }: ControlPane
         aria-label="Move Left"
         disabled={disabled}
       >
-        <ArrowLeftCircle className="h-16 w-16 text-foreground" />
+        <ArrowLeftCircle className="h-12 w-12 text-foreground" />
       </Button>
       <Button
         variant="ghost"
         size="lg"
         className={commonButtonStyles}
+        style={radialGradientStyle}
         onClick={() => handleAction('JUMP')}
         aria-label="Jump"
         disabled={disabled}
       >
-        <ArrowUpCircle className="h-16 w-16 text-foreground" />
+        <ArrowUpCircle className="h-12 w-12 text-foreground" />
       </Button>
       <Button
         variant="ghost"
         size="lg"
         className={commonButtonStyles}
+        style={radialGradientStyle}
         onMouseDown={() => handleMoveStart('MOVE_RIGHT_START')}
         onMouseUp={() => handleMoveStop('MOVE_RIGHT_STOP')}
         onTouchStart={() => handleMoveStart('MOVE_RIGHT_START')}
@@ -76,17 +79,18 @@ export function ControlPanel({ dispatch, onExit, disabled = false }: ControlPane
         aria-label="Move Right"
         disabled={disabled}
       >
-        <ArrowRightCircle className="h-16 w-16 text-foreground" />
+        <ArrowRightCircle className="h-12 w-12 text-foreground" />
       </Button>
       <Button
         variant="ghost"
         size="lg"
         className={commonButtonStyles}
+        style={radialGradientStyle} // Exit button also gets the gradient unless it's meant to be different
         onClick={onExit}
         aria-label="Exit Game"
-        // Exit button should ideally not be disabled by game state
+        // Exit button is not typically disabled by game state, but applying consistent styling
       >
-        <LogOut className="h-16 w-16 text-foreground" />
+        <LogOut className="h-12 w-12 text-foreground" />
       </Button>
     </div>
   );
