@@ -88,7 +88,7 @@ export const PLATFORM_NON_GROUND_HEIGHT = 24;
 
 export const TARGET_JUMP_HEIGHT_PX = 180; 
 
-export const PLATFORM1_Y_OFFSET = 140; // Lower moving platform (was 90, then 120, now 140)
+export const PLATFORM1_Y_OFFSET = 100; // Lower moving platform (was 90, then 120, then 140, then 120)
 export const PLATFORM2_Y_OFFSET = 220; // Higher moving platform (was 245, then 220)
 
 // Platform 1 is the lower moving platform, Platform 2 is the higher one.
@@ -163,3 +163,4 @@ export const heroAnimationsConfig: HeroAnimations = {
     height: HERO_HEIGHT,
   },
 };
+
