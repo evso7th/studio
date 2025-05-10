@@ -147,6 +147,25 @@ export default function HomePage() {
     };
   }, [dispatch, gameState.heroAppearance, gameState.levelCompleteScreenActive, gameState.gameLost]); 
   
+  useReactEffect(() => {
+    const preventZoom = (event: TouchEvent) => {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    };
+    // Use document.body for a more global effect, ensure passive is false to allow preventDefault
+    document.body.addEventListener('touchmove', preventZoom, { passive: false });
+
+    // Add touch-action: none to the body to further prevent unwanted touch behaviors like scrolling or zooming
+    document.body.style.touchAction = 'none';
+
+
+    return () => {
+      document.body.removeEventListener('touchmove', preventZoom);
+      document.body.style.touchAction = ''; // Reset style on cleanup
+    };
+  }, []);
+
   const handleExit = () => {
     dispatch({ type: 'RESTART_LEVEL' });
   };
