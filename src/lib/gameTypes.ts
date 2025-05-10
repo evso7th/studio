@@ -88,8 +88,8 @@ export const PLATFORM_NON_GROUND_HEIGHT = 24;
 export const TARGET_JUMP_HEIGHT_PX = 180; 
 
 // Platform 1 is the lower moving platform, Platform 2 is the higher one.
-export const PLATFORM1_Y_OFFSET = 100; 
-export const PLATFORM2_Y_OFFSET = 200; 
+export const PLATFORM1_Y_OFFSET = 80; 
+export const PLATFORM2_Y_OFFSET = 220; // Was 200, increased by 20
 
 export const INITIAL_PLATFORM1_X_PERCENT = 1.0; 
 export const INITIAL_PLATFORM_SPEED = 0.75; 
@@ -104,7 +104,7 @@ export const MIN_DISTANCE_BETWEEN_PAIR_COINS_Y_FACTOR = 0.15;
 
 export const COIN_ZONE_TOP_OFFSET = 50; 
 
-export const HERO_BASE_SPEED = 2.5; // Updated from 1.25
+export const HERO_BASE_SPEED = 2.5; 
 
 export interface GameState {
   hero: HeroType;
