@@ -3,7 +3,7 @@
 "use client";
 
 import type { Reducer} from 'react';
-import { useReducer, useCallback, useEffect, useRef } from 'react'; 
+import { useReducer, useCallback, useEffect as useReactEffect, useRef } from 'react'; 
 import type { GameState, GameAction, HeroType, PlatformType, CoinType, Size, EnemyType } from '@/lib/gameTypes'; 
 import { 
     HERO_APPEARANCE_DURATION_MS, 
@@ -34,9 +34,9 @@ import {
     ENEMY_COLLISION_RADIUS,
     ENEMY_IMAGE_SRC,
     ENEMY_DEFAULT_SPEED,
-    ENEMY_DEFEAT_DURATION_MS, // Retained for potential future use or other enemy types
-    ENEMY_DEFEAT_EXPLOSION_DURATION_MS, // Retained for potential future use
+    ENEMY_DEFEAT_EXPLOSION_DURATION_MS,
     ENEMY_FREEZE_DURATION_MS,
+    ENEMY_PERIODIC_FREEZE_INTERVAL_MS,
 } from '@/lib/gameTypes'; 
 
 const GRAVITY_ACCELERATION = 0.4; 
@@ -83,20 +83,20 @@ const getLevelPlatforms = (gameAreaWidth: number, gameAreaHeight: number, level:
     },
     {
       id: 'platform1', 
-      x: gameAreaWidth * INITIAL_PLATFORM1_X_PERCENT, // Starts at left edge
+      x: gameAreaWidth * INITIAL_PLATFORM1_X_PERCENT, 
       y: groundPlatformY + PLATFORM_GROUND_THICKNESS + PLATFORM1_Y_OFFSET, 
       width: PLATFORM_DEFAULT_WIDTH, height: PLATFORM_NON_GROUND_HEIGHT, 
-      isMoving: true, speed: platformSpeed, direction: 1, // Moves right initially
+      isMoving: true, speed: platformSpeed, direction: 1, 
       moveAxis: 'x',
       moveRange: { min: 0, max: gameAreaWidth - PLATFORM_DEFAULT_WIDTH },
       imageSrc: "/assets/images/PlatformGrass.png",
     },
     {
       id: 'platform2', 
-      x: gameAreaWidth * INITIAL_PLATFORM2_X_PERCENT - PLATFORM_DEFAULT_WIDTH, // Starts at right edge
+      x: gameAreaWidth * INITIAL_PLATFORM2_X_PERCENT - PLATFORM_DEFAULT_WIDTH, 
       y: groundPlatformY + PLATFORM_GROUND_THICKNESS + PLATFORM2_Y_OFFSET, 
       width: PLATFORM_DEFAULT_WIDTH, height: PLATFORM_NON_GROUND_HEIGHT,
-      isMoving: true, speed: platformSpeed, direction: -1, // Moves left initially
+      isMoving: true, speed: platformSpeed, direction: -1, 
       moveAxis: 'x',
       moveRange: { min: 0, max: gameAreaWidth - PLATFORM_DEFAULT_WIDTH },
       imageSrc: "/assets/images/PlatformGrass.png",
@@ -107,7 +107,6 @@ const getLevelPlatforms = (gameAreaWidth: number, gameAreaHeight: number, level:
 
 const getLevelEnemies = (gameAreaWidth: number, gameAreaHeight: number, level: number, platforms: PlatformType[]): EnemyType[] => {
   if (level === 2) { 
-    // Dynamic enemy for level 2, spawned on first coin collection, so initially empty.
     return []; 
   }
   return []; 
@@ -140,11 +139,12 @@ function createEnemy(id: string, gameAreaWidth: number, gameAreaHeight: number, 
       moveAxis: 'x',
       moveRange: { min: 0, max: gameAreaWidth - ENEMY_WIDTH },
       collisionRadius: ENEMY_COLLISION_RADIUS,
-      isDefeated: false, // This enemy type won't use this flag for hero collision defeat
+      isDefeated: false, 
       defeatTimer: 0,
       defeatExplosionProgress: 0,
       isFrozen: false,
       frozenTimer: 0,
+      periodicFreezeIntervalTimer: ENEMY_PERIODIC_FREEZE_INTERVAL_MS,
   };
 }
 
@@ -226,7 +226,7 @@ const getDefaultInitialGameState = (gameAreaWidth = 800, gameAreaHeight = 600, l
       ...initialHeroState,
       x: gameAreaWidth / 2 - initialHeroState.width / 2,
       y: groundPlatformY + PLATFORM_GROUND_THICKNESS,
-      currentSpeedX: 0, // Ensure hero starts stationary
+      currentSpeedX: 0, 
     },
     platforms: platforms,
     activeCoins: spawnNextCoinPair({ width: gameAreaWidth, height: gameAreaHeight }, COIN_SIZE, 0, platforms),
@@ -247,7 +247,6 @@ const getDefaultInitialGameState = (gameAreaWidth = 800, gameAreaHeight = 600, l
 };
 
 let initialGameState = getDefaultInitialGameState();
-// initialGameState.levelCompleteScreenActive = true; // For debugging level complete screen
 
 function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
@@ -287,7 +286,6 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         ...newState,
         paddingTop,
         isGameInitialized: true, 
-        // levelCompleteScreenActive: true, // For debugging level complete screen
       };
     }
      case 'RESTART_LEVEL': {
@@ -411,45 +409,62 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         return { ...p, velocity: {x: 0, y: 0}}; 
       });
 
-      // Move Enemies
       nextEnemies = nextEnemies.map(enemy => {
-        // For dynamic enemy on L2, isDefeated is not set by hero collision.
-        // Retain this block for other potential enemy types or defeat conditions.
-        if (enemy.isDefeated && enemy.defeatTimer !== undefined && enemy.id !== 'enemy_level2_dynamic') { 
-          const newDefeatTimer = enemy.defeatTimer - deltaTime;
-          const newDefeatExplosionProgress = Math.min(1, (enemy.defeatExplosionProgress || 0) + (deltaTime / ENEMY_DEFEAT_EXPLOSION_DURATION_MS));
-          if (newDefeatTimer <= 0) {
-             // Logic for respawning or permanently removing non-dynamic enemies
-             return { ...enemy, isDefeated: false, defeatTimer: 0, defeatExplosionProgress: 1 }; // Mark as ready or remove
+        let updatedEnemy = { ...enemy };
+
+        // 1. Handle existing freeze state (from any source)
+        if (updatedEnemy.isFrozen && updatedEnemy.frozenTimer !== undefined) {
+          const newFrozenTimer = updatedEnemy.frozenTimer - deltaTime;
+          if (newFrozenTimer <= 0) {
+            updatedEnemy = {
+              ...updatedEnemy,
+              isFrozen: false,
+              frozenTimer: 0,
+              periodicFreezeIntervalTimer: ENEMY_PERIODIC_FREEZE_INTERVAL_MS, // Reset interval for next periodic freeze
+            };
+          } else {
+            // Still frozen, just update timer and skip other logic for this tick
+            return { ...updatedEnemy, frozenTimer: newFrozenTimer };
           }
-          return { ...enemy, defeatTimer: newDefeatTimer, defeatExplosionProgress: newDefeatExplosionProgress };
+        }
+
+        // 2. If not currently frozen, check for periodic freeze trigger (for dynamic L2 enemy)
+        if (updatedEnemy.id === 'enemy_level2_dynamic' && !updatedEnemy.isFrozen && updatedEnemy.periodicFreezeIntervalTimer !== undefined) {
+          const newPeriodicIntervalTimer = updatedEnemy.periodicFreezeIntervalTimer - deltaTime;
+          if (newPeriodicIntervalTimer <= 0) {
+            // Trigger periodic freeze
+            return { // Return here because enemy is now frozen and should not move this tick
+              ...updatedEnemy,
+              isFrozen: true,
+              frozenTimer: ENEMY_FREEZE_DURATION_MS,
+              periodicFreezeIntervalTimer: ENEMY_PERIODIC_FREEZE_INTERVAL_MS, 
+            };
+          }
+          updatedEnemy = { ...updatedEnemy, periodicFreezeIntervalTimer: newPeriodicIntervalTimer };
         }
         
-        if (enemy.isFrozen && enemy.frozenTimer !== undefined) {
-          const newFrozenTimer = enemy.frozenTimer - deltaTime;
-          if (newFrozenTimer <= 0) {
-            return { ...enemy, isFrozen: false, frozenTimer: 0 }; // Unfreeze
-          }
-          // Enemy is frozen, do not update position, just timer
-          return { ...enemy, frozenTimer: newFrozenTimer };
+        // 3. If still not frozen after all checks, move the enemy
+        if (!updatedEnemy.isFrozen) {
+            let enemyNewX = updatedEnemy.x;
+            const enemyBaseSpeed = state.currentLevel === 2 ? ENEMY_DEFAULT_SPEED : updatedEnemy.speed;
+            let enemyVelX = enemyBaseSpeed * updatedEnemy.direction;
+
+            if (updatedEnemy.moveAxis === 'x' && updatedEnemy.moveRange) {
+              enemyNewX += enemyVelX * (deltaTime / (1000 / 60));
+              if (enemyNewX <= updatedEnemy.moveRange.min || enemyNewX + updatedEnemy.width >= updatedEnemy.moveRange.max + updatedEnemy.width) {
+                // updatedEnemy.direction needs to be updated on the object that will be returned or further processed
+                const newDirection = updatedEnemy.direction * -1;
+                enemyVelX *= -1;
+                enemyNewX = Math.max(updatedEnemy.moveRange.min, Math.min(enemyNewX, updatedEnemy.moveRange.max));
+                updatedEnemy = {...updatedEnemy, direction: newDirection}; 
+              }
+            }
+            // Ensure speed and velocity are part of the returned object if they can change.
+            updatedEnemy = { ...updatedEnemy, x: enemyNewX, velocity: { x: enemyVelX, y: 0 }, speed: enemyBaseSpeed };
         }
-
-
-        let enemyNewX = enemy.x;
-        const enemyBaseSpeed = state.currentLevel === 2 ? ENEMY_DEFAULT_SPEED : enemy.speed;
-        let enemyVelX = enemyBaseSpeed * enemy.direction;
-
-        if (enemy.moveAxis === 'x' && enemy.moveRange) {
-          enemyNewX += enemyVelX * (deltaTime / (1000 / 60));
-          if (enemyNewX <= enemy.moveRange.min || enemyNewX + enemy.width >= enemy.moveRange.max + enemy.width) {
-            enemy.direction *= -1;
-            enemyVelX *= -1;
-            enemyNewX = Math.max(enemy.moveRange.min, Math.min(enemyNewX, enemy.moveRange.max));
-          }
-        }
-        return { ...enemy, x: enemyNewX, velocity: { x: enemyVelX, y: 0 }, speed: enemyBaseSpeed };
+        return updatedEnemy; // Return the potentially modified enemy
       });
-      // Filter out fully defeated enemies (not applicable to enemy_level2_dynamic from hero collision)
+      
       nextEnemies = nextEnemies.filter(e => !(e.isDefeated && e.defeatTimer <= 0 && e.id !== 'enemy_level2_dynamic'));
 
 
@@ -543,10 +558,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         if (nextHero.x < 0) nextHero.x = 0;
         if (nextHero.x + nextHero.width > gameArea.width) nextHero.x = gameArea.width - nextHero.width;
         
-        // Hero-Enemy Collision
         for (const enemy of nextEnemies) {
-          // Skip collision if enemy is "defeated" (for other enemy types) or frozen.
-          // For enemy_level2_dynamic, isDefeated is not set by hero collision.
           if (enemy.isDefeated || enemy.isFrozen) continue; 
 
           const enemyCenterX = enemy.x + enemy.width / 2;
@@ -559,12 +571,9 @@ function gameReducer(state: GameState, action: GameAction): GameState {
 
           if (distanceSquared < (enemy.collisionRadius * enemy.collisionRadius)) {
               heroHitByEnemy = true;
-              // Dynamic enemy on L2 is not "defeated" by hero collision.
-              // If it was frozen and hit, unfreeze it (though hero reset makes this less critical).
               if (enemy.id === 'enemy_level2_dynamic') {
-                  nextEnemies = nextEnemies.map(e => e.id === enemy.id ? {...e, isFrozen: false, frozenTimer: 0} : e);
+                  nextEnemies = nextEnemies.map(e => e.id === enemy.id ? {...e, isFrozen: false, frozenTimer: 0, periodicFreezeIntervalTimer: ENEMY_PERIODIC_FREEZE_INTERVAL_MS } : e);
               }
-              // Add logic here for other enemy types that *are* defeated by hero collision
               break; 
           }
         }
@@ -605,20 +614,19 @@ function gameReducer(state: GameState, action: GameAction): GameState {
               nextScore += newlyCollectedCountThisTick;
               nextTotalCollected += newlyCollectedCountThisTick;
 
-              // Spawn dynamic enemy on level 2 after first coin, if not already present
-              if (state.currentLevel === 2 && nextTotalCollected === 1 && !nextEnemies.some(e => e.id === 'enemy_level2_dynamic')) {
+              if (state.currentLevel === 2 && !nextEnemies.some(e => e.id === 'enemy_level2_dynamic')) {
                   const newEnemy = createEnemy('enemy_level2_dynamic', gameArea.width, gameArea.height, nextPlatforms, state.currentLevel);
                   nextEnemies.push(newEnemy);
               }
               
-              // Freeze enemy on coin collection (Level 2)
               if (state.currentLevel === 2) {
                 nextEnemies = nextEnemies.map(enemy => {
-                  if (enemy.id === 'enemy_level2_dynamic' && !enemy.isDefeated) { // isDefeated check might be redundant if it's never set for this enemy
+                  if (enemy.id === 'enemy_level2_dynamic' && !enemy.isDefeated) { 
                     return {
                       ...enemy,
                       isFrozen: true,
                       frozenTimer: ENEMY_FREEZE_DURATION_MS,
+                      periodicFreezeIntervalTimer: ENEMY_PERIODIC_FREEZE_INTERVAL_MS, // Reset periodic timer on coin collection freeze
                     };
                   }
                   return enemy;
@@ -691,7 +699,7 @@ export function useGameLogic() {
     dispatch(action);
   }, []); 
   
-  useEffect(() => {
+  useReactEffect(() => {
     if (gameState.gameArea.width > 0 && gameState.gameArea.height > 0 && !gameState.isGameInitialized) {
       dispatch({ 
         type: 'UPDATE_GAME_AREA', 
@@ -707,4 +715,3 @@ export function useGameLogic() {
 
   return { gameState, dispatch: handleGameAction, gameTick };
 }
-

@@ -69,11 +69,12 @@ export interface EnemyType extends GameObject {
   moveAxis: 'x' | 'y';
   moveRange?: { min: number; max: number };
   collisionRadius: number;
-  isDefeated?: boolean; // Still used for potential other enemy types or non-collision defeats
+  isDefeated?: boolean;
   defeatTimer?: number;
   defeatExplosionProgress?: number;
   isFrozen?: boolean;
   frozenTimer?: number;
+  periodicFreezeIntervalTimer?: number; // Time until the next periodic freeze
 }
 
 
@@ -125,9 +126,10 @@ export const ENEMY_HEIGHT = 48;
 export const ENEMY_COLLISION_RADIUS = 24; // Half of width/height
 export const ENEMY_IMAGE_SRC = "/assets/images/bearFace.png";
 export const ENEMY_DEFAULT_SPEED = 0.4; 
-export const ENEMY_DEFEAT_DURATION_MS = 5000; // 5 seconds, used for enemy self-initiated disappearance
-export const ENEMY_DEFEAT_EXPLOSION_DURATION_MS = 500; // 0.5 seconds for explosion animation
+export const ENEMY_DEFEAT_DURATION_MS = 5000; 
+export const ENEMY_DEFEAT_EXPLOSION_DURATION_MS = 500; 
 export const ENEMY_FREEZE_DURATION_MS = 5000; // 5 seconds
+export const ENEMY_PERIODIC_FREEZE_INTERVAL_MS = 5000; // Enemy freezes every 5 seconds
 
 export interface GameState {
   hero: HeroType;
@@ -147,7 +149,6 @@ export interface GameState {
   currentPairIndex: number; 
   debugMode?: boolean; 
   levelCompleteScreenActive: boolean;
-  // isEnemyDefeated?: boolean; // Removed as dynamic enemy L2 no longer has this state from hero collision
 }
 
 export type GameAction =
@@ -186,4 +187,3 @@ export const heroAnimationsConfig: HeroAnimations = {
     height: HERO_HEIGHT,
   },
 };
-
