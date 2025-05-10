@@ -314,7 +314,7 @@ const getDefaultInitialGameState = (gameAreaWidth = 800, gameAreaHeight = 600, l
 
 // To start on level 3 for debugging, change the default level in the line below:
 // e.g., let initialGameState = getDefaultInitialGameState(undefined, undefined, 3);
-let initialGameState = getDefaultInitialGameState(undefined, undefined, 1);
+let initialGameState = getDefaultInitialGameState(undefined, undefined, 3);
 
 
 function gameReducer(state: GameState, action: GameAction): GameState {
@@ -886,6 +886,7 @@ export function useGameLogic() {
 
   return { gameState, dispatch: handleGameAction, gameTick };
 }
+
 
 
 
