@@ -133,12 +133,12 @@ export default function EntryPage() {
 
       <div className="text-center space-y-6 w-full h-full flex flex-col items-center justify-center relative z-10 p-0 shadow-xl pt-2 mt-[-12px]">
         <div className="max-w-2xl w-full pt-1 px-6 pb-6"> 
-          <h1 className="text-[44px] font-bold text-primary mt-[-20px] whitespace-nowrap pr-1 mr-1 ml-[-5px]">IPO Mad Racing</h1>
-          <p className="text-xl md:text-2xl text-foreground/90 mt-[-20px]">
+          <h1 className="text-[44px] font-bold text-primary mt-[-32px] whitespace-nowrap pr-1 mr-1 ml-[-5px]">IPO Mad Racing</h1>
+          <p className="text-xl md:text-2xl text-foreground/90 mt-[-30px]">
             Специальное издание <br />
             в честь Дня Рождения
           </p>
-          <p className="text-2xl md:text-3xl font-semibold text-accent mt-[-20px]">
+          <p className="text-2xl md:text-3xl font-semibold text-accent mt-[-30px]">
             Руслана Гайнанова
           </p>
 
@@ -157,16 +157,16 @@ export default function EntryPage() {
             onClick={() => router.push('/play')}
             variant="destructive"
             size="lg"
-            className="w-full max-w-xs text-xl py-4 rounded-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 mt-[26px] mb-3" 
+            className="w-full max-w-xs text-xl py-4 rounded-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 mt-[34px] mb-3" 
           >
             Начать игру
           </Button>
 
-          <div className="mt-[-24px] mb-3 pt-10">  
+          <div className="mt-[-20px] mb-3 pt-10">  
              <CreditsDialog />
           </div>
           
-          <p className="text-md md:text-lg text-muted-foreground pt-3 pb-6 mt-[-12px]"> 
+          <p className="text-md md:text-lg text-muted-foreground pt-3 pb-6 mt-[4px]"> 
             Собери все монетки и выйди на IPO!
             <br />
             Опасайся медведей!
