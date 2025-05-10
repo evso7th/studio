@@ -194,7 +194,7 @@ export default function HomePage() {
         ref={gameAreaRef} 
         className="flex-grow relative w-full overflow-hidden pt-16 pb-20" 
         style={{
-          backgroundImage: 'url("/assets/images/DackGroundBase.png")',
+          backgroundImage: 'url("/assets/images/BackGroundBase.png")',
           backgroundSize: 'cover',
           backgroundPosition: `${parallaxBgX - 100}px center`, 
           backgroundRepeat: 'no-repeat',
