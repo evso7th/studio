@@ -26,12 +26,10 @@ export default function HomePage() {
 
   // TEMPORARY: For debugging - start with level complete screen active
   // useReactEffect(() => {
-  //   if (dispatch) { 
-  //     // Ensure this runs only once or under specific conditions if needed,
-  //     // for now, it will set level complete on component mount/dispatch availability
-  //     // dispatch({ type: 'SET_DEBUG_LEVEL_COMPLETE', payload: true }); // This line is now commented out or removed
+  //   if (dispatch && gameState.gameArea.width > 0) { 
+  //     // dispatch({ type: 'SET_DEBUG_LEVEL_COMPLETE', payload: true }); 
   //   }
-  // }, [dispatch]);
+  // }, [dispatch, gameState.gameArea.width]);
 
 
   const updateGameAreaSize = useCallback(() => {
@@ -164,7 +162,7 @@ export default function HomePage() {
         } else if (elem.mozRequestFullScreen) { 
           await elem.mozRequestFullScreen({ navigationUI: "hide" });
         } else if (elem.webkitRequestFullscreen) { 
-          await elem.webkitRequestFullscreen(); // Safari doesn't support navigationUI option well
+          await elem.webkitRequestFullscreen(); 
         } else if (elem.msRequestFullscreen) { 
           await elem.msRequestFullscreen();
         }
@@ -184,6 +182,22 @@ export default function HomePage() {
   const handleExit = () => {
     dispatch({ type: 'RESTART_LEVEL' });
   };
+
+  const getBackgroundPosition = (level: number, pX: number): string => {
+    const parallaxOffset = `${pX}px`;
+    switch (level) {
+      case 1:
+        return `${pX - 100}px center`; // Default, left-ish center
+      case 2:
+        return `calc(50% + ${parallaxOffset}) 0%`; // top-center
+      case 3:
+        return `calc(100% + ${parallaxOffset}) 0%`; // top-right
+      default:
+        // For levels > 3, default to level 1 style or could be level 3 as "final working"
+        return `${pX - 100}px center`; 
+    }
+  };
+
 
   if (gameState.gameLost) {
     return (
@@ -232,7 +246,7 @@ export default function HomePage() {
         style={{
           backgroundImage: 'url("/assets/images/BackGroundBase.png")',
           backgroundSize: 'cover',
-          backgroundPosition: `${parallaxBgX - 100}px center`, 
+          backgroundPosition: getBackgroundPosition(gameState.currentLevel, parallaxBgX),
           backgroundRepeat: 'no-repeat',
           backgroundColor: 'hsl(var(--game-bg))',
           perspective: '1000px', 
@@ -270,3 +284,4 @@ export default function HomePage() {
     </div>
   );
 }
+
