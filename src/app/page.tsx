@@ -157,7 +157,7 @@ export default function EntryPage() {
             onClick={() => router.push('/play')}
             variant="destructive"
             size="lg"
-            className="w-full max-w-xs text-xl py-4 rounded-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 mt-8 mb-3" 
+            className="w-full max-w-xs text-xl py-4 rounded-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 mt-10 mb-3" 
           >
             Начать игру
           </Button>
