@@ -92,12 +92,12 @@ export default function EntryPage() {
     <div className="min-h-screen w-screen flex flex-col items-center justify-center text-foreground p-4 overflow-hidden relative">
       {/* Fullscreen Background Image */}
       <Image
-        src="/assets/images/wallpaper2.jpg"
+        src="/assets/images/Wallpaper2.jpg" // Corrected path
         alt="Background Wallpaper"
         fill
         style={{ objectFit: 'cover', zIndex: -10 }} // Ensure it's behind everything
         priority
-        data-ai-hint="starry sky"
+        data-ai-hint="starry sky space"
       />
       
       {/* Fireworks Container (z-0 by default as it's later in DOM, or explicitly z-0/positive if needed) */}
