@@ -69,7 +69,7 @@ export interface EnemyType extends GameObject {
   moveAxis: 'x' | 'y';
   moveRange?: { min: number; max: number };
   collisionRadius: number;
-  isDefeated?: boolean;
+  isDefeated?: boolean; // Still used for potential other enemy types or non-collision defeats
   defeatTimer?: number;
   defeatExplosionProgress?: number;
   isFrozen?: boolean;
@@ -106,8 +106,8 @@ export const PLATFORM2_Y_OFFSET = 275;
 
 
 export const INITIAL_PLATFORM_SPEED = 0.75; 
-export const INITIAL_PLATFORM1_X_PERCENT = 1.0; 
-export const INITIAL_PLATFORM2_X_PERCENT = 0.0;
+export const INITIAL_PLATFORM1_X_PERCENT = 0.0; 
+export const INITIAL_PLATFORM2_X_PERCENT = 1.0;
 
 
 export const TOTAL_COINS_PER_LEVEL = 10;
@@ -125,7 +125,7 @@ export const ENEMY_HEIGHT = 48;
 export const ENEMY_COLLISION_RADIUS = 24; // Half of width/height
 export const ENEMY_IMAGE_SRC = "/assets/images/bearFace.png";
 export const ENEMY_DEFAULT_SPEED = 0.4; 
-export const ENEMY_DEFEAT_DURATION_MS = 5000; // 5 seconds
+export const ENEMY_DEFEAT_DURATION_MS = 5000; // 5 seconds, used for enemy self-initiated disappearance
 export const ENEMY_DEFEAT_EXPLOSION_DURATION_MS = 500; // 0.5 seconds for explosion animation
 export const ENEMY_FREEZE_DURATION_MS = 5000; // 5 seconds
 
@@ -147,7 +147,7 @@ export interface GameState {
   currentPairIndex: number; 
   debugMode?: boolean; 
   levelCompleteScreenActive: boolean;
-  isEnemyDefeated?: boolean; // Tracks if the dynamic enemy in level 2 has been defeated once
+  // isEnemyDefeated?: boolean; // Removed as dynamic enemy L2 no longer has this state from hero collision
 }
 
 export type GameAction =
@@ -186,3 +186,4 @@ export const heroAnimationsConfig: HeroAnimations = {
     height: HERO_HEIGHT,
   },
 };
+
