@@ -89,7 +89,7 @@ export default function EntryPage() {
   }
 
   return (
-    <div className="min-h-screen w-screen flex flex-col items-center justify-center text-foreground overflow-hidden relative">
+    <div className="min-h-screen w-screen flex flex-col items-center justify-center text-foreground overflow-hidden relative p-0 m-0">
       {/* Fullscreen Background Image */}
       <Image
         src="/assets/images/Wallpaper2.jpg" 
@@ -123,8 +123,8 @@ export default function EntryPage() {
       </div>
 
       {/* Main Content (needs to be above fireworks) */}
-      <div className="text-center space-y-6 max-w-2xl w-full relative z-10 bg-background/70 p-6 rounded-lg shadow-xl">
-        <h1 className="text-5xl md:text-7xl font-bold text-primary">IPO Mad Racing</h1>
+      <div className="text-center space-y-6 max-w-2xl w-full relative z-10 bg-background/70 p-0 rounded-lg shadow-xl">
+        <h1 className="text-5xl md:text-7xl font-bold text-primary pt-6">IPO Mad Racing</h1>
         <p className="text-xl md:text-2xl text-foreground/90">
           Специальное издание <br />
           в честь дня рождения
@@ -155,7 +155,7 @@ export default function EntryPage() {
 
         <CreditsDialog />
 
-        <p className="text-md md:text-lg text-muted-foreground pt-6">
+        <p className="text-md md:text-lg text-muted-foreground pt-6 pb-6">
           Собери все монетки и выйди на IPO!
           <br />
           Опасайся медведей!
@@ -164,4 +164,3 @@ export default function EntryPage() {
     </div>
   );
 }
-
