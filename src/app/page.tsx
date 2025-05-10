@@ -89,8 +89,18 @@ export default function EntryPage() {
   }
 
   return (
-    <div className="min-h-screen w-screen flex flex-col items-center justify-center bg-background text-foreground p-4 overflow-hidden relative">
-      {/* Fireworks Container */}
+    <div className="min-h-screen w-screen flex flex-col items-center justify-center text-foreground p-4 overflow-hidden relative">
+      {/* Fullscreen Background Image */}
+      <Image
+        src="/assets/images/wallpaper2.jpg"
+        alt="Background Wallpaper"
+        fill
+        style={{ objectFit: 'cover', zIndex: -10 }} // Ensure it's behind everything
+        priority
+        data-ai-hint="starry sky"
+      />
+      
+      {/* Fireworks Container (z-0 by default as it's later in DOM, or explicitly z-0/positive if needed) */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
         {backgroundFireworks.map((particle) => (
           <div
@@ -113,7 +123,7 @@ export default function EntryPage() {
       </div>
 
       {/* Main Content (needs to be above fireworks) */}
-      <div className="text-center space-y-6 max-w-2xl w-full relative z-10">
+      <div className="text-center space-y-6 max-w-2xl w-full relative z-10 bg-background/70 p-6 rounded-lg shadow-xl">
         <h1 className="text-5xl md:text-7xl font-bold text-primary">IPO Mad Racing</h1>
         <p className="text-xl md:text-2xl text-foreground/90">
           Специальное издание <br />
@@ -127,7 +137,7 @@ export default function EntryPage() {
           <Image
             src="/assets/images/RelaxMan.png"
             alt="Relaxing Man"
-            fill // Changed from layout="fill" objectFit="contain"
+            fill
             style={{ objectFit: 'contain' }}
             data-ai-hint="man relaxing business"
             priority
