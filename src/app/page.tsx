@@ -34,7 +34,7 @@ const FIREWORK_COLORS = [
 ];
 
 const NUM_BACKGROUND_FIREWORKS = 7; // Number of simultaneous firework bursts
-const PARTICLES_PER_BACKGROUND_FIREWORK = 15; // Increased from 10 to 15 for more visual impact
+const PARTICLES_PER_BACKGROUND_FIREWORK = 15; 
 const FIREWORK_REGENERATION_INTERVAL = 4000; // Regenerate fireworks every 4 seconds
 
 export default function EntryPage() {
@@ -59,8 +59,8 @@ export default function EntryPage() {
     const generatePageFireworks = () => {
       const newFireworks: FireworkParticle[] = [];
       for (let i = 0; i < NUM_BACKGROUND_FIREWORKS; i++) {
-        const originXNum = 5 + Math.random() * 90; // Burst origin X (5% to 95%)
-        const originYNum = 5 + Math.random() * 90; // Burst origin Y (5% to 95%)
+        const originXNum = 5 + Math.random() * 90; 
+        const originYNum = 5 + Math.random() * 90; 
 
         for (let j = 0; j < PARTICLES_PER_BACKGROUND_FIREWORK; j++) {
           const angle = Math.random() * Math.PI * 2;
@@ -77,7 +77,7 @@ export default function EntryPage() {
             originY: `${originYNum}%`,
             targetOffsetX: `${targetOffsetXNum}vmin`, 
             targetOffsetY: `${targetOffsetYNum}vmin`,
-            size: (2 + Math.random() * 2.5) * 2 * 2, // Increased size by factor of 2
+            size: (2 + Math.random() * 2.5) * 2 * 2, 
             color: FIREWORK_COLORS[Math.floor(Math.random() * FIREWORK_COLORS.length)],
             delay: Math.random() * (FIREWORK_REGENERATION_INTERVAL / 1000 / 2), 
             duration: 1.5 + Math.random() * 1, 
@@ -131,18 +131,22 @@ export default function EntryPage() {
         ))}
       </div>
 
-      <div className="text-center w-full h-full flex flex-col items-center justify-center relative z-10 p-0 shadow-xl pt-2 mt-0">
-        <div className="max-w-2xl w-full pt-10 px-6 pb-8"> 
-          <h1 className="text-[44px] font-bold text-primary mt-0 whitespace-nowrap pr-1 mr-1 ml-[-5px]">IPO Mad Racing</h1>
-          <p className="text-xl md:text-2xl text-foreground/90 mt-2">
-            Специальное издание <br />
-            в честь Дня Рождения
-          </p>
-          <p className="text-2xl md:text-3xl font-semibold text-accent mt-2">
-            Руслана Гайнанова
-          </p>
+      <div className="text-center w-full h-full flex flex-col items-center justify-between relative z-10 p-0 shadow-xl pt-12 pb-12"> {/* Changed pt-16 to pt-12 */}
+        <div className="max-w-2xl w-full px-6 flex flex-col items-center"> 
+          {/* Top text block */}
+          <div className="flex flex-col items-center mb-auto">
+            <h1 className="text-[44px] font-bold text-primary whitespace-nowrap pr-1 mr-1 ml-[-5px]">IPO Mad Racing</h1>
+            <p className="text-xl md:text-2xl text-foreground/90 mt-1">
+              Специальное издание <br />
+              в честь Дня Рождения
+            </p>
+            <p className="text-2xl md:text-3xl font-semibold text-accent mt-1">
+              Руслана Гайнанова
+            </p>
+          </div>
 
-          <div className="relative w-full max-w-md mx-auto aspect-[4/3] mt-6 mb-6">
+          {/* Middle image */}
+          <div className="relative w-full max-w-xs sm:max-w-sm md:max-w-md mx-auto aspect-[4/3] my-4">
             <Image
               src="/assets/images/RelaxMan.png"
               alt="Relaxing Man"
@@ -153,24 +157,27 @@ export default function EntryPage() {
             />
           </div>
 
-          <Button
-            onClick={() => router.push('/play')}
-            variant="destructive"
-            size="lg"
-            className="w-full max-w-xs text-xl py-4 rounded-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 mt-6 mb-4" 
-          >
-            Начать игру
-          </Button>
+          {/* Bottom controls and text */}
+          <div className="flex flex-col items-center w-full mt-auto">
+            <Button
+              onClick={() => router.push('/play')}
+              variant="destructive"
+              size="lg"
+              className="w-full max-w-xs text-xl py-4 rounded-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 mb-2.5" 
+            >
+              Начать игру
+            </Button>
 
-          <div className="mt-0 mb-4 pt-0">  
-             <CreditsDialog />
+            <div className="mb-2.5">  
+               <CreditsDialog />
+            </div>
+            
+            <p className="text-md md:text-lg text-muted-foreground"> 
+              Собери все монетки и выйди на IPO!
+              <br />
+              Опасайся медведей!
+            </p>
           </div>
-          
-          <p className="text-md md:text-lg text-muted-foreground pt-0 pb-7 mt-4"> 
-            Собери все монетки и выйди на IPO!
-            <br />
-            Опасайся медведей!
-          </p>
         </div>
       </div>
     </div>
