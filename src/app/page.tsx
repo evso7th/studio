@@ -116,7 +116,8 @@ export default function EntryPage() {
       <div className="text-center space-y-6 max-w-2xl w-full relative z-10">
         <h1 className="text-5xl md:text-7xl font-bold text-primary">IPO Mad Racing</h1>
         <p className="text-xl md:text-2xl text-foreground/90">
-          Специальное издание в честь дня рождения
+          Специальное издание <br />
+          в честь дня рождения
         </p>
         <p className="text-2xl md:text-3xl font-semibold text-accent">
           Руслана Гайнанова
@@ -153,3 +154,4 @@ export default function EntryPage() {
     </div>
   );
 }
+
