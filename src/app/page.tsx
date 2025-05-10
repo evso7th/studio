@@ -29,7 +29,7 @@ export default function HomePage() {
     if (dispatch) { 
       // Ensure this runs only once or under specific conditions if needed,
       // for now, it will set level complete on component mount/dispatch availability
-      dispatch({ type: 'SET_DEBUG_LEVEL_COMPLETE', payload: true });
+      // dispatch({ type: 'SET_DEBUG_LEVEL_COMPLETE', payload: true });
     }
   }, [dispatch]); // Dependency array includes dispatch
 
@@ -153,16 +153,49 @@ export default function HomePage() {
         event.preventDefault();
       }
     };
-    // Use document.body for a more global effect, ensure passive is false to allow preventDefault
     document.body.addEventListener('touchmove', preventZoom, { passive: false });
-
-    // Add touch-action: none to the body to further prevent unwanted touch behaviors like scrolling or zooming
     document.body.style.touchAction = 'none';
+
+    // Attempt to enter fullscreen mode
+    const requestFullscreen = async () => {
+      const elem = document.documentElement as any; // Use 'any' for broader compatibility with vendor prefixes
+      try {
+        if (elem.requestFullscreen) {
+          await elem.requestFullscreen();
+        } else if (elem.mozRequestFullScreen) { // Firefox
+          await elem.mozRequestFullScreen();
+        } else if (elem.webkitRequestFullscreen) { // Chrome, Safari and Opera
+          await elem.webkitRequestFullscreen();
+        } else if (elem.msRequestFullscreen) { // IE/Edge
+          await elem.msRequestFullscreen();
+        }
+      } catch (e) {
+        // Fullscreen request might be denied if not triggered by user gesture, or API not supported.
+        // Silently fail as per common practice for auto-fullscreen attempts.
+      }
+    };
+
+    // Request fullscreen when the component mounts.
+    // Note: This often requires a user gesture (e.g., a click) to succeed in modern browsers.
+    // If starting in fullscreen is critical and this doesn't work reliably,
+    // consider adding a button that the user clicks to enter fullscreen.
+    requestFullscreen();
 
 
     return () => {
       document.body.removeEventListener('touchmove', preventZoom);
-      document.body.style.touchAction = ''; // Reset style on cleanup
+      document.body.style.touchAction = ''; 
+      // It's generally good practice to offer a way to exit fullscreen if entered programmatically
+      // However, browsers typically provide their own exit mechanisms (e.g., ESC key)
+      // if (document.exitFullscreen && document.fullscreenElement) {
+      //   document.exitFullscreen();
+      // } else if (document.mozCancelFullScreen && document.mozFullScreenElement) { // Firefox
+      //   document.mozCancelFullScreen();
+      // } else if (document.webkitExitFullscreen && document.webkitFullscreenElement) { // Chrome, Safari and Opera
+      //   document.webkitExitFullscreen();
+      // } else if (document.msExitFullscreen && document.msFullscreenElement) { // IE/Edge
+      //   document.msExitFullscreen();
+      // }
     };
   }, []);
 
