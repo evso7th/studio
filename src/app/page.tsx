@@ -123,44 +123,47 @@ export default function EntryPage() {
       </div>
 
       {/* Main Content (needs to be above fireworks) */}
-      <div className="text-center space-y-6 max-w-2xl w-full relative z-10 bg-background/70 p-0 rounded-lg shadow-xl">
-        <h1 className="text-5xl md:text-7xl font-bold text-primary pt-6">IPO Mad Racing</h1>
-        <p className="text-xl md:text-2xl text-foreground/90">
-          Специальное издание <br />
-          в честь дня рождения
-        </p>
-        <p className="text-2xl md:text-3xl font-semibold text-accent">
-          Руслана Гайнанова
-        </p>
+      <div className="text-center space-y-6 w-full h-full flex flex-col items-center justify-center relative z-10 bg-background/70 p-0 shadow-xl">
+        <div className="max-w-2xl w-full p-6"> {/* Added inner container for content max-width and padding */}
+          <h1 className="text-5xl md:text-7xl font-bold text-primary pt-6">IPO Mad Racing</h1>
+          <p className="text-xl md:text-2xl text-foreground/90">
+            Специальное издание <br />
+            в честь дня рождения
+          </p>
+          <p className="text-2xl md:text-3xl font-semibold text-accent">
+            Руслана Гайнанова
+          </p>
 
-        <div className="relative w-full max-w-md mx-auto aspect-[4/3] my-8">
-          <Image
-            src="/assets/images/RelaxMan.png"
-            alt="Relaxing Man"
-            fill
-            style={{ objectFit: 'contain' }}
-            data-ai-hint="man relaxing business"
-            priority
-          />
+          <div className="relative w-full max-w-md mx-auto aspect-[4/3] my-8">
+            <Image
+              src="/assets/images/RelaxMan.png"
+              alt="Relaxing Man"
+              fill
+              style={{ objectFit: 'contain' }}
+              data-ai-hint="man relaxing business"
+              priority
+            />
+          </div>
+
+          <Button
+            onClick={() => router.push('/play')}
+            variant="destructive"
+            size="lg"
+            className="w-full max-w-xs text-xl py-4 rounded-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200"
+          >
+            Начать игру
+          </Button>
+
+          <CreditsDialog />
+
+          <p className="text-md md:text-lg text-muted-foreground pt-6 pb-6">
+            Собери все монетки и выйди на IPO!
+            <br />
+            Опасайся медведей!
+          </p>
         </div>
-
-        <Button
-          onClick={() => router.push('/play')}
-          variant="destructive"
-          size="lg"
-          className="w-full max-w-xs text-xl py-4 rounded-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200"
-        >
-          Начать игру
-        </Button>
-
-        <CreditsDialog />
-
-        <p className="text-md md:text-lg text-muted-foreground pt-6 pb-6">
-          Собери все монетки и выйди на IPO!
-          <br />
-          Опасайся медведей!
-        </p>
       </div>
     </div>
   );
 }
+
