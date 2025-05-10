@@ -119,7 +119,7 @@ export const HERO_BASE_SPEED = 1.25;
 export const ENEMY_WIDTH = 48;
 export const ENEMY_HEIGHT = 48;
 export const ENEMY_COLLISION_RADIUS = 24;
-export const ENEMY_IMAGE_SRC = "/assets/images/BearFace.png";
+export const ENEMY_IMAGE_SRC = "/assets/images/bearFace.png"; // Updated image source
 export const ENEMY_DEFAULT_SPEED = INITIAL_PLATFORM_SPEED * 0.8; // Slightly slower than platforms
 
 export interface GameState {
@@ -178,3 +178,4 @@ export const heroAnimationsConfig: HeroAnimations = {
     height: HERO_HEIGHT,
   },
 };
+
