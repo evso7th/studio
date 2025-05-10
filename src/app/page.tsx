@@ -131,9 +131,9 @@ export default function EntryPage() {
         ))}
       </div>
 
-      <div className="text-center space-y-6 w-full h-full flex flex-col items-center justify-center relative z-10 p-0 shadow-xl pt-2"> {/* Changed pt-5 to pt-2 */}
+      <div className="text-center space-y-6 w-full h-full flex flex-col items-center justify-center relative z-10 p-0 shadow-xl pt-2">
         <div className="max-w-2xl w-full pt-1 px-6 pb-6"> 
-          <h1 className="text-[42px] font-bold text-primary pt-1 whitespace-nowrap pr-1 mr-1 ml-[-5px]">IPO Mad Racing</h1>
+          <h1 className="text-[48px] font-bold text-primary mt-[-8px] whitespace-nowrap pr-1 mr-1 ml-[-5px]">IPO Mad Racing</h1>
           <p className="text-xl md:text-2xl text-foreground/90 mt-[-10px]">
             Специальное издание <br />
             в честь Дня Рождения
@@ -142,7 +142,7 @@ export default function EntryPage() {
             Руслана Гайнанова
           </p>
 
-          <div className="relative w-full max-w-md mx-auto aspect-[4/3] mt-[-10px] mb-0">
+          <div className="relative w-full max-w-md mx-auto aspect-[4/3] mt-[2px] mb-0">
             <Image
               src="/assets/images/RelaxMan.png"
               alt="Relaxing Man"
@@ -157,7 +157,7 @@ export default function EntryPage() {
             onClick={() => router.push('/play')}
             variant="destructive"
             size="lg"
-            className="w-full max-w-xs text-xl py-4 rounded-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 mt-2 mb-3" 
+            className="w-full max-w-xs text-xl py-4 rounded-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 mt-5 mb-3" 
           >
             Начать игру
           </Button>
@@ -176,4 +176,3 @@ export default function EntryPage() {
     </div>
   );
 }
-
