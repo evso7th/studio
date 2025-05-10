@@ -162,7 +162,7 @@ export default function EntryPage() {
             Начать игру
           </Button>
 
-          <div className="mt-[-12px] mb-3 pt-10">  
+          <div className="mt-[-24px] mb-3 pt-10">  
              <CreditsDialog />
           </div>
           
