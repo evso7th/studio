@@ -88,8 +88,8 @@ export const PLATFORM_NON_GROUND_HEIGHT = 24;
 export const TARGET_JUMP_HEIGHT_PX = 180; 
 
 // Platform 1 is the lower moving platform, Platform 2 is the higher one.
-export const PLATFORM1_Y_OFFSET = 116; // Was 108, increased by 8
-export const PLATFORM2_Y_OFFSET = 235; // Was 215, increased by 20
+export const PLATFORM1_Y_OFFSET = 116; 
+export const PLATFORM2_Y_OFFSET = 235; 
 
 export const INITIAL_PLATFORM_SPEED = 0.75; 
 export const INITIAL_PLATFORM1_X_PERCENT = 1.0; 
@@ -140,26 +140,27 @@ export type GameAction =
 
 export const heroAnimationsConfig: HeroAnimations = {
   idle: {
-    src: "https://neurostaffing.online/wp-content/uploads/2025/05/HeroJeans3.png", 
+    src: "/assets/images/HeroJeans3.png", 
     frames: 1,
     fps: 1,
     width: HERO_WIDTH, 
     height: HERO_HEIGHT, 
   },
   run: {
-    src: "https://neurostaffing.online/wp-content/uploads/2025/05/HeroJeans3Run.png", 
-    frames: 4, 
+    src: "/assets/images/HeroJeans3.png", // Using the same image for now as per request. For true animation, this would be a sprite sheet.
+    frames: 1, // Assuming 1 frame if it's a static image, change if it becomes a sprite sheet
     fps: 10, 
     width: HERO_WIDTH, 
     height: HERO_HEIGHT,
   },
   jump: {
-    src: "https://neurostaffing.online/wp-content/uploads/2025/05/HeroJeans3Jump.png", 
-    frames: 1, 
+    src: "/assets/images/HeroJeans3.png", // Using the same image for now.
+    frames: 1, // Assuming 1 frame.
     fps: 1,
     width: HERO_WIDTH,
     height: HERO_HEIGHT,
   },
 };
+
 
 
