@@ -3,7 +3,7 @@
 "use client";
 
 import type { Reducer} from 'react';
-import { useReducer, useCallback, useEffect, useRef } from 'react'; 
+import { useReducer, useCallback, useEffect as useReactEffect, useRef } from 'react'; 
 import type { GameState, GameAction, HeroType, PlatformType, CoinType, Size, EnemyType } from '@/lib/gameTypes'; 
 import { 
     HERO_APPEARANCE_DURATION_MS, 
@@ -112,7 +112,7 @@ const getLevelEnemies = (gameAreaWidth: number, gameAreaHeight: number, level: n
   return [
     {
       id: 'enemy1_level2',
-      x: gameAreaWidth / 3, // Start somewhere in the middle
+      x: gameAreaWidth / 3, 
       y: enemyY,
       width: ENEMY_WIDTH,
       height: ENEMY_HEIGHT,
@@ -598,7 +598,7 @@ export function useGameLogic() {
     dispatch(action);
   }, []); 
   
-  useEffect(() => {
+  useReactEffect(() => {
     if (gameState.gameArea.width > 0 && gameState.gameArea.height > 0 && !gameState.isGameInitialized) {
       dispatch({ 
         type: 'UPDATE_GAME_AREA', 
@@ -614,3 +614,4 @@ export function useGameLogic() {
 
   return { gameState, dispatch: handleGameAction, gameTick };
 }
+

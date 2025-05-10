@@ -98,8 +98,9 @@ export const PLATFORM_NON_GROUND_HEIGHT = 24;
 export const TARGET_JUMP_HEIGHT_PX = 180; 
 
 // Platform 1 is the lower moving platform, Platform 2 is the higher one.
-export const PLATFORM1_Y_OFFSET = 116; 
-export const PLATFORM2_Y_OFFSET = 235; 
+export const PLATFORM1_Y_OFFSET = 136; // 116 + 20 (global lift) + 0 (lower platform specific lift)
+export const PLATFORM2_Y_OFFSET = 275; // 235 + 20 (global lift) + 20 (upper platform specific lift)
+
 
 export const INITIAL_PLATFORM_SPEED = 0.75; 
 export const INITIAL_PLATFORM1_X_PERCENT = 1.0; 
@@ -119,8 +120,8 @@ export const HERO_BASE_SPEED = 1.25;
 export const ENEMY_WIDTH = 48;
 export const ENEMY_HEIGHT = 48;
 export const ENEMY_COLLISION_RADIUS = 24;
-export const ENEMY_IMAGE_SRC = "/assets/images/bearFace.png"; // Updated image source
-export const ENEMY_DEFAULT_SPEED = INITIAL_PLATFORM_SPEED * 0.8; // Slightly slower than platforms
+export const ENEMY_IMAGE_SRC = "/assets/images/bearFace.png";
+export const ENEMY_DEFAULT_SPEED = 0.5; // Changed from INITIAL_PLATFORM_SPEED * 0.8
 
 export interface GameState {
   hero: HeroType;
@@ -178,4 +179,5 @@ export const heroAnimationsConfig: HeroAnimations = {
     height: HERO_HEIGHT,
   },
 };
+
 
