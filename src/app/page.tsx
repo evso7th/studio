@@ -25,11 +25,11 @@ export default function HomePage() {
   const PARALLAX_FACTOR = 0.2; 
 
   // TEMPORARY: For debugging - start with level complete screen active
-  useReactEffect(() => {
-    if (dispatch) { // Ensure dispatch is available
-      dispatch({ type: 'SET_DEBUG_LEVEL_COMPLETE', payload: true });
-    }
-  }, [dispatch]);
+  // useReactEffect(() => {
+  //   if (dispatch) { // Ensure dispatch is available
+  //     dispatch({ type: 'SET_DEBUG_LEVEL_COMPLETE', payload: true });
+  //   }
+  // }, [dispatch]);
 
 
   const updateGameAreaSize = useCallback(() => {
@@ -194,7 +194,7 @@ export default function HomePage() {
         ref={gameAreaRef} 
         className="flex-grow relative w-full overflow-hidden pt-16 pb-20" 
         style={{
-          backgroundImage: 'url("https://neurostaffing.online/wp-content/uploads/2025/05/BackGroundBase.png")',
+          backgroundImage: 'url("/assets/images/DackGroundBase.png")',
           backgroundSize: 'cover',
           backgroundPosition: `${parallaxBgX - 100}px center`, 
           backgroundRepeat: 'no-repeat',
@@ -231,3 +231,4 @@ export default function HomePage() {
     </div>
   );
 }
+
