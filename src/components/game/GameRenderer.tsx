@@ -118,19 +118,25 @@ export function HeroComponent({ hero, gameAreaHeight, paddingTop, heroAppearance
     appearanceProps = { type: 'heroAppear', progress };
   }
 
-  const heroImageSrc = "https://neurostaffing.online/wp-content/uploads/2025/05/HeroJeans3.png";
+  const heroIdleSrc = hero.animations.idle.src;
+  const heroRunSrc = hero.animations.run.src;
+  const heroJumpSrc = hero.animations.jump.src;
+
+  let currentHeroImageSrc = heroIdleSrc;
   let heroImageHint = "character fantasy";
 
   if (hero.action === 'run_left' || hero.action === 'run_right') {
+    currentHeroImageSrc = heroRunSrc; // This would be a sprite sheet
     heroImageHint = "character running";
   } else if (hero.action === 'jump_up' || hero.action === 'fall_down') {
+    currentHeroImageSrc = heroJumpSrc; // This would be a sprite sheet
     heroImageHint = "character jumping";
   }
 
 
   return (
     <img
-      src={heroImageSrc}
+      src={currentHeroImageSrc}
       alt="Hero"
       style={getGameObjectStyle({ 
         ...hero, 
@@ -164,7 +170,7 @@ export function PlatformComponent({ platform, gameAreaHeight, paddingTop }: { pl
     ...baseStyle,
     backgroundImage: platform.id === 'platform_ground' 
       ? 'url("https://neurostaffing.online/wp-content/uploads/2025/05/GroundFloor.png")' 
-      : 'url("https://neurostaffing.online/wp-content/uploads/2025/05/PlatformGrassShort.png")',
+      : 'url("/assets/images/PlatformGrass.png")', // Updated to local asset
     backgroundSize: platform.id === 'platform_ground' ? 'auto 100%' : '100% 100%', 
     backgroundPosition: platform.id === 'platform_ground' ? 'left bottom' : 'center', 
     backgroundRepeat: platform.id === 'platform_ground' ? 'repeat-x' : 'no-repeat', 
@@ -272,8 +278,14 @@ export function CoinComponent({ coin, gameAreaHeight, paddingTop }: { coin: Coin
       <img
         src="https://neurostaffing.online/wp-content/uploads/2025/04/Спасибка1.png"
         alt="Coin"
-        className="animate-rotate-y"
-        style={baseStyle} 
+        className="animate-rotate-y" 
+        style={{
+          ...baseStyle,
+          // Simulating 3D effect with drop shadow and slight perspective
+          transformStyle: 'preserve-3d', // Important for 3D effects on children if any
+          // transform: `rotateY(${coin.rotationY || 0}deg) translateZ(1px)`, // Example rotation
+          boxShadow: '2px 2px 3px rgba(0,0,0,0.2), inset 0 0 2px rgba(255,255,255,0.3)', // Inset shadow for top highlight
+        }}
         role="img" 
         aria-label="Coin"
         data-ai-hint="gold coin"
