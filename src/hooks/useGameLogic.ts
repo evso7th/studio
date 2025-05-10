@@ -4,7 +4,7 @@
 
 import type { Reducer} from 'react';
 import { useReducer, useCallback, useEffect as useReactEffect, useRef } from 'react'; 
-import type { GameState, GameAction, HeroType, PlatformType, CoinType, Size, EnemyType } from '@/lib/gameTypes'; 
+import type { GameState, GameAction, HeroType, PlatformType, CoinType, Size } from '@/lib/gameTypes'; 
 import { 
     HERO_APPEARANCE_DURATION_MS, 
     PLATFORM_GROUND_Y_FROM_BOTTOM, 
@@ -65,6 +65,7 @@ const initialHeroState: HeroType = {
 
 const getLevelPlatforms = (gameAreaWidth: number, gameAreaHeight: number, level: number): PlatformType[] => {
   const groundPlatformY = calculatePlatformGroundY(gameAreaHeight);
+  const platformSpeed = level === 2 ? 0.75 : INITIAL_PLATFORM_SPEED;
 
   return [
     {
@@ -78,7 +79,7 @@ const getLevelPlatforms = (gameAreaWidth: number, gameAreaHeight: number, level:
       x: gameAreaWidth * INITIAL_PLATFORM1_X_PERCENT - PLATFORM_DEFAULT_WIDTH, 
       y: groundPlatformY + PLATFORM_GROUND_THICKNESS + PLATFORM1_Y_OFFSET, 
       width: PLATFORM_DEFAULT_WIDTH, height: PLATFORM_NON_GROUND_HEIGHT, 
-      isMoving: true, speed: INITIAL_PLATFORM_SPEED, direction: -1, 
+      isMoving: true, speed: platformSpeed, direction: -1, 
       moveAxis: 'x',
       moveRange: { min: 0, max: gameAreaWidth - PLATFORM_DEFAULT_WIDTH },
       imageSrc: "/assets/images/PlatformGrass.png",
@@ -88,7 +89,7 @@ const getLevelPlatforms = (gameAreaWidth: number, gameAreaHeight: number, level:
       x: gameAreaWidth * INITIAL_PLATFORM2_X_PERCENT, 
       y: groundPlatformY + PLATFORM_GROUND_THICKNESS + PLATFORM2_Y_OFFSET, 
       width: PLATFORM_DEFAULT_WIDTH, height: PLATFORM_NON_GROUND_HEIGHT,
-      isMoving: true, speed: INITIAL_PLATFORM_SPEED, direction: 1, 
+      isMoving: true, speed: platformSpeed, direction: 1, 
       moveAxis: 'x',
       moveRange: { min: 0, max: gameAreaWidth - PLATFORM_DEFAULT_WIDTH },
       imageSrc: "/assets/images/PlatformGrass.png",
@@ -96,35 +97,48 @@ const getLevelPlatforms = (gameAreaWidth: number, gameAreaHeight: number, level:
   ];
 };
 
+// Defines enemies that spawn AT THE START of a level.
+// Level 2 enemy is spawned dynamically, so it's not defined here.
 const getLevelEnemies = (gameAreaWidth: number, gameAreaHeight: number, level: number, platforms: PlatformType[]): EnemyType[] => {
-  if (level !== 2) return [];
+  if (level === 2) { // Level 2 enemy is spawned dynamically
+    return [];
+  }
+  // Define static enemies for other levels here if needed
+  // e.g., if level 1 had an enemy:
+  // if (level === 1) {
+  //   return [createEnemy('enemy_level1_static', gameAreaWidth, gameAreaHeight, platforms)];
+  // }
+  return []; 
+};
 
+// Helper function to create an enemy instance
+function createEnemy(id: string, gameAreaWidth: number, gameAreaHeight: number, platforms: PlatformType[]): EnemyType {
   const platform1 = platforms.find(p => p.id === 'platform1');
   const platform2 = platforms.find(p => p.id === 'platform2');
+  
+  let enemyYPosition = gameAreaHeight / 2 - ENEMY_HEIGHT / 2; // Fallback if platforms not found
 
-  if (!platform1 || !platform2) return [];
-
-  const lowerPlatformTop = platform1.y + platform1.height;
-  const upperPlatformBottom = platform2.y;
-  const midPointY = lowerPlatformTop + (upperPlatformBottom - lowerPlatformTop) / 2;
-  const enemyY = midPointY - ENEMY_HEIGHT / 2;
-
-  return [
-    {
-      id: 'enemy1_level2',
-      x: gameAreaWidth / 3, 
-      y: enemyY,
+  if (platform1 && platform2) {
+      const lowerPlatformTop = platform1.y + platform1.height;
+      const upperPlatformBottom = platform2.y;
+      const midPointY = lowerPlatformTop + (upperPlatformBottom - lowerPlatformTop) / 2;
+      enemyYPosition = midPointY - ENEMY_HEIGHT / 2;
+  }
+  
+  return {
+      id: id,
+      x: gameAreaWidth / 2 - ENEMY_WIDTH / 2, // Spawn in horizontal center
+      y: enemyYPosition,
       width: ENEMY_WIDTH,
       height: ENEMY_HEIGHT,
       imageSrc: ENEMY_IMAGE_SRC,
-      speed: ENEMY_DEFAULT_SPEED,
+      speed: ENEMY_DEFAULT_SPEED, // 0.5
       direction: 1,
       moveAxis: 'x',
       moveRange: { min: 0, max: gameAreaWidth - ENEMY_WIDTH },
       collisionRadius: ENEMY_COLLISION_RADIUS,
-    }
-  ];
-};
+  };
+}
 
 
 function spawnNextCoinPair(gameArea: Size, coinSize: number, currentPairId: number, platforms: PlatformType[]): CoinType[] {
@@ -160,7 +174,7 @@ function spawnNextCoinPair(gameArea: Size, coinSize: number, currentPairId: numb
   newPair.push({
     id: `coin_p${currentPairId}_0_${Date.now()}`,
     x: x1, y: y1, width: coinSize, height: coinSize,
-    color: 'hsl(var(--coin-color))', collected: false, isExploding: false, explosionProgress: 0,
+    collected: false, isExploding: false, explosionProgress: 0,
     isSpawning: true, 
     spawnExplosionProgress: 0,
     pairId: currentPairId,
@@ -180,7 +194,7 @@ function spawnNextCoinPair(gameArea: Size, coinSize: number, currentPairId: numb
   newPair.push({
     id: `coin_p${currentPairId}_1_${Date.now()}`,
     x: x2, y: y2, width: coinSize, height: coinSize,
-    color: 'hsl(var(--coin-color))', collected: false, isExploding: false, explosionProgress: 0,
+    collected: false, isExploding: false, explosionProgress: 0,
     isSpawning: false, 
     spawnExplosionProgress: 0, 
     pairId: currentPairId,
@@ -195,12 +209,16 @@ function spawnNextCoinPair(gameArea: Size, coinSize: number, currentPairId: numb
 const getDefaultInitialGameState = (gameAreaWidth = 800, gameAreaHeight = 600, level = 1): GameState => {
   const groundPlatformY = calculatePlatformGroundY(gameAreaHeight);
   const platforms = getLevelPlatforms(gameAreaWidth, gameAreaHeight, level);
-  const enemies = getLevelEnemies(gameAreaWidth, gameAreaHeight, level, platforms);
+  const enemies = getLevelEnemies(gameAreaWidth, gameAreaHeight, level, platforms); // Level 2 will start with no enemies
+  
+  const heroSpeed = level === 2 ? 1.25 : HERO_BASE_SPEED;
+
   return {
     hero: {
       ...initialHeroState,
       x: gameAreaWidth / 2 - initialHeroState.width / 2,
       y: groundPlatformY + PLATFORM_GROUND_THICKNESS,
+      // baseSpeed will be implicitly handled by HERO_BASE_SPEED constant if not made dynamic per level
     },
     platforms: platforms,
     activeCoins: spawnNextCoinPair({ width: gameAreaWidth, height: gameAreaHeight }, COIN_SIZE, 0, platforms),
@@ -227,7 +245,8 @@ function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
     case 'MOVE_LEFT_START':
       if (state.heroAppearance === 'visible' && !state.levelCompleteScreenActive && !state.gameLost) {
-        return { ...state, hero: { ...state.hero, currentSpeedX: -HERO_BASE_SPEED, action: 'run_left', facingDirection: 'left' } };
+        const currentHeroSpeed = state.currentLevel === 2 ? 1.25 : HERO_BASE_SPEED;
+        return { ...state, hero: { ...state.hero, currentSpeedX: -currentHeroSpeed, action: 'run_left', facingDirection: 'left' } };
       }
       return state;
     case 'MOVE_LEFT_STOP':
@@ -237,7 +256,8 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       return state;
     case 'MOVE_RIGHT_START':
       if (state.heroAppearance === 'visible' && !state.levelCompleteScreenActive && !state.gameLost) {
-        return { ...state, hero: { ...state.hero, currentSpeedX: HERO_BASE_SPEED, action: 'run_right', facingDirection: 'right' } };
+         const currentHeroSpeed = state.currentLevel === 2 ? 1.25 : HERO_BASE_SPEED;
+        return { ...state, hero: { ...state.hero, currentSpeedX: currentHeroSpeed, action: 'run_right', facingDirection: 'right' } };
       }
       return state;
     case 'MOVE_RIGHT_STOP':
@@ -280,7 +300,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         paddingTop: state.paddingTop,
       };
     }
-    case 'SET_DEBUG_LEVEL_COMPLETE': {
+    case 'SET_DEBUG_LEVEL_COMPLETE': { // This case might be used for debugging
       return {
         ...state,
         levelCompleteScreenActive: action.payload,
@@ -298,7 +318,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       let nextPlatforms = currentPlatforms.map(p => ({ ...p }));
       let nextHero = { ...heroState, velocity: { ...heroState.velocity }, animations: { ...heroState.animations} }; 
       let nextActiveCoins = currentActiveCoins.map(c => ({ ...c }));
-      let nextEnemies = currentEnemies.map(e => ({ ...e }));
+      let nextEnemies = [...currentEnemies.map(e => ({ ...e }))]; // Clone enemies array
       let nextScore = currentScore;
       let nextTotalCollected = currentTotalCollected;
       let nextPairIdx = currentPairIdx;
@@ -362,7 +382,9 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         }
         if (p.isMoving && p.id !== 'platform_ground') {
           let platformNewX = p.x;
-          let platformVelX = p.speed * p.direction;
+          const platformSpeed = state.currentLevel === 2 ? 0.75 : p.speed;
+          let platformVelX = platformSpeed * p.direction;
+
           if (p.moveAxis === 'x' && p.moveRange) {
             platformNewX += platformVelX * (deltaTime / (1000/60)); 
             if (platformNewX <= p.moveRange.min || platformNewX + p.width >= p.moveRange.max + p.width ) { 
@@ -372,7 +394,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
             }
           }
            const platformNewY = groundPlatformY + PLATFORM_GROUND_THICKNESS + (p.id === 'platform1' ? PLATFORM1_Y_OFFSET : PLATFORM2_Y_OFFSET);
-          return { ...p, x: platformNewX, y: platformNewY, velocity: { x: platformVelX, y: 0 } };
+          return { ...p, x: platformNewX, y: platformNewY, velocity: { x: platformVelX, y: 0 }, speed: platformSpeed };
         }
         return { ...p, velocity: {x: 0, y: 0}}; 
       });
@@ -415,7 +437,10 @@ function gameReducer(state: GameState, action: GameAction): GameState {
           }
         }
         
-        let newPosX = nextHero.x + nextHero.currentSpeedX * (deltaTime / (1000/60)) + platformMovementEffectX;
+        const currentHeroBaseSpeed = state.currentLevel === 2 ? 1.25 : HERO_BASE_SPEED;
+        const heroMovementX = (nextHero.currentSpeedX !== 0 ? (nextHero.currentSpeedX > 0 ? currentHeroBaseSpeed : -currentHeroBaseSpeed) : 0);
+
+        let newPosX = nextHero.x + heroMovementX * (deltaTime / (1000/60)) + platformMovementEffectX;
         let newPosY = nextHero.y + newVelY * (deltaTime / (1000/60));
         
         if (newVelY < -GRAVITY_ACCELERATION * 0.5) nextHero.action = 'fall_down'; 
@@ -484,11 +509,8 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         for (const enemy of nextEnemies) {
             const enemyCenterX = enemy.x + enemy.width / 2;
             const enemyCenterY = enemy.y + enemy.height / 2;
-
-            // Find closest point on hero's AABB to enemy's circle center
             const closestX = Math.max(nextHero.x, Math.min(enemyCenterX, nextHero.x + nextHero.width));
             const closestY = Math.max(nextHero.y, Math.min(enemyCenterY, nextHero.y + nextHero.height));
-
             const distanceX = enemyCenterX - closestX;
             const distanceY = enemyCenterY - closestY;
             const distanceSquared = (distanceX * distanceX) + (distanceY * distanceY);
@@ -508,13 +530,15 @@ function gameReducer(state: GameState, action: GameAction): GameState {
             nextHero.action = 'idle';
             nextHeroAppearance = 'appearing';
             nextHeroAppearElapsedTime = 0;
+            // Reset score or lives for the current level if desired upon enemy hit
+            // For now, just resetting hero position and appearance
         }
 
 
         let collectedAnyCoinThisTick = false;
         let newlyCollectedCountThisTick = 0;
         
-        if (!heroHitByEnemy) { // Only process coins if not hit by enemy this tick
+        if (!heroHitByEnemy) { 
             nextActiveCoins = nextActiveCoins.map(coin => {
               if (!coin.collected && !coin.isExploding && !coin.isSpawning && !coin.isPendingSpawn) { 
                 if (nextHero.x < coin.x + coin.width &&
@@ -533,6 +557,12 @@ function gameReducer(state: GameState, action: GameAction): GameState {
             if (collectedAnyCoinThisTick) {
               nextScore += newlyCollectedCountThisTick;
               nextTotalCollected += newlyCollectedCountThisTick;
+
+              // Spawn enemy on level 2 after first coin collected
+              if (state.currentLevel === 2 && nextTotalCollected === 1 && state.enemies.length === 0) {
+                  const newEnemy = createEnemy('enemy_level2_dynamic', gameArea.width, gameArea.height, nextPlatforms);
+                  nextEnemies.push(newEnemy);
+              }
 
               const coinsOfCurrentPair = nextActiveCoins.filter(c => c.pairId === currentPairIdx);
               if (coinsOfCurrentPair.length > 0 && coinsOfCurrentPair.every(c => c.collected)) {
@@ -614,4 +644,3 @@ export function useGameLogic() {
 
   return { gameState, dispatch: handleGameAction, gameTick };
 }
-

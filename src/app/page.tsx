@@ -25,13 +25,13 @@ export default function HomePage() {
   const PARALLAX_FACTOR = 0.2; 
 
   // TEMPORARY: For debugging - start with level complete screen active
-  useReactEffect(() => {
-    if (dispatch) { 
-      // Ensure this runs only once or under specific conditions if needed,
-      // for now, it will set level complete on component mount/dispatch availability
-      // dispatch({ type: 'SET_DEBUG_LEVEL_COMPLETE', payload: true });
-    }
-  }, [dispatch]); // Dependency array includes dispatch
+  // useReactEffect(() => {
+  //   if (dispatch) { 
+  //     // Ensure this runs only once or under specific conditions if needed,
+  //     // for now, it will set level complete on component mount/dispatch availability
+  //     // dispatch({ type: 'SET_DEBUG_LEVEL_COMPLETE', payload: true }); // This line is now commented out or removed
+  //   }
+  // }, [dispatch]);
 
 
   const updateGameAreaSize = useCallback(() => {
@@ -156,46 +156,28 @@ export default function HomePage() {
     document.body.addEventListener('touchmove', preventZoom, { passive: false });
     document.body.style.touchAction = 'none';
 
-    // Attempt to enter fullscreen mode
     const requestFullscreen = async () => {
-      const elem = document.documentElement as any; // Use 'any' for broader compatibility with vendor prefixes
+      const elem = document.documentElement as any; 
       try {
         if (elem.requestFullscreen) {
-          await elem.requestFullscreen();
-        } else if (elem.mozRequestFullScreen) { // Firefox
-          await elem.mozRequestFullScreen();
-        } else if (elem.webkitRequestFullscreen) { // Chrome, Safari and Opera
-          await elem.webkitRequestFullscreen();
-        } else if (elem.msRequestFullscreen) { // IE/Edge
+          await elem.requestFullscreen({ navigationUI: "hide" });
+        } else if (elem.mozRequestFullScreen) { 
+          await elem.mozRequestFullScreen({ navigationUI: "hide" });
+        } else if (elem.webkitRequestFullscreen) { 
+          await elem.webkitRequestFullscreen(); // Safari doesn't support navigationUI option well
+        } else if (elem.msRequestFullscreen) { 
           await elem.msRequestFullscreen();
         }
       } catch (e) {
-        // Fullscreen request might be denied if not triggered by user gesture, or API not supported.
-        // Silently fail as per common practice for auto-fullscreen attempts.
+        // Silently fail.
       }
     };
-
-    // Request fullscreen when the component mounts.
-    // Note: This often requires a user gesture (e.g., a click) to succeed in modern browsers.
-    // If starting in fullscreen is critical and this doesn't work reliably,
-    // consider adding a button that the user clicks to enter fullscreen.
-    requestFullscreen();
-
+    
+    // requestFullscreen(); // Auto fullscreen can be annoying, consider a user-initiated button
 
     return () => {
       document.body.removeEventListener('touchmove', preventZoom);
       document.body.style.touchAction = ''; 
-      // It's generally good practice to offer a way to exit fullscreen if entered programmatically
-      // However, browsers typically provide their own exit mechanisms (e.g., ESC key)
-      // if (document.exitFullscreen && document.fullscreenElement) {
-      //   document.exitFullscreen();
-      // } else if (document.mozCancelFullScreen && document.mozFullScreenElement) { // Firefox
-      //   document.mozCancelFullScreen();
-      // } else if (document.webkitExitFullscreen && document.webkitFullscreenElement) { // Chrome, Safari and Opera
-      //   document.webkitExitFullscreen();
-      // } else if (document.msExitFullscreen && document.msFullscreenElement) { // IE/Edge
-      //   document.msExitFullscreen();
-      // }
     };
   }, []);
 
@@ -288,4 +270,3 @@ export default function HomePage() {
     </div>
   );
 }
-
