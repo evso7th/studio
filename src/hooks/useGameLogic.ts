@@ -77,7 +77,7 @@ const getLevelPlatforms = (gameAreaWidth: number, gameAreaHeight: number, level:
   if (level === 2) {
     platformSpeed = 0.75;
   } else if (level === 3) {
-    platformSpeed = 0.75; // Or adjust for level 3 if needed
+    platformSpeed = 0.75; 
     isPlatform2Slippery = true;
   }
 
@@ -87,7 +87,7 @@ const getLevelPlatforms = (gameAreaWidth: number, gameAreaHeight: number, level:
       id: 'platform_ground', x: -100, y: groundPlatformY, 
       width: gameAreaWidth + 200, height: PLATFORM_GROUND_THICKNESS, 
       isMoving: false, speed: 0, direction: 1, moveAxis: 'x',
-      imageSrc: "/assets/images/PlatformGrass.png", // Using PlatformGrass for ground too
+      imageSrc: "/assets/images/PlatformGrass.png", 
     },
     {
       id: 'platform1', 
@@ -310,7 +310,10 @@ const getDefaultInitialGameState = (gameAreaWidth = 800, gameAreaHeight = 600, l
   };
 };
 
-let initialGameState = getDefaultInitialGameState();
+// To start on level 3 for debugging, change the default level in the line below:
+// e.g., let initialGameState = getDefaultInitialGameState(undefined, undefined, 3);
+let initialGameState = getDefaultInitialGameState(undefined, undefined, 3);
+
 
 function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
@@ -345,7 +348,9 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       const { width, height, paddingTop } = action.payload;
       if (width <= 0 || height <= 0) return state; 
 
-      const newState = getDefaultInitialGameState(width, height, state.currentLevel);
+      // Preserve the current starting level if already set (e.g. for debugging level 3)
+      const startingLevel = state.currentLevel > 1 ? state.currentLevel : 1;
+      const newState = getDefaultInitialGameState(width, height, state.isGameInitialized ? state.currentLevel : startingLevel);
       return {
         ...newState,
         paddingTop,
@@ -364,6 +369,18 @@ function gameReducer(state: GameState, action: GameAction): GameState {
     }
     case 'NEXT_LEVEL': {
       const nextLevel = state.currentLevel + 1;
+      // For now, level 3 is the final level, loop back or show game complete
+      if (nextLevel > 3) { 
+        // Option 1: Restart from level 1 (or show a game complete screen later)
+        const { width, height } = state.gameArea;
+        const newState = getDefaultInitialGameState(width, height, 1); // Restart to level 1
+         return {
+          ...newState,
+          isGameInitialized: true,
+          paddingTop: state.paddingTop,
+          levelCompleteScreenActive: false, // Or a new "Game Over You Win!" screen
+        };
+      }
       const { width, height } = state.gameArea;
       const newState = getDefaultInitialGameState(width, height, nextLevel);
       return {
@@ -476,6 +493,29 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       nextEnemies = nextEnemies.map(enemy => {
         let updatedEnemy = { ...enemy };
 
+        if (updatedEnemy.isDefeated && updatedEnemy.defeatTimer !== undefined) {
+          const newDefeatTimer = updatedEnemy.defeatTimer - deltaTime;
+          if (newDefeatTimer <= 0) {
+            // Enemy respawns or is removed - for now, let's make it respawn for simplicity
+             updatedEnemy = {
+                ...updatedEnemy,
+                isDefeated: false,
+                defeatTimer: 0,
+                defeatExplosionProgress: 0,
+                x: gameArea.width / 2 - updatedEnemy.width / 2, // Respawn at initial position
+                y: updatedEnemy.y, // Keep original Y
+                direction: 1, // Reset direction
+                isFrozen: false,
+                frozenTimer: 0,
+                periodicFreezeIntervalTimer: ENEMY_PERIODIC_FREEZE_INTERVAL_MS,
+             };
+          } else {
+             const defeatProgress = 1 - (newDefeatTimer / ENEMY_DEFEAT_DURATION_MS);
+             return { ...updatedEnemy, defeatTimer: newDefeatTimer, defeatExplosionProgress: Math.min(1, defeatProgress) };
+          }
+        }
+
+
         if (updatedEnemy.isFrozen && updatedEnemy.frozenTimer !== undefined) {
           const newFrozenTimer = updatedEnemy.frozenTimer - deltaTime;
           if (newFrozenTimer <= 0) {
@@ -490,7 +530,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
           }
         }
 
-        if (!updatedEnemy.isFrozen && updatedEnemy.periodicFreezeIntervalTimer !== undefined) {
+        if (!updatedEnemy.isDefeated && !updatedEnemy.isFrozen && updatedEnemy.periodicFreezeIntervalTimer !== undefined) {
           const newPeriodicIntervalTimer = updatedEnemy.periodicFreezeIntervalTimer - deltaTime;
           if (newPeriodicIntervalTimer <= 0) {
             return { 
@@ -503,7 +543,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
           updatedEnemy = { ...updatedEnemy, periodicFreezeIntervalTimer: newPeriodicIntervalTimer };
         }
         
-        if (!updatedEnemy.isFrozen) {
+        if (!updatedEnemy.isDefeated && !updatedEnemy.isFrozen) {
             let enemyNewX = updatedEnemy.x;
             const enemyBaseSpeed = (state.currentLevel === 2 || state.currentLevel === 3) ? ENEMY_DEFAULT_SPEED : updatedEnemy.speed;
             let enemyVelX = enemyBaseSpeed * updatedEnemy.direction;
@@ -522,7 +562,8 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         return updatedEnemy; 
       });
       
-      nextEnemies = nextEnemies.filter(e => !(e.isDefeated && e.defeatTimer <= 0 ));
+      // Filter out enemies whose defeat explosion is over (if we made them disappear after explosion)
+      // For now, they "respawn" above so we don't filter them if they just completed defeatTimer.
 
 
       if (state.heroAppearance === 'appearing') {
@@ -671,9 +712,14 @@ function gameReducer(state: GameState, action: GameAction): GameState {
           if (distanceSquared < (enemy.collisionRadius * enemy.collisionRadius)) {
               heroHitByEnemy = true;
               // Reset the specific enemy that was hit if it has periodic freeze
-              if (enemy.periodicFreezeIntervalTimer !== undefined) {
-                 nextEnemies[i] = {...enemy, isFrozen: false, frozenTimer: 0, periodicFreezeIntervalTimer: ENEMY_PERIODIC_FREEZE_INTERVAL_MS };
-              }
+              nextEnemies[i] = {
+                ...enemy,
+                isDefeated: true, // Mark as defeated
+                defeatTimer: ENEMY_DEFEAT_DURATION_MS, // Start defeat timer
+                defeatExplosionProgress: 0, // Start explosion animation
+                isFrozen: false, // Unfreeze if it was
+                frozenTimer: 0,
+              };
               break; 
           }
         }
@@ -716,13 +762,14 @@ function gameReducer(state: GameState, action: GameAction): GameState {
               const previousTotalCollected = nextTotalCollected;
               nextTotalCollected += newlyCollectedCountThisTick;
               
-              // Spawn enemy on L2 after first coin
-              if (state.currentLevel === 2 && previousTotalCollected === 0 && nextTotalCollected > 0 && !nextEnemies.some(e => e.id === 'enemy_level2_0')) {
-                  const newEnemy = getLevelEnemies(gameArea.width, gameArea.height, state.currentLevel, nextPlatforms).find(e => e.id === 'enemy_level2_0');
-                  if (newEnemy) nextEnemies.push(newEnemy);
+              if (state.currentLevel === 2 && previousTotalCollected === 0 && nextTotalCollected > 0 && !nextEnemies.some(e => e.id === 'enemy_level2_0' && !e.isDefeated)) {
+                  const existingEnemy = nextEnemies.find(e => e.id === 'enemy_level2_0');
+                  if (!existingEnemy) {
+                    const newEnemy = getLevelEnemies(gameArea.width, gameArea.height, state.currentLevel, nextPlatforms).find(e => e.id === 'enemy_level2_0');
+                    if (newEnemy) nextEnemies.push(newEnemy);
+                  }
               }
-              // Spawn enemies on L3 after first coin
-              if (state.currentLevel === 3 && previousTotalCollected === 0 && nextTotalCollected > 0 && nextEnemies.filter(e => e.id.startsWith('enemy_level3_')).length === 0) {
+              if (state.currentLevel === 3 && previousTotalCollected === 0 && nextTotalCollected > 0 && nextEnemies.filter(e => e.id.startsWith('enemy_level3_') && !e.isDefeated).length === 0) {
                   const newEnemiesL3 = getLevelEnemies(gameArea.width, gameArea.height, state.currentLevel, nextPlatforms);
                   newEnemiesL3.forEach(ne => {
                       if (!nextEnemies.some(e => e.id === ne.id)) nextEnemies.push(ne);
@@ -737,7 +784,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
                       ...enemy,
                       isFrozen: true,
                       frozenTimer: ENEMY_FREEZE_DURATION_MS,
-                      periodicFreezeIntervalTimer: ENEMY_PERIODIC_FREEZE_INTERVAL_MS, 
+                      // periodicFreezeIntervalTimer: ENEMY_PERIODIC_FREEZE_INTERVAL_MS, // Don't reset periodic here, let it run its course
                     };
                   }
                   return enemy;
@@ -746,10 +793,10 @@ function gameReducer(state: GameState, action: GameAction): GameState {
                  const isEvenCoinCollected = (nextTotalCollected % 2 === 0);
                  nextEnemies = nextEnemies.map(enemy => {
                     if (enemy.enemyId === 'enemy1' && isEvenCoinCollected && !enemy.isDefeated) {
-                        return {...enemy, isFrozen: true, frozenTimer: ENEMY_FREEZE_DURATION_MS, periodicFreezeIntervalTimer: ENEMY_PERIODIC_FREEZE_INTERVAL_MS};
+                        return {...enemy, isFrozen: true, frozenTimer: ENEMY_FREEZE_DURATION_MS};
                     }
                     if (enemy.enemyId === 'enemy2' && !isEvenCoinCollected && !enemy.isDefeated) {
-                        return {...enemy, isFrozen: true, frozenTimer: ENEMY_FREEZE_DURATION_MS, periodicFreezeIntervalTimer: ENEMY_PERIODIC_FREEZE_INTERVAL_MS};
+                        return {...enemy, isFrozen: true, frozenTimer: ENEMY_FREEZE_DURATION_MS};
                     }
                     return enemy;
                  });
