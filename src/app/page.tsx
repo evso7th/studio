@@ -104,7 +104,7 @@ export default function EntryPage() {
         src="/assets/images/Wallpaper2.jpg" 
         alt="Background Wallpaper"
         fill
-        style={{ objectFit: 'cover', zIndex: -10, objectPosition: 'center center' }} 
+        style={{ objectFit: 'cover', zIndex: -10, objectPosition: 'top center' }} 
         priority
         data-ai-hint="starry sky space"
       />
@@ -133,7 +133,7 @@ export default function EntryPage() {
 
       <div className="text-center space-y-6 w-full h-full flex flex-col items-center justify-center relative z-10 bg-background/70 p-0 shadow-xl">
         <div className="max-w-2xl w-full pt-1 px-6 pb-6"> 
-          <h1 className="text-5xl md:text-7xl font-bold text-primary pt-6 whitespace-nowrap">IPO Mad Racing</h1>
+          <h1 className="text-5xl md:text-7xl font-bold text-primary pt-6 whitespace-nowrap pr-1">IPO Mad Racing</h1>
           <p className="text-xl md:text-2xl text-foreground/90 mt-4">
             Специальное издание <br />
             в честь дня рождения
@@ -162,11 +162,11 @@ export default function EntryPage() {
             Начать игру
           </Button>
 
-          <div className="mt-2 mb-5"> {/* Changed mt-5 to mt-2 to lift by 12px */}
+          <div className="mt-2 mb-5"> 
              <CreditsDialog />
           </div>
           
-          <p className="text-md md:text-lg text-muted-foreground pt-6 pb-6 mt-[10px]">
+          <p className="text-md md:text-lg text-muted-foreground pt-6 pb-6 mt-0">
             Собери все монетки и выйди на IPO!
             <br />
             Опасайся медведей!
@@ -176,3 +176,4 @@ export default function EntryPage() {
     </div>
   );
 }
+
