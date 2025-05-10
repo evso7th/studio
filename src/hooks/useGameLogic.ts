@@ -35,6 +35,7 @@ import {
     ENEMY_COLLISION_RADIUS,
     ENEMY_IMAGE_SRC,
     ENEMY_DEFAULT_SPEED,
+    ENEMY_DEFEAT_DURATION_MS, // Added this import
     ENEMY_DEFEAT_EXPLOSION_DURATION_MS,
     ENEMY_FREEZE_DURATION_MS,
     ENEMY_PERIODIC_FREEZE_INTERVAL_MS,
@@ -510,7 +511,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
                 periodicFreezeIntervalTimer: ENEMY_PERIODIC_FREEZE_INTERVAL_MS,
              };
           } else {
-             const defeatProgress = 1 - (newDefeatTimer / ENEMY_DEFEAT_DURATION_MS);
+             const defeatProgress = 1 - (newDefeatTimer / ENEMY_DEFEAT_EXPLOSION_DURATION_MS);
              return { ...updatedEnemy, defeatTimer: newDefeatTimer, defeatExplosionProgress: Math.min(1, defeatProgress) };
           }
         }
@@ -884,4 +885,5 @@ export function useGameLogic() {
 
   return { gameState, dispatch: handleGameAction, gameTick };
 }
+
 
