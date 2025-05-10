@@ -77,7 +77,7 @@ export default function EntryPage() {
             originY: `${originYNum}%`,
             targetOffsetX: `${targetOffsetXNum}vmin`, 
             targetOffsetY: `${targetOffsetYNum}vmin`,
-            size: (2 + Math.random() * 2.5) * 2, 
+            size: (2 + Math.random() * 2.5) * 2 * 2, // Increased size by factor of 2
             color: FIREWORK_COLORS[Math.floor(Math.random() * FIREWORK_COLORS.length)],
             delay: Math.random() * (FIREWORK_REGENERATION_INTERVAL / 1000 / 2), 
             duration: 1.5 + Math.random() * 1, 
@@ -131,12 +131,12 @@ export default function EntryPage() {
         ))}
       </div>
 
-      <div className="text-center space-y-6 w-full h-full flex flex-col items-center justify-center relative z-10 bg-background/70 p-0 shadow-xl">
+      <div className="text-center space-y-6 w-full h-full flex flex-col items-center justify-center relative z-10 p-0 shadow-xl">
         <div className="max-w-2xl w-full pt-1 px-6 pb-6"> 
-          <h1 className="text-5xl md:text-7xl font-bold text-primary pt-6 whitespace-nowrap pr-1">IPO Mad Racing</h1>
+          <h1 className="text-[32px] font-bold text-primary pt-6 whitespace-nowrap pr-1">IPO Mad Racing</h1>
           <p className="text-xl md:text-2xl text-foreground/90 mt-4">
             Специальное издание <br />
-            в честь дня рождения
+            в честь Дня Рождения
           </p>
           <p className="text-2xl md:text-3xl font-semibold text-accent mt-4">
             Руслана Гайнанова
