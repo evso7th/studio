@@ -43,7 +43,6 @@ export interface HeroType extends GameObject {
 }
 
 export interface PlatformType extends GameObject {
-  color?: string; // Made optional as we might use images
   isMoving: boolean;
   speed: number;
   direction: 1 | -1; 
@@ -88,10 +87,10 @@ export const PLATFORM_NON_GROUND_HEIGHT = 24;
 
 export const TARGET_JUMP_HEIGHT_PX = 180; 
 
-export const PLATFORM1_Y_OFFSET = 100; // Lower moving platform (was 90, then 120, then 140, then 120)
-export const PLATFORM2_Y_OFFSET = 220; // Higher moving platform (was 245, then 220)
-
 // Platform 1 is the lower moving platform, Platform 2 is the higher one.
+export const PLATFORM1_Y_OFFSET = 100; // Was 120, then 100
+export const PLATFORM2_Y_OFFSET = 220; // Was 245, then 220
+
 // "Верхняя (platform2) начинает движение с левого края экрана" -> INITIAL_PLATFORM2_X_PERCENT = 0.0
 // "нижняя (platform1) - с правого" -> INITIAL_PLATFORM1_X_PERCENT = 1.0 (left edge starts at right screen edge)
 export const INITIAL_PLATFORM1_X_PERCENT = 1.0; 
@@ -107,7 +106,7 @@ export const MIN_DISTANCE_BETWEEN_PAIR_COINS_Y_FACTOR = 0.15;
 
 export const COIN_ZONE_TOP_OFFSET = 50; 
 
-export const HERO_BASE_SPEED = 1.1; // Updated from 0.5859375 -> 2.34375 -> 1.1
+export const HERO_BASE_SPEED = 1.25; // Updated from 1.1
 
 export interface GameState {
   hero: HeroType;
