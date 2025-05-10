@@ -1,3 +1,4 @@
+
 "use client";
 
 import Image from 'next/image';
@@ -132,16 +133,16 @@ export default function EntryPage() {
 
       <div className="text-center space-y-6 w-full h-full flex flex-col items-center justify-center relative z-10 bg-background/70 p-0 shadow-xl">
         <div className="max-w-2xl w-full pt-1 px-6 pb-6"> 
-          <h1 className="text-5xl md:text-7xl font-bold text-primary pt-6">IPO Mad Racing</h1>
-          <p className="text-xl md:text-2xl text-foreground/90 mt-4"> {/* Reduced mt-6 to mt-4 */}
+          <h1 className="text-5xl md:text-7xl font-bold text-primary pt-6 whitespace-nowrap">IPO Mad Racing</h1>
+          <p className="text-xl md:text-2xl text-foreground/90 mt-4">
             Специальное издание <br />
             в честь дня рождения
           </p>
-          <p className="text-2xl md:text-3xl font-semibold text-accent mt-4"> {/* Reduced mt-6 to mt-4 */}
+          <p className="text-2xl md:text-3xl font-semibold text-accent mt-4">
             Руслана Гайнанова
           </p>
 
-          <div className="relative w-full max-w-md mx-auto aspect-[4/3] mt-5 mb-0"> {/* Reduced mt-8 to mt-5 */}
+          <div className="relative w-full max-w-md mx-auto aspect-[4/3] mt-5 mb-0">
             <Image
               src="/assets/images/RelaxMan.png"
               alt="Relaxing Man"
@@ -161,11 +162,10 @@ export default function EntryPage() {
             Начать игру
           </Button>
 
-          <div className="mt-5 mb-5"> {/* Adjusted spacing for CreditsDialog */}
+          <div className="mt-2 mb-5"> {/* Changed mt-5 to mt-2 to lift by 12px */}
              <CreditsDialog />
           </div>
           
-
           <p className="text-md md:text-lg text-muted-foreground pt-6 pb-6 mt-[10px]">
             Собери все монетки и выйди на IPO!
             <br />
