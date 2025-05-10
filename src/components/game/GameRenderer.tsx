@@ -1,11 +1,11 @@
 
 "use client";
 import type { HeroType, PlatformType, CoinType, EnemyType } from "@/lib/gameTypes";
-import { ENEMY_DEFEAT_EXPLOSION_DURATION_MS } from "@/lib/gameTypes";
+// ENEMY_DEFEAT_EXPLOSION_DURATION_MS is no longer used here
 import type React from 'react'; 
 
 interface AppearanceProps {
-  type: 'heroAppear' | 'enemyDefeat';
+  type: 'heroAppear'; // Removed 'enemyDefeat'
   progress: number; // 0 to 1
 }
 
@@ -24,10 +24,10 @@ interface GameObjectStylePropsBase {
   isHero?: boolean; 
   isPlatform?: boolean; 
   isEnemy?: boolean;
-  isDefeated?: boolean; // For enemy
+  isDefeated?: boolean; // For enemy - though EnemyComponent now handles this by returning null
 }
 
-function getGameObjectStyle({ x, y, width, height, gameAreaHeight, paddingTop, color, heroAction, heroFacingDirection, appearanceProps, shape = 'rect', isHero = false, isPlatform = false, isEnemy = false, isDefeated = false }: GameObjectStylePropsBase): React.CSSProperties {
+function getGameObjectStyle({ x, y, width, height, gameAreaHeight, paddingTop, color, heroAction, heroFacingDirection, appearanceProps, shape = 'rect', isHero = false, isPlatform = false, isEnemy = false }: GameObjectStylePropsBase): React.CSSProperties {
   const topInEffectiveArea = gameAreaHeight - y - height;
   const finalCssTop = paddingTop + topInEffectiveArea;
   
@@ -38,7 +38,7 @@ function getGameObjectStyle({ x, y, width, height, gameAreaHeight, paddingTop, c
     width: `${width}px`,
     height: `${height}px`,
     objectFit: 'fill', 
-    transition: 'opacity 0.2s ease-out, transform 0.2s ease-out', // Smooth transitions
+    transition: 'opacity 0.2s ease-out, transform 0.2s ease-out', 
   };
 
   if (color && !isEnemy) { 
@@ -62,12 +62,7 @@ function getGameObjectStyle({ x, y, width, height, gameAreaHeight, paddingTop, c
     animationTransform = `scale(${progress})`; 
     dynamicStyles.transformOrigin = 'center bottom'; 
     dynamicStyles.borderRadius = '2px'; 
-  } else if (appearanceProps?.type === 'enemyDefeat') {
-    const progress = appearanceProps.progress;
-    dynamicStyles.opacity = 1 - progress; // Fade out
-    animationTransform = `scale(${1 + progress * 0.5})`; // Slightly expand while fading
-    dynamicStyles.transformOrigin = 'center center';
-  } else {
+  } else { // Removed 'enemyDefeat' case
     if (shape === 'circle') {
       dynamicStyles.borderRadius = '50%';
     } else if (!isEnemy) { 
@@ -101,10 +96,8 @@ function getGameObjectStyle({ x, y, width, height, gameAreaHeight, paddingTop, c
     dynamicStyles.transform = combinedTransform;
   }
   
-  // If enemy is defeated and no specific defeat animation prop, make it invisible
-  if (isEnemy && isDefeated && !appearanceProps) {
-    dynamicStyles.opacity = 0;
-  }
+  // Removed: if (isEnemy && isDefeated && !appearanceProps) { dynamicStyles.opacity = 0; }
+  // as EnemyComponent will return null if isDefeated.
 
   return dynamicStyles;
 }
@@ -186,8 +179,8 @@ export function PlatformComponent({ platform, gameAreaHeight, paddingTop }: { pl
     backgroundSize: platform.id === 'platform_ground' ? 'auto 100%' : '100% 100%', 
     backgroundPosition: platform.id === 'platform_ground' ? 'left bottom' : 'center', 
     backgroundRepeat: platform.id === 'platform_ground' ? 'repeat-x' : 'no-repeat', 
-    boxShadow: 'none', // Ensure no shadow for platforms
-    border: 'none', // Ensure no border for platforms
+    boxShadow: 'none',
+    border: 'none',
   };
 
   return (
@@ -309,65 +302,34 @@ interface EnemyComponentProps extends GameObjectComponentProps {
   enemy: EnemyType;
 }
 
-const ENEMY_PARTICLE_COLOR = 'hsl(30, 40%, 70%)'; // Light brown
+// ENEMY_PARTICLE_COLOR is no longer needed if explosion is removed.
+// const ENEMY_PARTICLE_COLOR = 'hsl(30, 40%, 70%)'; 
 
 export function EnemyComponent({ enemy, gameAreaHeight, paddingTop }: EnemyComponentProps) {
   if (!gameAreaHeight && gameAreaHeight !== 0) return null;
 
-  let appearanceProps: AppearanceProps | undefined = undefined;
-  if (enemy.isDefeated && enemy.defeatExplosionProgress !== undefined) {
-      appearanceProps = { type: 'enemyDefeat', progress: enemy.defeatExplosionProgress };
+  // If enemy is defeated, render nothing. Game logic handles respawn.
+  if (enemy.isDefeated) {
+    return null;
   }
   
+  // No appearanceProps for defeat anymore. isDefeated will be false here.
   const enemyStyle = getGameObjectStyle({
     ...enemy,
     gameAreaHeight,
     paddingTop,
     isEnemy: true,
-    appearanceProps,
-    isDefeated: enemy.isDefeated,
+    isDefeated: false, 
   });
 
+  // REMOVED: Enemy defeat particle explosion block
+  /*
   if (enemy.isDefeated && enemy.defeatExplosionProgress != null && enemy.defeatExplosionProgress < 1) {
-    const particles = [];
-    for (let i = 0; i < NUM_PARTICLES * 2; i++) { // More particles for enemy defeat
-      const angle = (i / (NUM_PARTICLES * 2)) * 2 * Math.PI + (Math.random() - 0.5) * 0.5;
-      const distance = EXPLOSION_SPREAD_RADIUS * 1.5 * enemy.defeatExplosionProgress * (0.5 + Math.random() * 0.5); // Wider spread
-      const particleX = Math.cos(angle) * distance;
-      const particleY = Math.sin(angle) * distance;
-      const particleStyle: React.CSSProperties = {
-        position: 'absolute',
-        left: `calc(50% + ${particleX}px - ${PARTICLE_SIZE / 2}px)`,
-        top: `calc(50% + ${particleY}px - ${PARTICLE_SIZE / 2}px)`,
-        width: `${PARTICLE_SIZE + Math.random() * 2}px`, // Slightly varied size
-        height: `${PARTICLE_SIZE + Math.random() * 2}px`,
-        backgroundColor: ENEMY_PARTICLE_COLOR,
-        borderRadius: '30%', // Irregular shape
-        opacity: 1 - enemy.defeatExplosionProgress,
-        transform: `scale(${1 - enemy.defeatExplosionProgress}) rotate(${Math.random() * 360}deg)`,
-        transition: 'opacity 0.1s ease-out, transform 0.1s ease-out',
-      };
-      particles.push(<div key={`enemy_defeat_particle_${i}`} style={particleStyle} />);
-    }
-    const explosionContainerStyle: React.CSSProperties = {
-        position: 'absolute',
-        left: enemyStyle.left,
-        top: enemyStyle.top,
-        width: enemyStyle.width,
-        height: enemyStyle.height,
-        pointerEvents: 'none', // Particles should not interfere with clicks
-    };
-    return (
-      <div style={explosionContainerStyle} aria-label="Enemy Defeated" data-ai-hint="brown fragments">
-        {particles}
-      </div>
-    );
+    // ... particle rendering logic ...
   }
+  */
 
-  if (enemy.isDefeated) { // If defeated and explosion is over, render nothing
-    return null;
-  }
-
+  // This will only be reached if enemy is NOT defeated
   return (
     <img
       src={enemy.imageSrc}
@@ -375,7 +337,8 @@ export function EnemyComponent({ enemy, gameAreaHeight, paddingTop }: EnemyCompo
       style={enemyStyle}
       role="img"
       aria-label="Enemy"
-      data-ai-hint="bear face"
+      data-ai-hint={enemy.enemyId === 'enemy2' ? "dark bear face" : "bear face"}
     />
   );
 }
+

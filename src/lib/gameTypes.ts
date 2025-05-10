@@ -74,7 +74,7 @@ export interface EnemyType extends GameObject {
   collisionRadius: number;
   isDefeated?: boolean;
   defeatTimer?: number;
-  defeatExplosionProgress?: number;
+  defeatExplosionProgress?: number; // Kept for data structure, but visual effect removed
   isFrozen?: boolean;
   frozenTimer?: number;
   periodicFreezeIntervalTimer?: number; 
@@ -124,7 +124,7 @@ export const MIN_DISTANCE_BETWEEN_PAIR_COINS_Y_FACTOR = 0.15;
 export const COIN_ZONE_TOP_OFFSET = 50; 
 
 export const HERO_BASE_SPEED = 1.25; 
-export const SLIPPERY_FRICTION_FACTOR = 0.97; // How much velocity is retained per tick on slippery surface
+export const SLIPPERY_FRICTION_FACTOR = 0.97; 
 
 export const ENEMY_WIDTH = 48;
 export const ENEMY_HEIGHT = 48;
@@ -132,7 +132,7 @@ export const ENEMY_COLLISION_RADIUS = 24;
 export const ENEMY_IMAGE_SRC = "/assets/images/bearFace.png";
 export const ENEMY_DEFAULT_SPEED = 0.4; 
 export const ENEMY_DEFEAT_DURATION_MS = 5000; 
-export const ENEMY_DEFEAT_EXPLOSION_DURATION_MS = 500; 
+// export const ENEMY_DEFEAT_EXPLOSION_DURATION_MS = 500; // No longer used for explosion rendering
 export const ENEMY_FREEZE_DURATION_MS = 5000; 
 export const ENEMY_PERIODIC_FREEZE_INTERVAL_MS = 5000; 
 
@@ -167,7 +167,9 @@ export type GameAction =
   | { type: 'NEXT_LEVEL' } 
   | { type: 'UPDATE_GAME_AREA', payload: { width: number; height: number; paddingTop: number; } }
   | { type: 'GAME_TICK', payload: { deltaTime: number } }
-  | { type: 'SET_DEBUG_LEVEL_COMPLETE', payload: boolean }; 
+  | { type: 'SET_DEBUG_LEVEL_COMPLETE', payload: boolean }
+  | { type: 'SET_DEBUG_LEVEL', payload: number };
+
 
 export const heroAnimationsConfig: HeroAnimations = {
   idle: {

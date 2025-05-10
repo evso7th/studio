@@ -37,7 +37,7 @@ import {
     ENEMY_IMAGE_SRC,
     ENEMY_DEFAULT_SPEED,
     ENEMY_DEFEAT_DURATION_MS, 
-    ENEMY_DEFEAT_EXPLOSION_DURATION_MS,
+    // ENEMY_DEFEAT_EXPLOSION_DURATION_MS, // No longer used for explosion timing
     ENEMY_FREEZE_DURATION_MS,
     ENEMY_PERIODIC_FREEZE_INTERVAL_MS,
     ENEMY2_LEVEL3_Y_OFFSET_FROM_PLATFORM2,
@@ -155,7 +155,7 @@ const getLevelEnemies = (gameAreaWidth: number, gameAreaHeight: number, level: n
     enemies.push({
       id: `enemy_level3_0`,
       enemyId: 'enemy1',
-      x: gameAreaWidth / 3 - ENEMY_WIDTH / 2, // Start position adjusted
+      x: gameAreaWidth / 3 - ENEMY_WIDTH / 2, 
       y: enemyYPositionL2,
       width: ENEMY_WIDTH,
       height: ENEMY_HEIGHT,
@@ -173,19 +173,18 @@ const getLevelEnemies = (gameAreaWidth: number, gameAreaHeight: number, level: n
       periodicFreezeIntervalTimer: ENEMY_PERIODIC_FREEZE_INTERVAL_MS,
     });
 
-    // Enemy 2 (new for level 3)
     if (platform2) {
       const enemy2YPosition = platform2.y + platform2.height + ENEMY2_LEVEL3_Y_OFFSET_FROM_PLATFORM2;
       enemies.push({
         id: `enemy_level3_1`,
         enemyId: 'enemy2',
-        x: (gameAreaWidth * 2 / 3) - ENEMY_WIDTH / 2, // Start position adjusted
+        x: (gameAreaWidth * 2 / 3) - ENEMY_WIDTH / 2, 
         y: enemy2YPosition,
         width: ENEMY_WIDTH,
         height: ENEMY_HEIGHT,
-        imageSrc: "/assets/images/BearFaceDark.png", // Updated image source for enemy2
+        imageSrc: "/assets/images/BearFaceDark.png", 
         speed: ENEMY_DEFAULT_SPEED, 
-        direction: -1, // Starts moving left
+        direction: -1, 
         moveAxis: 'x',
         moveRange: { min: 0, max: gameAreaWidth - ENEMY_WIDTH },
         collisionRadius: ENEMY_COLLISION_RADIUS,
@@ -312,9 +311,7 @@ const getDefaultInitialGameState = (gameAreaWidth = 800, gameAreaHeight = 600, l
   };
 };
 
-// To start on level 3 for debugging, change the default level in the line below:
-// e.g., let initialGameState = getDefaultInitialGameState(undefined, undefined, 3);
-let initialGameState = getDefaultInitialGameState(undefined, undefined, 3);
+let initialGameState = getDefaultInitialGameState(undefined, undefined, 1);
 
 
 function gameReducer(state: GameState, action: GameAction): GameState {
@@ -350,7 +347,6 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       const { width, height, paddingTop } = action.payload;
       if (width <= 0 || height <= 0) return state; 
 
-      // Preserve the current starting level if already set (e.g. for debugging level 3)
       const startingLevel = state.currentLevel > 1 ? state.currentLevel : 1;
       const newState = getDefaultInitialGameState(width, height, state.isGameInitialized ? state.currentLevel : startingLevel);
       return {
@@ -371,16 +367,14 @@ function gameReducer(state: GameState, action: GameAction): GameState {
     }
     case 'NEXT_LEVEL': {
       const nextLevel = state.currentLevel + 1;
-      // For now, level 3 is the final level, loop back or show game complete
       if (nextLevel > 3) { 
-        // Option 1: Restart from level 1 (or show a game complete screen later)
         const { width, height } = state.gameArea;
-        const newState = getDefaultInitialGameState(width, height, 1); // Restart to level 1
+        const newState = getDefaultInitialGameState(width, height, 1); 
          return {
           ...newState,
           isGameInitialized: true,
           paddingTop: state.paddingTop,
-          levelCompleteScreenActive: false, // Or a new "Game Over You Win!" screen
+          levelCompleteScreenActive: false, 
         };
       }
       const { width, height } = state.gameArea;
@@ -397,6 +391,17 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         ...state,
         levelCompleteScreenActive: action.payload,
       };
+    }
+    case 'SET_DEBUG_LEVEL': {
+        const { width, height } = state.gameArea;
+        const newState = getDefaultInitialGameState(width, height, action.payload);
+        initialGameState = newState; // Update the global initialGameState for subsequent resets
+        return {
+          ...newState,
+          isGameInitialized: true,
+          paddingTop: state.paddingTop,
+          levelCompleteScreenActive: false,
+        };
     }
     case 'GAME_TICK': {
       if (!state.isGameInitialized || state.levelCompleteScreenActive || state.gameLost) return state;
@@ -498,22 +503,21 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         if (updatedEnemy.isDefeated && updatedEnemy.defeatTimer !== undefined) {
           const newDefeatTimer = updatedEnemy.defeatTimer - deltaTime;
           if (newDefeatTimer <= 0) {
-            // Enemy respawns or is removed - for now, let's make it respawn for simplicity
              updatedEnemy = {
                 ...updatedEnemy,
                 isDefeated: false,
                 defeatTimer: 0,
-                defeatExplosionProgress: 0,
-                x: gameArea.width / 2 - updatedEnemy.width / 2, // Respawn at initial position
-                y: updatedEnemy.y, // Keep original Y
-                direction: 1, // Reset direction
+                defeatExplosionProgress: 0, // Keep this at 0
+                x: gameArea.width / 2 - updatedEnemy.width / 2, 
+                y: updatedEnemy.y, 
+                direction: 1, 
                 isFrozen: false,
                 frozenTimer: 0,
                 periodicFreezeIntervalTimer: ENEMY_PERIODIC_FREEZE_INTERVAL_MS,
              };
           } else {
-             const defeatProgress = 1 - (newDefeatTimer / ENEMY_DEFEAT_EXPLOSION_DURATION_MS);
-             return { ...updatedEnemy, defeatTimer: newDefeatTimer, defeatExplosionProgress: Math.min(1, defeatProgress) };
+             // No explosion progress update needed
+             return { ...updatedEnemy, defeatTimer: newDefeatTimer, defeatExplosionProgress: 0 };
           }
         }
 
@@ -564,9 +568,6 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         return updatedEnemy; 
       });
       
-      // Filter out enemies whose defeat explosion is over (if we made them disappear after explosion)
-      // For now, they "respawn" above so we don't filter them if they just completed defeatTimer.
-
 
       if (state.heroAppearance === 'appearing') {
         nextHeroAppearElapsedTime += deltaTime; 
@@ -602,9 +603,9 @@ function gameReducer(state: GameState, action: GameAction): GameState {
 
         let newPosX;
         if (onSlipperyPlatform) {
-            if (nextHero.currentSpeedX !== 0) { // Player is actively moving
-                nextHero.slideVelocityX = heroMovementX; // Update slide velocity based on input
-            } else { // Player stopped pressing keys, apply friction
+            if (nextHero.currentSpeedX !== 0) { 
+                nextHero.slideVelocityX = heroMovementX; 
+            } else { 
                 nextHero.slideVelocityX = (nextHero.slideVelocityX || 0) * SLIPPERY_FRICTION_FACTOR;
                 if (Math.abs(nextHero.slideVelocityX || 0) < 0.1) {
                     nextHero.slideVelocityX = 0;
@@ -612,7 +613,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
             }
             newPosX = nextHero.x + (nextHero.slideVelocityX || 0) * (deltaTime / (1000/60)) + platformMovementEffectX;
         } else {
-            nextHero.slideVelocityX = 0; // Reset slide velocity if not on slippery platform
+            nextHero.slideVelocityX = 0; 
             newPosX = nextHero.x + heroMovementX * (deltaTime / (1000/60)) + platformMovementEffectX;
         }
         
@@ -625,7 +626,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         }
         else if (nextHero.isOnPlatform && (nextHero.slideVelocityX === 0 || !onSlipperyPlatform) ) nextHero.action = 'idle'; 
         else if (nextHero.isOnPlatform && onSlipperyPlatform && nextHero.slideVelocityX !==0) {
-            nextHero.action = nextHero.slideVelocityX > 0 ? 'run_right' : 'run_left'; // Show running if sliding
+            nextHero.action = nextHero.slideVelocityX > 0 ? 'run_right' : 'run_left'; 
         }
 
 
@@ -713,13 +714,12 @@ function gameReducer(state: GameState, action: GameAction): GameState {
 
           if (distanceSquared < (enemy.collisionRadius * enemy.collisionRadius)) {
               heroHitByEnemy = true;
-              // Reset the specific enemy that was hit if it has periodic freeze
               nextEnemies[i] = {
                 ...enemy,
-                isDefeated: true, // Mark as defeated
-                defeatTimer: ENEMY_DEFEAT_DURATION_MS, // Start defeat timer
-                defeatExplosionProgress: 0, // Start explosion animation
-                isFrozen: false, // Unfreeze if it was
+                isDefeated: true, 
+                defeatTimer: ENEMY_DEFEAT_DURATION_MS, 
+                defeatExplosionProgress: 0, // Ensure this is 0
+                isFrozen: false, 
                 frozenTimer: 0,
               };
               break; 
@@ -786,7 +786,6 @@ function gameReducer(state: GameState, action: GameAction): GameState {
                       ...enemy,
                       isFrozen: true,
                       frozenTimer: ENEMY_FREEZE_DURATION_MS,
-                      // periodicFreezeIntervalTimer: ENEMY_PERIODIC_FREEZE_INTERVAL_MS, // Don't reset periodic here, let it run its course
                     };
                   }
                   return enemy;
@@ -886,6 +885,7 @@ export function useGameLogic() {
 
   return { gameState, dispatch: handleGameAction, gameTick };
 }
+
 
 
 
