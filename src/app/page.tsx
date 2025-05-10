@@ -142,7 +142,7 @@ export default function EntryPage() {
             Руслана Гайнанова
           </p>
 
-          <div className="relative w-full max-w-md mx-auto aspect-[4/3] my-8">
+          <div className="relative w-full max-w-md mx-auto aspect-[4/3] mt-8 mb-0"> {/* Changed my-8 to mt-8 mb-0 */}
             <Image
               src="/assets/images/RelaxMan.png"
               alt="Relaxing Man"
@@ -157,13 +157,12 @@ export default function EntryPage() {
             onClick={() => router.push('/play')}
             variant="destructive"
             size="lg"
-            className="w-full max-w-xs text-xl py-4 rounded-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 mt-6 mb-5" // Added mt-6 and mb-5 (20px)
+            className="w-full max-w-xs text-xl py-4 rounded-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 mt-4 mb-5" // Changed mt-6 to mt-4
           >
             Начать игру
           </Button>
 
-          {/* CreditsDialog will now have a 20px gap from the button above */}
-          <CreditsDialog />
+          <CreditsDialog /> {/* Gap handled by mb-5 on the button above */}
 
           <p className="text-md md:text-lg text-muted-foreground pt-6 pb-6 mt-6">
             Собери все монетки и выйди на IPO!
