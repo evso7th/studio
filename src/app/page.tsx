@@ -27,9 +27,11 @@ export default function HomePage() {
   // TEMPORARY: For debugging - start with level complete screen active
   useReactEffect(() => {
     if (dispatch) { 
+      // Ensure this runs only once or under specific conditions if needed,
+      // for now, it will set level complete on component mount/dispatch availability
       dispatch({ type: 'SET_DEBUG_LEVEL_COMPLETE', payload: true });
     }
-  }, [dispatch]);
+  }, [dispatch]); // Dependency array includes dispatch
 
 
   const updateGameAreaSize = useCallback(() => {
