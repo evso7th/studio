@@ -88,13 +88,11 @@ export const PLATFORM_NON_GROUND_HEIGHT = 24;
 export const TARGET_JUMP_HEIGHT_PX = 180; 
 
 // Platform 1 is the lower moving platform, Platform 2 is the higher one.
-export const PLATFORM1_Y_OFFSET = 100; // Was 120, then 100
-export const PLATFORM2_Y_OFFSET = 220; // Was 245, then 220
+export const PLATFORM1_Y_OFFSET = 100; 
+export const PLATFORM2_Y_OFFSET = 200; 
 
-// "Верхняя (platform2) начинает движение с левого края экрана" -> INITIAL_PLATFORM2_X_PERCENT = 0.0
-// "нижняя (platform1) - с правого" -> INITIAL_PLATFORM1_X_PERCENT = 1.0 (left edge starts at right screen edge)
 export const INITIAL_PLATFORM1_X_PERCENT = 1.0; 
-export const INITIAL_PLATFORM_SPEED = 0.75; // Common speed for both platforms
+export const INITIAL_PLATFORM_SPEED = 0.75; 
 export const INITIAL_PLATFORM2_X_PERCENT = 0.0;
 
 
@@ -106,7 +104,7 @@ export const MIN_DISTANCE_BETWEEN_PAIR_COINS_Y_FACTOR = 0.15;
 
 export const COIN_ZONE_TOP_OFFSET = 50; 
 
-export const HERO_BASE_SPEED = 1.25; // Updated from 1.1
+export const HERO_BASE_SPEED = 2.5; // Updated from 1.25
 
 export interface GameState {
   hero: HeroType;
@@ -144,19 +142,19 @@ export const heroAnimationsConfig: HeroAnimations = {
     src: "https://neurostaffing.online/wp-content/uploads/2025/05/HeroJeans3.png", // Assuming this is a single frame for idle
     frames: 1,
     fps: 1,
-    width: HERO_WIDTH, // Define sprite sheet frame width
-    height: HERO_HEIGHT, // Define sprite sheet frame height
+    width: HERO_WIDTH, 
+    height: HERO_HEIGHT, 
   },
   run: {
-    src: "https://neurostaffing.online/wp-content/uploads/2025/05/HeroJeans3Run.png", // Placeholder for run animation sprite sheet
-    frames: 4, // Example: 4 frames in the run animation
-    fps: 10, // Example: 10 frames per second
+    src: "https://neurostaffing.online/wp-content/uploads/2025/05/HeroJeans3Run.png", 
+    frames: 4, 
+    fps: 10, 
     width: HERO_WIDTH, 
     height: HERO_HEIGHT,
   },
   jump: {
-    src: "https://neurostaffing.online/wp-content/uploads/2025/05/HeroJeans3Jump.png", // Placeholder for jump animation sprite sheet (can be a single frame)
-    frames: 1, // Example: 1 frame for jump
+    src: "https://neurostaffing.online/wp-content/uploads/2025/05/HeroJeans3Jump.png", 
+    frames: 1, 
     fps: 1,
     width: HERO_WIDTH,
     height: HERO_HEIGHT,

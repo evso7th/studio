@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -100,12 +101,12 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-sans overflow-hidden; /* Use font-sans, add overflow-hidden */
-    overscroll-behavior: none; /* Prevent pull-to-refresh and other overscroll behaviors */
+    @apply bg-background text-foreground font-sans overflow-hidden; 
+    overscroll-behavior: none; 
   }
   html, body, #__next {
     height: 100%;
-    @apply overflow-hidden; /* Ensure #__next also has overflow-hidden for good measure */
+    @apply overflow-hidden; 
   }
 }
 
@@ -122,8 +123,37 @@
     }
   }
   .animate-rotate-y {
-    animation: rotate-y 1.8s linear infinite; /* Adjusted speed from 2s to 1.8s */
+    animation: rotate-y 1.8s linear infinite; 
   }
 
-  /* Removed coin-glow animation */
+  /* Fireworks animation for LevelCompleteScreen */
+  .firework-particle {
+    position: absolute;
+    border-radius: 50%;
+    animation-name: firework-explode;
+    animation-timing-function: ease-out;
+    animation-fill-mode: forwards;
+    will-change: transform, opacity; /* Optimization hint */
+  }
+
+  @keyframes firework-explode {
+    0% {
+      transform: scale(0.5) translate(0, 20px); /* Start slightly bigger and lower */
+      opacity: 1;
+    }
+    50% {
+      opacity: 1;
+    }
+    100% {
+      transform: scale(1) translate(var(--tx, 0), var(--ty, -100px)); /* Use CSS vars for varied paths */
+      opacity: 0;
+    }
+  }
+  
+  /* Example usage of CSS variables for varied particle paths - needs to be set inline for each particle */
+  /*
+  .particle-1 { --tx: -50px; --ty: -120px; }
+  .particle-2 { --tx: 50px; --ty: -80px; }
+  */
+
 }

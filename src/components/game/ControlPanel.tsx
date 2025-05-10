@@ -24,11 +24,15 @@ export function ControlPanel({ dispatch, onExit, disabled = false }: ControlPane
   };
 
   const handleMoveStop = (type: 'MOVE_LEFT_STOP' | 'MOVE_RIGHT_STOP') => {
+    // Always allow move stop to prevent stuck state if controls become disabled while key/button is pressed
     dispatch({ type });
   };
 
-  const commonButtonStyles = "p-3 h-16 w-16 rounded-full text-foreground shadow-lg hover:shadow-xl active:shadow-lg active:translate-y-px transition-all duration-150 ease-in-out disabled:opacity-70 disabled:bg-transparent disabled:border disabled:border-destructive disabled:text-destructive disabled:shadow-none";
-  const radialGradientStyle = !disabled ? { backgroundImage: 'radial-gradient(circle, #f48c25, #e74210)' } : {};
+  const commonButtonStyles = "p-3 h-16 w-16 rounded-full text-foreground shadow-lg hover:shadow-xl active:shadow-lg active:translate-y-px transition-all duration-150 ease-in-out";
+  const disabledButtonStyles = "disabled:opacity-70 disabled:bg-transparent disabled:border disabled:border-destructive disabled:text-destructive disabled:shadow-none disabled:cursor-not-allowed";
+  
+  const getRadialGradientStyle = (isDisabled: boolean) => !isDisabled ? { backgroundImage: 'radial-gradient(circle, #f48c25, #e74210)' } : {};
+
 
   return (
     <div
@@ -45,8 +49,8 @@ export function ControlPanel({ dispatch, onExit, disabled = false }: ControlPane
       <Button
         variant="ghost"
         size="lg"
-        className={commonButtonStyles}
-        style={radialGradientStyle}
+        className={`${commonButtonStyles} ${disabled ? disabledButtonStyles : ''}`}
+        style={getRadialGradientStyle(disabled)}
         onMouseDown={() => handleMoveStart('MOVE_LEFT_START')}
         onMouseUp={() => handleMoveStop('MOVE_LEFT_STOP')}
         onTouchStart={() => handleMoveStart('MOVE_LEFT_START')}
@@ -59,8 +63,8 @@ export function ControlPanel({ dispatch, onExit, disabled = false }: ControlPane
       <Button
         variant="ghost"
         size="lg"
-        className={commonButtonStyles}
-        style={radialGradientStyle}
+        className={`${commonButtonStyles} ${disabled ? disabledButtonStyles : ''}`}
+        style={getRadialGradientStyle(disabled)}
         onClick={() => handleAction('JUMP')}
         aria-label="Jump"
         disabled={disabled}
@@ -70,8 +74,8 @@ export function ControlPanel({ dispatch, onExit, disabled = false }: ControlPane
       <Button
         variant="ghost"
         size="lg"
-        className={commonButtonStyles}
-        style={radialGradientStyle}
+        className={`${commonButtonStyles} ${disabled ? disabledButtonStyles : ''}`}
+        style={getRadialGradientStyle(disabled)}
         onMouseDown={() => handleMoveStart('MOVE_RIGHT_START')}
         onMouseUp={() => handleMoveStop('MOVE_RIGHT_STOP')}
         onTouchStart={() => handleMoveStart('MOVE_RIGHT_START')}
@@ -84,15 +88,14 @@ export function ControlPanel({ dispatch, onExit, disabled = false }: ControlPane
       <Button
         variant="ghost"
         size="lg"
-        className={commonButtonStyles}
-        style={radialGradientStyle} // Exit button also gets the gradient unless it's meant to be different
+        className={`${commonButtonStyles} ${disabled ? disabledButtonStyles : ''}`} // Exit button can also be disabled
+        style={getRadialGradientStyle(disabled)} 
         onClick={onExit}
-        aria-label="Exit Game"
-        // Exit button is not typically disabled by game state, but applying consistent styling
+        aria-label="Restart Level" // Changed from Exit Game to Restart Level
+        disabled={disabled} // Allow exit button to be disabled by game state
       >
         <LogOut className="h-12 w-12 text-foreground" />
       </Button>
     </div>
   );
 }
-

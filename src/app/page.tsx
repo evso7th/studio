@@ -1,16 +1,19 @@
+
 // @ts-nocheck
 "use client";
 
 import type { useEffect } from 'react';
-import { useRef, useCallback, useEffect as useReactEffect, useState } from 'react'; // Renamed to avoid conflict & added useState
+import { useRef, useCallback, useEffect as useReactEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useGameLogic } from '@/hooks/useGameLogic';
 import { ControlPanel } from '@/components/game/ControlPanel';
 import { HeroComponent, PlatformComponent, CoinComponent } from '@/components/game/GameRenderer';
+import { LevelCompleteScreen } from '@/components/game/LevelCompleteScreen';
 import type { GameState } from '@/lib/gameTypes'; 
 import { HERO_APPEARANCE_DURATION_MS } from '@/lib/gameTypes';
+import { Button } from "@/components/ui/button";
 
-// HomePage component is now the GameScreen
+
 export default function HomePage() {
   const { gameState, dispatch, gameTick } = useGameLogic();
   const gameAreaRef = useRef<HTMLDivElement>(null);
@@ -19,7 +22,7 @@ export default function HomePage() {
 
   const [parallaxBgX, setParallaxBgX] = useState(0);
   const initialHeroXRef = useRef<number | null>(null);
-  const PARALLAX_FACTOR = 0.2; // Background moves 20% of hero speed
+  const PARALLAX_FACTOR = 0.2; 
 
   const updateGameAreaSize = useCallback(() => {
     if (gameAreaRef.current) {
@@ -43,7 +46,7 @@ export default function HomePage() {
 
   useReactEffect(() => {
     if (gameState.isGameInitialized && gameState.gameArea.width > 0 && initialHeroXRef.current === null && gameState.hero) {
-      initialHeroXRef.current = gameState.hero.x; // Store initial hero X based on its actual starting position
+      initialHeroXRef.current = gameState.hero.x; 
     }
   }, [gameState.isGameInitialized, gameState.gameArea.width, gameState.hero]);
 
@@ -72,7 +75,7 @@ export default function HomePage() {
 
   useReactEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (gameState.heroAppearance === 'appearing') return; 
+      if (gameState.heroAppearance === 'appearing' || gameState.levelCompleteScreenActive || gameState.gameLost) return; 
 
       if (event.key === 'F5' || (event.ctrlKey && event.key.toLowerCase() === 'r')) return;
       if ((event.ctrlKey && event.shiftKey && event.key.toLowerCase() === 'i') || 
@@ -104,7 +107,7 @@ export default function HomePage() {
     };
 
     const handleKeyUp = (event: KeyboardEvent) => {
-      if (gameState.heroAppearance === 'appearing') return; 
+      if (gameState.heroAppearance === 'appearing' || gameState.levelCompleteScreenActive || gameState.gameLost) return; 
       let handled = false;
       switch (event.key.toLowerCase()) {
         case 'arrowleft':
@@ -132,37 +135,36 @@ export default function HomePage() {
       dispatch({ type: 'MOVE_LEFT_STOP' });
       dispatch({ type: 'MOVE_RIGHT_STOP' });
     };
-  }, [dispatch, gameState.heroAppearance]); 
+  }, [dispatch, gameState.heroAppearance, gameState.levelCompleteScreenActive, gameState.gameLost]); 
   
   const handleExit = () => {
-    // For now, re-initialize the game which effectively restarts it.
-    // Or, navigate to a different page if a main menu or similar exists.
-    if (gameAreaRef.current) {
-        const { clientWidth, clientHeight } = gameAreaRef.current;
-        const style = window.getComputedStyle(gameAreaRef.current);
-        const paddingTop = parseFloat(style.paddingTop) || 0;
-        const effectiveWidth = clientWidth;
-        const effectiveHeight = clientHeight - paddingTop - (parseFloat(style.paddingBottom) || 0);
-        dispatch({ type: 'UPDATE_GAME_AREA', payload: { width: effectiveWidth, height: effectiveHeight, paddingTop: paddingTop } });
-    }
-    // router.push('/'); // If you have a separate landing page
+    dispatch({ type: 'RESTART_LEVEL' });
   };
 
-  useReactEffect(() => {
-    if (gameState.gameOver) { 
-      // Potentially show a game over screen/modal here before resetting
-      // For now, just re-initialize.
-        if (gameAreaRef.current) {
-            const { clientWidth, clientHeight } = gameAreaRef.current;
-            const style = window.getComputedStyle(gameAreaRef.current);
-            const paddingTop = parseFloat(style.paddingTop) || 0;
-            const effectiveWidth = clientWidth;
-            const effectiveHeight = clientHeight - paddingTop - (parseFloat(style.paddingBottom) || 0);
-            dispatch({ type: 'UPDATE_GAME_AREA', payload: { width: effectiveWidth, height: effectiveHeight, paddingTop: paddingTop } });
-        }
-      // router.push('/'); // If you have a separate landing/game over page
-    }
-  }, [gameState.gameOver, dispatch]); // Added dispatch to dependency array
+  if (gameState.gameLost) {
+    return (
+      <div className="h-screen w-screen flex flex-col items-center justify-center bg-background text-foreground p-4">
+        <h2 className="text-4xl font-bold mb-4 text-destructive">Игра окончена!</h2>
+        <p className="text-xl mb-8 text-center">Кажется, наш герой немного увлекся полетом...</p>
+        <Button 
+          onClick={() => dispatch({ type: 'RESTART_LEVEL' })} 
+          size="lg"
+          className="text-lg px-8 py-3 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+        >
+          Начать сначала
+        </Button>
+      </div>
+    );
+  }
+
+  if (gameState.levelCompleteScreenActive) {
+    return (
+      <LevelCompleteScreen
+        currentLevel={gameState.currentLevel}
+        onNextLevel={() => dispatch({ type: 'NEXT_LEVEL' })}
+      />
+    );
+  }
 
   return (
     <div 
@@ -213,7 +215,11 @@ export default function HomePage() {
         )}
       </div>
 
-      <ControlPanel dispatch={dispatch} onExit={handleExit} disabled={gameState.heroAppearance === 'appearing'} />
+      <ControlPanel 
+        dispatch={dispatch} 
+        onExit={handleExit} 
+        disabled={gameState.heroAppearance === 'appearing' || gameState.levelCompleteScreenActive || gameState.gameLost} 
+      />
     </div>
   );
 }
