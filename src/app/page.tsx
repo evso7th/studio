@@ -186,7 +186,7 @@ export default function HomePage() {
         style={{
           backgroundImage: 'url("https://neurostaffing.online/wp-content/uploads/2025/05/BackGroundBase.png")',
           backgroundSize: 'cover',
-          backgroundPosition: `${parallaxBgX + 100}px center`, 
+          backgroundPosition: `${parallaxBgX - 100}px center`, 
           backgroundRepeat: 'no-repeat',
           backgroundColor: 'hsl(var(--game-bg))',
           perspective: '1000px', 
@@ -217,3 +217,4 @@ export default function HomePage() {
     </div>
   );
 }
+
