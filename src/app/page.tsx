@@ -131,9 +131,9 @@ export default function EntryPage() {
         ))}
       </div>
 
-      <div className="text-center space-y-6 w-full h-full flex flex-col items-center justify-center relative z-10 p-0 shadow-xl pt-2">
+      <div className="text-center space-y-6 w-full h-full flex flex-col items-center justify-center relative z-10 p-0 shadow-xl pt-2 mt-[-12px]">
         <div className="max-w-2xl w-full pt-1 px-6 pb-6"> 
-          <h1 className="text-[48px] font-bold text-primary mt-[-8px] whitespace-nowrap pr-1 mr-1 ml-[-5px]">IPO Mad Racing</h1>
+          <h1 className="text-[44px] font-bold text-primary mt-[-8px] whitespace-nowrap pr-1 mr-1 ml-[-5px]">IPO Mad Racing</h1>
           <p className="text-xl md:text-2xl text-foreground/90 mt-[-10px]">
             Специальное издание <br />
             в честь Дня Рождения
@@ -157,16 +157,16 @@ export default function EntryPage() {
             onClick={() => router.push('/play')}
             variant="destructive"
             size="lg"
-            className="w-full max-w-xs text-xl py-4 rounded-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 mt-5 mb-3" 
+            className="w-full max-w-xs text-xl py-4 rounded-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 mt-8 mb-3" 
           >
             Начать игру
           </Button>
 
-          <div className="mt-0 mb-3 pt-12">  
+          <div className="mt-[-12px] mb-3 pt-12">  
              <CreditsDialog />
           </div>
           
-          <p className="text-md md:text-lg text-muted-foreground pt-3 pb-6 mt-[-2px]"> 
+          <p className="text-md md:text-lg text-muted-foreground pt-3 pb-6 mt-[-22px]"> 
             Собери все монетки и выйди на IPO!
             <br />
             Опасайся медведей!
@@ -176,3 +176,4 @@ export default function EntryPage() {
     </div>
   );
 }
+
