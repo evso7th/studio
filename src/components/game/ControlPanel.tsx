@@ -88,11 +88,11 @@ export function ControlPanel({ dispatch, onExit, disabled = false }: ControlPane
       <Button
         variant="ghost"
         size="lg"
-        className={`${commonButtonStyles} ${disabled ? disabledButtonStyles : ''}`} // Exit button can also be disabled
+        className={`${commonButtonStyles} ${disabled ? disabledButtonStyles : ''}`}
         style={getRadialGradientStyle(disabled)} 
         onClick={onExit}
-        aria-label="Restart Level" // Changed from Exit Game to Restart Level
-        disabled={disabled} // Allow exit button to be disabled by game state
+        aria-label="Выход в меню"
+        disabled={disabled}
       >
         <LogOut className="h-12 w-12 text-foreground" />
       </Button>
