@@ -95,7 +95,7 @@ export default function EntryPage() {
         src="/assets/images/Wallpaper2.jpg" 
         alt="Background Wallpaper"
         fill
-        style={{ objectFit: 'cover', zIndex: -10, objectPosition: 'center top' }} // Ensure it's behind everything
+        style={{ objectFit: 'cover', zIndex: -10, objectPosition: 'center center' }} // Ensure it's behind everything
         priority
         data-ai-hint="starry sky space"
       />
