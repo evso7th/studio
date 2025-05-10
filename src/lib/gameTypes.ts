@@ -40,6 +40,7 @@ export interface HeroType extends GameObject {
   animations: HeroAnimations;
   currentFrame: number;
   frameTime: number;
+  slideVelocityX?: number; // For slippery platforms
 }
 
 export interface PlatformType extends GameObject {
@@ -49,6 +50,7 @@ export interface PlatformType extends GameObject {
   moveAxis: 'x' | 'y';
   moveRange?: { min: number; max: number };
   imageSrc?: string;
+  isSlippery?: boolean;
 }
 
 export interface CoinType extends GameObject {
@@ -63,6 +65,7 @@ export interface CoinType extends GameObject {
 }
 
 export interface EnemyType extends GameObject {
+  enemyId?: 'enemy1' | 'enemy2'; // To distinguish for freezing logic
   imageSrc: string;
   speed: number;
   direction: 1 | -1;
@@ -74,7 +77,7 @@ export interface EnemyType extends GameObject {
   defeatExplosionProgress?: number;
   isFrozen?: boolean;
   frozenTimer?: number;
-  periodicFreezeIntervalTimer?: number; // Time until the next periodic freeze
+  periodicFreezeIntervalTimer?: number; 
 }
 
 
@@ -104,6 +107,7 @@ export const TARGET_JUMP_HEIGHT_PX = 180;
 
 export const PLATFORM1_Y_OFFSET = 136; 
 export const PLATFORM2_Y_OFFSET = 275; 
+export const ENEMY2_LEVEL3_Y_OFFSET_FROM_PLATFORM2 = 50;
 
 
 export const INITIAL_PLATFORM_SPEED = 0.75; 
@@ -120,16 +124,17 @@ export const MIN_DISTANCE_BETWEEN_PAIR_COINS_Y_FACTOR = 0.15;
 export const COIN_ZONE_TOP_OFFSET = 50; 
 
 export const HERO_BASE_SPEED = 1.25; 
+export const SLIPPERY_FRICTION_FACTOR = 0.97; // How much velocity is retained per tick on slippery surface
 
 export const ENEMY_WIDTH = 48;
 export const ENEMY_HEIGHT = 48;
-export const ENEMY_COLLISION_RADIUS = 24; // Half of width/height
+export const ENEMY_COLLISION_RADIUS = 24; 
 export const ENEMY_IMAGE_SRC = "/assets/images/bearFace.png";
 export const ENEMY_DEFAULT_SPEED = 0.4; 
 export const ENEMY_DEFEAT_DURATION_MS = 5000; 
 export const ENEMY_DEFEAT_EXPLOSION_DURATION_MS = 500; 
-export const ENEMY_FREEZE_DURATION_MS = 5000; // 5 seconds
-export const ENEMY_PERIODIC_FREEZE_INTERVAL_MS = 5000; // Enemy freezes every 5 seconds
+export const ENEMY_FREEZE_DURATION_MS = 5000; 
+export const ENEMY_PERIODIC_FREEZE_INTERVAL_MS = 5000; 
 
 export interface GameState {
   hero: HeroType;
@@ -187,3 +192,4 @@ export const heroAnimationsConfig: HeroAnimations = {
     height: HERO_HEIGHT,
   },
 };
+

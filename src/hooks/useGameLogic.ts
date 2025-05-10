@@ -28,6 +28,7 @@ import {
     COIN_ZONE_TOP_OFFSET,
     COIN_SPAWN_DELAY_MS,
     HERO_BASE_SPEED,
+    SLIPPERY_FRICTION_FACTOR,
     heroAnimationsConfig,
     ENEMY_WIDTH,
     ENEMY_HEIGHT,
@@ -37,6 +38,7 @@ import {
     ENEMY_DEFEAT_EXPLOSION_DURATION_MS,
     ENEMY_FREEZE_DURATION_MS,
     ENEMY_PERIODIC_FREEZE_INTERVAL_MS,
+    ENEMY2_LEVEL3_Y_OFFSET_FROM_PLATFORM2,
 } from '@/lib/gameTypes'; 
 
 const GRAVITY_ACCELERATION = 0.4; 
@@ -64,13 +66,19 @@ const initialHeroState: HeroType = {
   animations: heroAnimationsConfig,
   currentFrame: 0,
   frameTime: 0,
+  slideVelocityX: 0,
 };
 
 const getLevelPlatforms = (gameAreaWidth: number, gameAreaHeight: number, level: number): PlatformType[] => {
   const groundPlatformY = calculatePlatformGroundY(gameAreaHeight);
   let platformSpeed = INITIAL_PLATFORM_SPEED;
+  let isPlatform2Slippery = false;
+
   if (level === 2) {
     platformSpeed = 0.75;
+  } else if (level === 3) {
+    platformSpeed = 0.75; // Or adjust for level 3 if needed
+    isPlatform2Slippery = true;
   }
 
 
@@ -79,7 +87,7 @@ const getLevelPlatforms = (gameAreaWidth: number, gameAreaHeight: number, level:
       id: 'platform_ground', x: -100, y: groundPlatformY, 
       width: gameAreaWidth + 200, height: PLATFORM_GROUND_THICKNESS, 
       isMoving: false, speed: 0, direction: 1, moveAxis: 'x',
-      imageSrc: "https://neurostaffing.online/wp-content/uploads/2025/05/GroundFloor.png",
+      imageSrc: "/assets/images/PlatformGrass.png", // Using PlatformGrass for ground too
     },
     {
       id: 'platform1', 
@@ -100,41 +108,35 @@ const getLevelPlatforms = (gameAreaWidth: number, gameAreaHeight: number, level:
       moveAxis: 'x',
       moveRange: { min: 0, max: gameAreaWidth - PLATFORM_DEFAULT_WIDTH },
       imageSrc: "/assets/images/PlatformGrass.png",
+      isSlippery: isPlatform2Slippery,
     },
   ];
 };
 
 
 const getLevelEnemies = (gameAreaWidth: number, gameAreaHeight: number, level: number, platforms: PlatformType[]): EnemyType[] => {
-  if (level === 2) { 
-    return []; 
-  }
-  return []; 
-};
-
-function createEnemy(id: string, gameAreaWidth: number, gameAreaHeight: number, platforms: PlatformType[], level: number): EnemyType {
+  const enemies: EnemyType[] = [];
   const platform1 = platforms.find(p => p.id === 'platform1');
   const platform2 = platforms.find(p => p.id === 'platform2');
-  
-  let enemyYPosition = gameAreaHeight / 2 - ENEMY_HEIGHT / 2; 
 
+  let enemyYPositionL2 = gameAreaHeight / 2 - ENEMY_HEIGHT / 2; 
   if (platform1 && platform2) {
       const lowerPlatformTop = platform1.y + platform1.height;
       const upperPlatformBottom = platform2.y;
       const midPointY = lowerPlatformTop + (upperPlatformBottom - lowerPlatformTop) / 2;
-      enemyYPosition = midPointY - ENEMY_HEIGHT / 2;
+      enemyYPositionL2 = midPointY - ENEMY_HEIGHT / 2;
   }
   
-  const enemySpeed = level === 2 ? ENEMY_DEFAULT_SPEED : ENEMY_DEFAULT_SPEED;
-
-  return {
-      id: id,
+  if (level === 2) {
+    enemies.push({
+      id: `enemy_level2_0`,
+      enemyId: 'enemy1', // For specific logic if needed
       x: gameAreaWidth / 2 - ENEMY_WIDTH / 2, 
-      y: enemyYPosition,
+      y: enemyYPositionL2,
       width: ENEMY_WIDTH,
       height: ENEMY_HEIGHT,
       imageSrc: ENEMY_IMAGE_SRC,
-      speed: enemySpeed, 
+      speed: ENEMY_DEFAULT_SPEED, 
       direction: 1,
       moveAxis: 'x',
       moveRange: { min: 0, max: gameAreaWidth - ENEMY_WIDTH },
@@ -145,8 +147,57 @@ function createEnemy(id: string, gameAreaWidth: number, gameAreaHeight: number, 
       isFrozen: false,
       frozenTimer: 0,
       periodicFreezeIntervalTimer: ENEMY_PERIODIC_FREEZE_INTERVAL_MS,
-  };
-}
+    });
+  } else if (level === 3) {
+    // Enemy 1 (similar to level 2)
+    enemies.push({
+      id: `enemy_level3_0`,
+      enemyId: 'enemy1',
+      x: gameAreaWidth / 3 - ENEMY_WIDTH / 2, // Start position adjusted
+      y: enemyYPositionL2,
+      width: ENEMY_WIDTH,
+      height: ENEMY_HEIGHT,
+      imageSrc: ENEMY_IMAGE_SRC,
+      speed: ENEMY_DEFAULT_SPEED, 
+      direction: 1,
+      moveAxis: 'x',
+      moveRange: { min: 0, max: gameAreaWidth - ENEMY_WIDTH },
+      collisionRadius: ENEMY_COLLISION_RADIUS,
+      isDefeated: false, 
+      defeatTimer: 0,
+      defeatExplosionProgress: 0,
+      isFrozen: false,
+      frozenTimer: 0,
+      periodicFreezeIntervalTimer: ENEMY_PERIODIC_FREEZE_INTERVAL_MS,
+    });
+
+    // Enemy 2 (new for level 3)
+    if (platform2) {
+      const enemy2YPosition = platform2.y + platform2.height + ENEMY2_LEVEL3_Y_OFFSET_FROM_PLATFORM2;
+      enemies.push({
+        id: `enemy_level3_1`,
+        enemyId: 'enemy2',
+        x: (gameAreaWidth * 2 / 3) - ENEMY_WIDTH / 2, // Start position adjusted
+        y: enemy2YPosition,
+        width: ENEMY_WIDTH,
+        height: ENEMY_HEIGHT,
+        imageSrc: ENEMY_IMAGE_SRC,
+        speed: ENEMY_DEFAULT_SPEED, 
+        direction: -1, // Starts moving left
+        moveAxis: 'x',
+        moveRange: { min: 0, max: gameAreaWidth - ENEMY_WIDTH },
+        collisionRadius: ENEMY_COLLISION_RADIUS,
+        isDefeated: false, 
+        defeatTimer: 0,
+        defeatExplosionProgress: 0,
+        isFrozen: false,
+        frozenTimer: 0,
+        periodicFreezeIntervalTimer: ENEMY_PERIODIC_FREEZE_INTERVAL_MS,
+      });
+    }
+  }
+  return enemies; 
+};
 
 
 function spawnNextCoinPair(gameArea: Size, coinSize: number, currentPairId: number, platforms: PlatformType[]): CoinType[] {
@@ -219,7 +270,20 @@ const getDefaultInitialGameState = (gameAreaWidth = 800, gameAreaHeight = 600, l
   const platforms = getLevelPlatforms(gameAreaWidth, gameAreaHeight, level);
   const enemies = getLevelEnemies(gameAreaWidth, gameAreaHeight, level, platforms); 
   
-  const heroSpeed = level === 2 ? 1.25 : HERO_BASE_SPEED;
+  let heroSpeed = HERO_BASE_SPEED;
+  let platformSpeed = INITIAL_PLATFORM_SPEED;
+
+  if (level === 2 || level === 3) {
+    heroSpeed = 1.25;
+    platformSpeed = 0.75;
+  }
+  
+  const updatedPlatforms = platforms.map(p => {
+    if (p.isMoving) {
+      return { ...p, speed: platformSpeed };
+    }
+    return p;
+  });
 
   return {
     hero: {
@@ -228,8 +292,8 @@ const getDefaultInitialGameState = (gameAreaWidth = 800, gameAreaHeight = 600, l
       y: groundPlatformY + PLATFORM_GROUND_THICKNESS,
       currentSpeedX: 0, 
     },
-    platforms: platforms,
-    activeCoins: spawnNextCoinPair({ width: gameAreaWidth, height: gameAreaHeight }, COIN_SIZE, 0, platforms),
+    platforms: updatedPlatforms,
+    activeCoins: spawnNextCoinPair({ width: gameAreaWidth, height: gameAreaHeight }, COIN_SIZE, 0, updatedPlatforms),
     enemies: enemies,
     score: 0,
     currentLevel: level,
@@ -252,8 +316,8 @@ function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
     case 'MOVE_LEFT_START':
       if (state.heroAppearance === 'visible' && !state.levelCompleteScreenActive && !state.gameLost) {
-        const currentHeroSpeed = state.currentLevel === 2 ? 1.25 : HERO_BASE_SPEED;
-        return { ...state, hero: { ...state.hero, currentSpeedX: -currentHeroSpeed, action: 'run_left', facingDirection: 'left' } };
+        const currentHeroSpeed = (state.currentLevel === 2 || state.currentLevel === 3) ? 1.25 : HERO_BASE_SPEED;
+        return { ...state, hero: { ...state.hero, currentSpeedX: -currentHeroSpeed, action: 'run_left', facingDirection: 'left', slideVelocityX: 0 } };
       }
       return state;
     case 'MOVE_LEFT_STOP':
@@ -263,8 +327,8 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       return state;
     case 'MOVE_RIGHT_START':
       if (state.heroAppearance === 'visible' && !state.levelCompleteScreenActive && !state.gameLost) {
-         const currentHeroSpeed = state.currentLevel === 2 ? 1.25 : HERO_BASE_SPEED;
-        return { ...state, hero: { ...state.hero, currentSpeedX: currentHeroSpeed, action: 'run_right', facingDirection: 'right' } };
+         const currentHeroSpeed = (state.currentLevel === 2 || state.currentLevel === 3) ? 1.25 : HERO_BASE_SPEED;
+        return { ...state, hero: { ...state.hero, currentSpeedX: currentHeroSpeed, action: 'run_right', facingDirection: 'right', slideVelocityX: 0 } };
       }
       return state;
     case 'MOVE_RIGHT_STOP':
@@ -392,7 +456,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         }
         if (p.isMoving && p.id !== 'platform_ground') {
           let platformNewX = p.x;
-          const platformBaseSpeed = state.currentLevel === 2 ? 0.75 : p.speed;
+          const platformBaseSpeed = (state.currentLevel === 2 || state.currentLevel === 3) ? 0.75 : p.speed;
           let platformVelX = platformBaseSpeed * p.direction;
 
           if (p.moveAxis === 'x' && p.moveRange) {
@@ -412,7 +476,6 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       nextEnemies = nextEnemies.map(enemy => {
         let updatedEnemy = { ...enemy };
 
-        // 1. Handle existing freeze state (from any source)
         if (updatedEnemy.isFrozen && updatedEnemy.frozenTimer !== undefined) {
           const newFrozenTimer = updatedEnemy.frozenTimer - deltaTime;
           if (newFrozenTimer <= 0) {
@@ -420,20 +483,17 @@ function gameReducer(state: GameState, action: GameAction): GameState {
               ...updatedEnemy,
               isFrozen: false,
               frozenTimer: 0,
-              periodicFreezeIntervalTimer: ENEMY_PERIODIC_FREEZE_INTERVAL_MS, // Reset interval for next periodic freeze
+              periodicFreezeIntervalTimer: ENEMY_PERIODIC_FREEZE_INTERVAL_MS, 
             };
           } else {
-            // Still frozen, just update timer and skip other logic for this tick
             return { ...updatedEnemy, frozenTimer: newFrozenTimer };
           }
         }
 
-        // 2. If not currently frozen, check for periodic freeze trigger (for dynamic L2 enemy)
-        if (updatedEnemy.id === 'enemy_level2_dynamic' && !updatedEnemy.isFrozen && updatedEnemy.periodicFreezeIntervalTimer !== undefined) {
+        if (!updatedEnemy.isFrozen && updatedEnemy.periodicFreezeIntervalTimer !== undefined) {
           const newPeriodicIntervalTimer = updatedEnemy.periodicFreezeIntervalTimer - deltaTime;
           if (newPeriodicIntervalTimer <= 0) {
-            // Trigger periodic freeze
-            return { // Return here because enemy is now frozen and should not move this tick
+            return { 
               ...updatedEnemy,
               isFrozen: true,
               frozenTimer: ENEMY_FREEZE_DURATION_MS,
@@ -443,29 +503,26 @@ function gameReducer(state: GameState, action: GameAction): GameState {
           updatedEnemy = { ...updatedEnemy, periodicFreezeIntervalTimer: newPeriodicIntervalTimer };
         }
         
-        // 3. If still not frozen after all checks, move the enemy
         if (!updatedEnemy.isFrozen) {
             let enemyNewX = updatedEnemy.x;
-            const enemyBaseSpeed = state.currentLevel === 2 ? ENEMY_DEFAULT_SPEED : updatedEnemy.speed;
+            const enemyBaseSpeed = (state.currentLevel === 2 || state.currentLevel === 3) ? ENEMY_DEFAULT_SPEED : updatedEnemy.speed;
             let enemyVelX = enemyBaseSpeed * updatedEnemy.direction;
 
             if (updatedEnemy.moveAxis === 'x' && updatedEnemy.moveRange) {
               enemyNewX += enemyVelX * (deltaTime / (1000 / 60));
               if (enemyNewX <= updatedEnemy.moveRange.min || enemyNewX + updatedEnemy.width >= updatedEnemy.moveRange.max + updatedEnemy.width) {
-                // updatedEnemy.direction needs to be updated on the object that will be returned or further processed
                 const newDirection = updatedEnemy.direction * -1;
                 enemyVelX *= -1;
                 enemyNewX = Math.max(updatedEnemy.moveRange.min, Math.min(enemyNewX, updatedEnemy.moveRange.max));
                 updatedEnemy = {...updatedEnemy, direction: newDirection}; 
               }
             }
-            // Ensure speed and velocity are part of the returned object if they can change.
             updatedEnemy = { ...updatedEnemy, x: enemyNewX, velocity: { x: enemyVelX, y: 0 }, speed: enemyBaseSpeed };
         }
-        return updatedEnemy; // Return the potentially modified enemy
+        return updatedEnemy; 
       });
       
-      nextEnemies = nextEnemies.filter(e => !(e.isDefeated && e.defeatTimer <= 0 && e.id !== 'enemy_level2_dynamic'));
+      nextEnemies = nextEnemies.filter(e => !(e.isDefeated && e.defeatTimer <= 0 ));
 
 
       if (state.heroAppearance === 'appearing') {
@@ -478,22 +535,44 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         nextHero.velocity = { x: 0, y: 0 };
         nextHero.currentSpeedX = 0;
         nextHero.facingDirection = heroState.facingDirection || 'right';
+        nextHero.slideVelocityX = 0;
       } else { 
         let newVelY = (nextHero.velocity?.y ?? 0) - GRAVITY_ACCELERATION * (deltaTime / (1000/60));
         newVelY = Math.max(newVelY, MAX_FALL_SPEED);
 
         let platformMovementEffectX = 0;
+        let onSlipperyPlatform = false;
         if (nextHero.isOnPlatform && nextHero.platformId) {
           const currentPlatformInstance = nextPlatforms.find(p => p.id === nextHero.platformId);
-          if (currentPlatformInstance?.isMoving && currentPlatformInstance.velocity?.x) {
-            platformMovementEffectX = currentPlatformInstance.velocity.x * (deltaTime / (1000/60));
+          if (currentPlatformInstance) {
+            if (currentPlatformInstance.isMoving && currentPlatformInstance.velocity?.x) {
+              platformMovementEffectX = currentPlatformInstance.velocity.x * (deltaTime / (1000/60));
+            }
+            if (currentPlatformInstance.isSlippery && state.currentLevel === 3) {
+              onSlipperyPlatform = true;
+            }
           }
         }
         
-        const currentHeroBaseSpeed = state.currentLevel === 2 ? 1.25 : HERO_BASE_SPEED;
+        const currentHeroBaseSpeed = (state.currentLevel === 2 || state.currentLevel === 3) ? 1.25 : HERO_BASE_SPEED;
         const heroMovementX = (nextHero.currentSpeedX !== 0 ? (nextHero.currentSpeedX > 0 ? currentHeroBaseSpeed : -currentHeroBaseSpeed) : 0);
 
-        let newPosX = nextHero.x + heroMovementX * (deltaTime / (1000/60)) + platformMovementEffectX;
+        let newPosX;
+        if (onSlipperyPlatform) {
+            if (nextHero.currentSpeedX !== 0) { // Player is actively moving
+                nextHero.slideVelocityX = heroMovementX; // Update slide velocity based on input
+            } else { // Player stopped pressing keys, apply friction
+                nextHero.slideVelocityX = (nextHero.slideVelocityX || 0) * SLIPPERY_FRICTION_FACTOR;
+                if (Math.abs(nextHero.slideVelocityX || 0) < 0.1) {
+                    nextHero.slideVelocityX = 0;
+                }
+            }
+            newPosX = nextHero.x + (nextHero.slideVelocityX || 0) * (deltaTime / (1000/60)) + platformMovementEffectX;
+        } else {
+            nextHero.slideVelocityX = 0; // Reset slide velocity if not on slippery platform
+            newPosX = nextHero.x + heroMovementX * (deltaTime / (1000/60)) + platformMovementEffectX;
+        }
+        
         let newPosY = nextHero.y + newVelY * (deltaTime / (1000/60));
         
         if (newVelY < -GRAVITY_ACCELERATION * 0.5) nextHero.action = 'fall_down'; 
@@ -501,7 +580,11 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         else if (nextHero.currentSpeedX !== 0 && nextHero.isOnPlatform) {
              nextHero.action = nextHero.facingDirection === 'right' ? 'run_right' : 'run_left';
         }
-        else if (nextHero.isOnPlatform) nextHero.action = 'idle'; 
+        else if (nextHero.isOnPlatform && (nextHero.slideVelocityX === 0 || !onSlipperyPlatform) ) nextHero.action = 'idle'; 
+        else if (nextHero.isOnPlatform && onSlipperyPlatform && nextHero.slideVelocityX !==0) {
+            nextHero.action = nextHero.slideVelocityX > 0 ? 'run_right' : 'run_left'; // Show running if sliding
+        }
+
 
         let resolvedOnPlatform = false;
         let resolvedPlatformId = null;
@@ -527,6 +610,11 @@ function gameReducer(state: GameState, action: GameAction): GameState {
               resolvedPlatformId = platform.id;
               if (nextHero.action === 'fall_down' || nextHero.action === 'jump_up') { 
                  nextHero.action = nextHero.currentSpeedX !==0 ? (nextHero.facingDirection === 'right' ? 'run_right' : 'run_left') : 'idle';
+                 if (platform.isSlippery && state.currentLevel === 3 && nextHero.currentSpeedX === 0) {
+                    // Keep existing slideVelocity if landing on slippery without input
+                 } else if (!platform.isSlippery || state.currentLevel !== 3) {
+                    nextHero.slideVelocityX = 0;
+                 }
               }
               break; 
             }
@@ -546,19 +634,30 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         nextHero.platformId = resolvedPlatformId;
 
         if (nextHero.isOnPlatform) {
-          if (nextHero.currentSpeedX === 0 && finalVelY === 0) nextHero.action = 'idle';
-          else if (nextHero.currentSpeedX !== 0 && finalVelY === 0) {
-            nextHero.action = nextHero.facingDirection === 'right' ? 'run_right' : 'run_left';
+          const currentPlatform = nextPlatforms.find(p => p.id === nextHero.platformId);
+          if (currentPlatform?.isSlippery && state.currentLevel === 3) {
+            if (nextHero.currentSpeedX === 0 && Math.abs(nextHero.slideVelocityX || 0) < 0.1) {
+              nextHero.action = 'idle';
+            } else if (Math.abs(nextHero.slideVelocityX || 0) >= 0.1) {
+               nextHero.action = (nextHero.slideVelocityX || 0) > 0 ? 'run_right' : 'run_left';
+            }
+          } else {
+            if (nextHero.currentSpeedX === 0 && finalVelY === 0) nextHero.action = 'idle';
+            else if (nextHero.currentSpeedX !== 0 && finalVelY === 0) {
+              nextHero.action = nextHero.facingDirection === 'right' ? 'run_right' : 'run_left';
+            }
           }
         } else { 
           if (finalVelY > 0) nextHero.action = 'jump_up';
           else if (finalVelY < -GRAVITY_ACCELERATION * 0.5) nextHero.action = 'fall_down';
         }
 
+
         if (nextHero.x < 0) nextHero.x = 0;
         if (nextHero.x + nextHero.width > gameArea.width) nextHero.x = gameArea.width - nextHero.width;
         
-        for (const enemy of nextEnemies) {
+        for (let i = 0; i < nextEnemies.length; i++) {
+          const enemy = nextEnemies[i];
           if (enemy.isDefeated || enemy.isFrozen) continue; 
 
           const enemyCenterX = enemy.x + enemy.width / 2;
@@ -571,8 +670,9 @@ function gameReducer(state: GameState, action: GameAction): GameState {
 
           if (distanceSquared < (enemy.collisionRadius * enemy.collisionRadius)) {
               heroHitByEnemy = true;
-              if (enemy.id === 'enemy_level2_dynamic') {
-                  nextEnemies = nextEnemies.map(e => e.id === enemy.id ? {...e, isFrozen: false, frozenTimer: 0, periodicFreezeIntervalTimer: ENEMY_PERIODIC_FREEZE_INTERVAL_MS } : e);
+              // Reset the specific enemy that was hit if it has periodic freeze
+              if (enemy.periodicFreezeIntervalTimer !== undefined) {
+                 nextEnemies[i] = {...enemy, isFrozen: false, frozenTimer: 0, periodicFreezeIntervalTimer: ENEMY_PERIODIC_FREEZE_INTERVAL_MS };
               }
               break; 
           }
@@ -588,6 +688,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
             nextHero.action = 'idle';
             nextHeroAppearance = 'appearing';
             nextHeroAppearElapsedTime = 0;
+            nextHero.slideVelocityX = 0;
         }
 
 
@@ -612,25 +713,46 @@ function gameReducer(state: GameState, action: GameAction): GameState {
             let shouldSpawnNextPair = false;
             if (collectedAnyCoinThisTick) {
               nextScore += newlyCollectedCountThisTick;
+              const previousTotalCollected = nextTotalCollected;
               nextTotalCollected += newlyCollectedCountThisTick;
-
-              if (state.currentLevel === 2 && !nextEnemies.some(e => e.id === 'enemy_level2_dynamic')) {
-                  const newEnemy = createEnemy('enemy_level2_dynamic', gameArea.width, gameArea.height, nextPlatforms, state.currentLevel);
-                  nextEnemies.push(newEnemy);
-              }
               
+              // Spawn enemy on L2 after first coin
+              if (state.currentLevel === 2 && previousTotalCollected === 0 && nextTotalCollected > 0 && !nextEnemies.some(e => e.id === 'enemy_level2_0')) {
+                  const newEnemy = getLevelEnemies(gameArea.width, gameArea.height, state.currentLevel, nextPlatforms).find(e => e.id === 'enemy_level2_0');
+                  if (newEnemy) nextEnemies.push(newEnemy);
+              }
+              // Spawn enemies on L3 after first coin
+              if (state.currentLevel === 3 && previousTotalCollected === 0 && nextTotalCollected > 0 && nextEnemies.filter(e => e.id.startsWith('enemy_level3_')).length === 0) {
+                  const newEnemiesL3 = getLevelEnemies(gameArea.width, gameArea.height, state.currentLevel, nextPlatforms);
+                  newEnemiesL3.forEach(ne => {
+                      if (!nextEnemies.some(e => e.id === ne.id)) nextEnemies.push(ne);
+                  });
+              }
+
+
               if (state.currentLevel === 2) {
                 nextEnemies = nextEnemies.map(enemy => {
-                  if (enemy.id === 'enemy_level2_dynamic' && !enemy.isDefeated) { 
+                  if (enemy.id === 'enemy_level2_0' && !enemy.isDefeated) { 
                     return {
                       ...enemy,
                       isFrozen: true,
                       frozenTimer: ENEMY_FREEZE_DURATION_MS,
-                      periodicFreezeIntervalTimer: ENEMY_PERIODIC_FREEZE_INTERVAL_MS, // Reset periodic timer on coin collection freeze
+                      periodicFreezeIntervalTimer: ENEMY_PERIODIC_FREEZE_INTERVAL_MS, 
                     };
                   }
                   return enemy;
                 });
+              } else if (state.currentLevel === 3) {
+                 const isEvenCoinCollected = (nextTotalCollected % 2 === 0);
+                 nextEnemies = nextEnemies.map(enemy => {
+                    if (enemy.enemyId === 'enemy1' && isEvenCoinCollected && !enemy.isDefeated) {
+                        return {...enemy, isFrozen: true, frozenTimer: ENEMY_FREEZE_DURATION_MS, periodicFreezeIntervalTimer: ENEMY_PERIODIC_FREEZE_INTERVAL_MS};
+                    }
+                    if (enemy.enemyId === 'enemy2' && !isEvenCoinCollected && !enemy.isDefeated) {
+                        return {...enemy, isFrozen: true, frozenTimer: ENEMY_FREEZE_DURATION_MS, periodicFreezeIntervalTimer: ENEMY_PERIODIC_FREEZE_INTERVAL_MS};
+                    }
+                    return enemy;
+                 });
               }
 
 
@@ -715,3 +837,4 @@ export function useGameLogic() {
 
   return { gameState, dispatch: handleGameAction, gameTick };
 }
+
