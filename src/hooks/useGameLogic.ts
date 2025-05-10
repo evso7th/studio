@@ -1,4 +1,5 @@
 
+
 // @ts-nocheck
 "use client";
 
@@ -35,7 +36,7 @@ import {
     ENEMY_COLLISION_RADIUS,
     ENEMY_IMAGE_SRC,
     ENEMY_DEFAULT_SPEED,
-    ENEMY_DEFEAT_DURATION_MS, // Added this import
+    ENEMY_DEFEAT_DURATION_MS, 
     ENEMY_DEFEAT_EXPLOSION_DURATION_MS,
     ENEMY_FREEZE_DURATION_MS,
     ENEMY_PERIODIC_FREEZE_INTERVAL_MS,
@@ -182,7 +183,7 @@ const getLevelEnemies = (gameAreaWidth: number, gameAreaHeight: number, level: n
         y: enemy2YPosition,
         width: ENEMY_WIDTH,
         height: ENEMY_HEIGHT,
-        imageSrc: ENEMY_IMAGE_SRC,
+        imageSrc: "/assets/images/BearFaceDark.png", // Updated image source for enemy2
         speed: ENEMY_DEFAULT_SPEED, 
         direction: -1, // Starts moving left
         moveAxis: 'x',
@@ -313,7 +314,7 @@ const getDefaultInitialGameState = (gameAreaWidth = 800, gameAreaHeight = 600, l
 
 // To start on level 3 for debugging, change the default level in the line below:
 // e.g., let initialGameState = getDefaultInitialGameState(undefined, undefined, 3);
-let initialGameState = getDefaultInitialGameState(undefined, undefined, 3);
+let initialGameState = getDefaultInitialGameState(undefined, undefined, 1);
 
 
 function gameReducer(state: GameState, action: GameAction): GameState {
@@ -885,5 +886,6 @@ export function useGameLogic() {
 
   return { gameState, dispatch: handleGameAction, gameTick };
 }
+
 
 
