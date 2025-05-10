@@ -34,7 +34,7 @@ const FIREWORK_COLORS = [
 ];
 
 const NUM_BACKGROUND_FIREWORKS = 7; // Number of simultaneous firework bursts
-const PARTICLES_PER_BACKGROUND_FIREWORK = 10; // Particles per burst
+const PARTICLES_PER_BACKGROUND_FIREWORK = 15; // Increased from 10 to 15 for more visual impact
 const FIREWORK_REGENERATION_INTERVAL = 4000; // Regenerate fireworks every 4 seconds
 
 export default function EntryPage() {
@@ -44,6 +44,13 @@ export default function EntryPage() {
 
   useEffect(() => {
     setIsMounted(true);
+    if (typeof screen.orientation?.lock === 'function') {
+      screen.orientation.lock('portrait-primary')
+        .then(() => console.log('Screen orientation locked to portrait.'))
+        .catch((error) => console.warn('Screen orientation lock failed. This is common if not triggered by user action or if the API is unsupported/restricted.', error));
+    } else {
+      console.warn('Screen Orientation API not supported.');
+    }
   }, []);
 
   useEffect(() => {
@@ -62,10 +69,7 @@ export default function EntryPage() {
           const targetOffsetXNum = Math.cos(angle) * radius;
           const targetOffsetYNum = Math.sin(angle) * radius;
 
-          // Calculate trail angle: angle of motion vector (targetOffsetX, targetOffsetY)
-          //旋转精灵使其Y轴（高度）与运动方向对齐
           const particleTrailAngleDeg = (Math.atan2(targetOffsetYNum, targetOffsetXNum) * (180 / Math.PI)) - 90;
-
 
           newFireworks.push({
             id: Date.now() + i * PARTICLES_PER_BACKGROUND_FIREWORK + j + Math.random(),
@@ -73,7 +77,7 @@ export default function EntryPage() {
             originY: `${originYNum}%`,
             targetOffsetX: `${targetOffsetXNum}vmin`, 
             targetOffsetY: `${targetOffsetYNum}vmin`,
-            size: (2 + Math.random() * 2.5) * 2, // Particle size DOUBLED
+            size: (2 + Math.random() * 2.5) * 2, 
             color: FIREWORK_COLORS[Math.floor(Math.random() * FIREWORK_COLORS.length)],
             delay: Math.random() * (FIREWORK_REGENERATION_INTERVAL / 1000 / 2), 
             duration: 1.5 + Math.random() * 1, 
@@ -113,15 +117,15 @@ export default function EntryPage() {
             style={{
               left: particle.originX,
               top: particle.originY,
-              width: `${particle.size}px`, // Initial width, referenced by CSS var
-              height: `${particle.size}px`, // Initial height, referenced by CSS var
+              width: `${particle.size}px`, 
+              height: `${particle.size}px`, 
               backgroundColor: particle.color,
               '--tx': particle.targetOffsetX,
               '--ty': particle.targetOffsetY,
               animationDelay: `${particle.delay}s`,
               animationDuration: `${particle.duration}s`,
-              '--particle-initial-size': `${particle.size}px`, // Pass initial size
-              '--trail-angle': `${particle.trailAngle}deg`,     // Pass trail angle
+              '--particle-initial-size': `${particle.size}px`, 
+              '--trail-angle': `${particle.trailAngle}deg`,     
             } as React.CSSProperties} 
           />
         ))}
@@ -130,11 +134,11 @@ export default function EntryPage() {
       <div className="text-center space-y-6 w-full h-full flex flex-col items-center justify-center relative z-10 bg-background/70 p-0 shadow-xl">
         <div className="max-w-2xl w-full p-6"> 
           <h1 className="text-5xl md:text-7xl font-bold text-primary pt-6">IPO Mad Racing</h1>
-          <p className="text-xl md:text-2xl text-foreground/90">
+          <p className="text-xl md:text-2xl text-foreground/90 mt-6">
             Специальное издание <br />
             в честь дня рождения
           </p>
-          <p className="text-2xl md:text-3xl font-semibold text-accent">
+          <p className="text-2xl md:text-3xl font-semibold text-accent mt-6">
             Руслана Гайнанова
           </p>
 
@@ -153,14 +157,15 @@ export default function EntryPage() {
             onClick={() => router.push('/play')}
             variant="destructive"
             size="lg"
-            className="w-full max-w-xs text-xl py-4 rounded-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200"
+            className="w-full max-w-xs text-xl py-4 rounded-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 mt-6 mb-5" // Added mt-6 and mb-5 (20px)
           >
             Начать игру
           </Button>
 
+          {/* CreditsDialog will now have a 20px gap from the button above */}
           <CreditsDialog />
 
-          <p className="text-md md:text-lg text-muted-foreground pt-6 pb-6">
+          <p className="text-md md:text-lg text-muted-foreground pt-6 pb-6 mt-6">
             Собери все монетки и выйди на IPO!
             <br />
             Опасайся медведей!
@@ -170,3 +175,4 @@ export default function EntryPage() {
     </div>
   );
 }
+
