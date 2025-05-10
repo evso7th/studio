@@ -131,10 +131,10 @@ export default function EntryPage() {
         ))}
       </div>
 
-      <div className="text-center w-full h-full flex flex-col items-center justify-between relative z-10 p-0 shadow-xl pt-12 pb-12"> {/* Changed pt-16 to pt-12 */}
-        <div className="max-w-2xl w-full px-6 flex flex-col items-center"> 
+      <div className="text-center w-full h-full flex flex-col items-center justify-between relative z-10 p-0 shadow-xl pt-3 pb-[50px]">
+        <div className="max-w-2xl w-full px-6 flex flex-col items-center h-full justify-between"> 
           {/* Top text block */}
-          <div className="flex flex-col items-center mb-auto">
+          <div className="flex flex-col items-center">
             <h1 className="text-[44px] font-bold text-primary whitespace-nowrap pr-1 mr-1 ml-[-5px]">IPO Mad Racing</h1>
             <p className="text-xl md:text-2xl text-foreground/90 mt-1">
               Специальное издание <br />
@@ -158,7 +158,7 @@ export default function EntryPage() {
           </div>
 
           {/* Bottom controls and text */}
-          <div className="flex flex-col items-center w-full mt-auto">
+          <div className="flex flex-col items-center w-full">
             <Button
               onClick={() => router.push('/play')}
               variant="destructive"
@@ -168,7 +168,7 @@ export default function EntryPage() {
               Начать игру
             </Button>
 
-            <div className="mb-2.5">  
+            <div className="mb-2.5 w-full max-w-xs">  
                <CreditsDialog />
             </div>
             

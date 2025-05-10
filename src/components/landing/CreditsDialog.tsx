@@ -17,7 +17,7 @@ export function CreditsDialog() {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button variant="outline" size="lg" className="w-full max-w-xs text-lg py-3 rounded-lg shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200">
+        <Button variant="outline" size="lg" className="w-full max-w-xs text-xl py-4 rounded-lg shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200">
           Credits
         </Button>
       </AlertDialogTrigger>
@@ -45,4 +45,3 @@ export function CreditsDialog() {
     </AlertDialog>
   );
 }
-
