@@ -170,7 +170,7 @@ export function PlatformComponent({ platform, gameAreaHeight, paddingTop }: { pl
     ...baseStyle,
     backgroundImage: platform.id === 'platform_ground' 
       ? 'url("https://neurostaffing.online/wp-content/uploads/2025/05/GroundFloor.png")' 
-      : 'url("/assets/images/PlatformGrass.png")', // Updated to local asset
+      : 'url("/assets/images/PlatformGrass.png")', 
     backgroundSize: platform.id === 'platform_ground' ? 'auto 100%' : '100% 100%', 
     backgroundPosition: platform.id === 'platform_ground' ? 'left bottom' : 'center', 
     backgroundRepeat: platform.id === 'platform_ground' ? 'repeat-x' : 'no-repeat', 
@@ -276,7 +276,7 @@ export function CoinComponent({ coin, gameAreaHeight, paddingTop }: { coin: Coin
   if (!coin.collected && !coin.isSpawning) { 
     return (
       <img
-        src="https://neurostaffing.online/wp-content/uploads/2025/04/Спасибка1.png"
+        src="/assets/images/Thankscoin.png"
         alt="Coin"
         className="animate-rotate-y" 
         style={{
@@ -295,4 +295,5 @@ export function CoinComponent({ coin, gameAreaHeight, paddingTop }: { coin: Coin
 
   return null; 
 }
+
 
