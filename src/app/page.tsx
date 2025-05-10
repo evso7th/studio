@@ -131,18 +131,18 @@ export default function EntryPage() {
         ))}
       </div>
 
-      <div className="text-center space-y-6 w-full h-full flex flex-col items-center justify-center relative z-10 p-0 shadow-xl pt-2 mt-[-12px]">
-        <div className="max-w-2xl w-full pt-1 px-6 pb-6"> 
-          <h1 className="text-[44px] font-bold text-primary mt-[-32px] whitespace-nowrap pr-1 mr-1 ml-[-5px]">IPO Mad Racing</h1>
-          <p className="text-xl md:text-2xl text-foreground/90 mt-[-30px]">
+      <div className="text-center w-full h-full flex flex-col items-center justify-center relative z-10 p-0 shadow-xl pt-2 mt-0">
+        <div className="max-w-2xl w-full pt-10 px-6 pb-8"> 
+          <h1 className="text-[44px] font-bold text-primary mt-0 whitespace-nowrap pr-1 mr-1 ml-[-5px]">IPO Mad Racing</h1>
+          <p className="text-xl md:text-2xl text-foreground/90 mt-2">
             Специальное издание <br />
             в честь Дня Рождения
           </p>
-          <p className="text-2xl md:text-3xl font-semibold text-accent mt-[-30px]">
+          <p className="text-2xl md:text-3xl font-semibold text-accent mt-2">
             Руслана Гайнанова
           </p>
 
-          <div className="relative w-full max-w-md mx-auto aspect-[4/3] mt-[2px] mb-0">
+          <div className="relative w-full max-w-md mx-auto aspect-[4/3] mt-6 mb-6">
             <Image
               src="/assets/images/RelaxMan.png"
               alt="Relaxing Man"
@@ -157,16 +157,16 @@ export default function EntryPage() {
             onClick={() => router.push('/play')}
             variant="destructive"
             size="lg"
-            className="w-full max-w-xs text-xl py-4 rounded-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 mt-[34px] mb-3" 
+            className="w-full max-w-xs text-xl py-4 rounded-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 mt-6 mb-4" 
           >
             Начать игру
           </Button>
 
-          <div className="mt-[-20px] mb-3 pt-10">  
+          <div className="mt-0 mb-4 pt-0">  
              <CreditsDialog />
           </div>
           
-          <p className="text-md md:text-lg text-muted-foreground pt-3 pb-6 mt-[4px]"> 
+          <p className="text-md md:text-lg text-muted-foreground pt-0 pb-7 mt-4"> 
             Собери все монетки и выйди на IPO!
             <br />
             Опасайся медведей!
@@ -176,4 +176,3 @@ export default function EntryPage() {
     </div>
   );
 }
-
