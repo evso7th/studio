@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -207,5 +206,13 @@
   .animate-swirl-in {
     animation: swirl-in 1.5s ease-out forwards;
     transform-origin: center; /* Important for scale and rotate */
+  }
+
+  /* Animation delay utilities for preloader */
+  .animation-delay-200 {
+    animation-delay: 0.2s;
+  }
+  .animation-delay-400 {
+    animation-delay: 0.4s;
   }
 }

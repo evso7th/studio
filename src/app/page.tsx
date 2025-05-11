@@ -1,4 +1,3 @@
-
 "use client";
 
 import Image from 'next/image';
@@ -8,6 +7,7 @@ import { CreditsDialog } from '@/components/landing/CreditsDialog';
 import { useState, useEffect, useCallback } from 'react';
 import type React from 'react';
 import { audioManager } from '@/lib/audioManager';
+import { Preloader } from '@/components/landing/Preloader'; // Import Preloader
 
 interface FireworkParticle {
   id: number;
@@ -43,12 +43,14 @@ const TARGET_TITLE = "IPO Mad Racing";
 export default function EntryPage() {
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
+  const [isLoadingAssets, setIsLoadingAssets] = useState(true); // New state for preloader
   const [backgroundFireworks, setBackgroundFireworks] = useState<FireworkParticle[]>([]);
   const [animatedTitle, setAnimatedTitle] = useState<string[]>(Array(TARGET_TITLE.length).fill('\u00A0')); 
 
   useEffect(() => {
     setIsMounted(true);
     audioManager.preloadSounds(); 
+
     if (typeof screen.orientation?.lock === 'function') {
       screen.orientation.lock('portrait-primary')
         .then(() => console.log('Screen orientation locked to portrait.'))
@@ -56,24 +58,17 @@ export default function EntryPage() {
     } else {
       console.warn('Screen Orientation API not supported.');
     }
-  }, []);
 
-  useEffect(() => {
-    if (!isMounted) return;
-
+    // Title Animation
     const titleChars = TARGET_TITLE.split('');
     const indices = titleChars.map((_, i) => i);
-
-    // Shuffle indices for random appearance order
     for (let i = indices.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [indices[i], indices[j]] = [indices[j], indices[i]];
     }
-
     let currentAnimatedChars = Array(TARGET_TITLE.length).fill('\u00A0');
     let charRevealCount = 0;
-    const titleIntervalTime = 100; // 0.1 seconds
-
+    const titleIntervalTime = 100; 
     const titleIntervalId = setInterval(() => {
       if (charRevealCount < indices.length) {
         const indexToReveal = indices[charRevealCount];
@@ -85,6 +80,7 @@ export default function EntryPage() {
       }
     }, titleIntervalTime);
     
+    // Fireworks
     const generatePageFireworks = () => {
       const newFireworks: FireworkParticle[] = [];
       for (let i = 0; i < NUM_BACKGROUND_FIREWORKS; i++) {
@@ -97,7 +93,6 @@ export default function EntryPage() {
           
           const targetOffsetXNum = Math.cos(angle) * radius;
           const targetOffsetYNum = Math.sin(angle) * radius;
-
           const particleTrailAngleDeg = (Math.atan2(targetOffsetYNum, targetOffsetXNum) * (180 / Math.PI)) - 90;
 
           newFireworks.push({
@@ -116,29 +111,44 @@ export default function EntryPage() {
       }
       setBackgroundFireworks(newFireworks);
     };
-
     generatePageFireworks();
     const fireworksIntervalId = setInterval(generatePageFireworks, FIREWORK_REGENERATION_INTERVAL);
+
+    // Attempt to play First_screen sound
+    const playInitialSound = async () => {
+      audioManager.playSound('First_screen');
+    };
+    const initialSoundTimeout = setTimeout(playInitialSound, 100);
+
+
+    // Asset Loading timeout for preloader
+    const assetLoadingTimeout = setTimeout(() => {
+      setIsLoadingAssets(false);
+    }, 1500); // Show preloader for 1.5 seconds
 
     return () => {
       clearInterval(titleIntervalId);
       clearInterval(fireworksIntervalId);
-      audioManager.stopSound('First_screen');
+      clearTimeout(initialSoundTimeout);
+      clearTimeout(assetLoadingTimeout);
+      audioManager.stopSound('First_screen'); // Ensure it stops on unmount
     };
   }, [isMounted]);
 
   const handleStartGame = useCallback(async () => {
     try {
-      await audioManager.initAudio();
-      audioManager.playSound('First_screen');
+      if (!audioManager.isInitialized()) { 
+        await audioManager.initAudio();
+      }
+      audioManager.stopSound('First_screen'); // Stop the entry page music
     } catch (error) {
-      console.error("Failed to initialize or play startup audio:", error);
+      console.error("Failed to initialize/manage audio for game start:", error);
     }
     router.push('/play');
   }, [router]);
 
-  if (!isMounted) {
-    return null; 
+  if (!isMounted || isLoadingAssets) {
+    return <Preloader />; 
   }
 
   return (
@@ -224,4 +234,3 @@ export default function EntryPage() {
     </div>
   );
 }
-
