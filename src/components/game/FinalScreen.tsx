@@ -45,7 +45,7 @@ export function FinalScreen() {
         data-ai-hint="victory celebration achievement"
         priority
       />
-      <div className="bg-card/80 backdrop-blur-sm text-card-foreground p-8 rounded-xl shadow-2xl text-center max-w-md w-full transform transition-all animate-in fade-in zoom-in-90 duration-500">
+      <div className="bg-card/70 backdrop-blur-sm text-card-foreground p-8 rounded-xl shadow-2xl text-center max-w-md w-full transform transition-all animate-in fade-in zoom-in-90 duration-500">
         <h1 className="text-4xl font-bold text-primary mb-4">Поздравляем!</h1>
         <p className="text-xl text-foreground/90 mb-2">Главный приз - ваш!</p>
         <p className="text-xl text-foreground/90 mb-2">Смело идите на IPO!</p>
