@@ -69,7 +69,7 @@ export default function EntryPage() {
     }
     let currentAnimatedChars = Array(TARGET_TITLE.length).fill('\u00A0');
     let charRevealCount = 0;
-    const titleIntervalTime = 100;
+    const titleIntervalTime = 100; // 0.1 sec per char
     const titleIntervalId = setInterval(() => {
       if (charRevealCount < indices.length) {
         const indexToReveal = indices[charRevealCount];
@@ -131,11 +131,21 @@ export default function EntryPage() {
   // Effect to attempt playing initial sound after preloader is done
   useEffect(() => {
     if (!isLoadingAssets && isMounted) {
-      const playInitialSound = () => {
+      const playInitialSound = async () => { // Made async
+        if (!audioManager.isInitialized()) {
+          try {
+            await audioManager.initAudio(); // Explicitly await initialization
+            // console.log("EntryPage: Audio initialized after preloader.");
+          } catch (error) {
+            console.warn("EntryPage: Audio initialization failed after preloader.", error);
+          }
+        }
+        // Now attempt to play the sound. audioManager.playSound will also check/attempt init if still needed.
         audioManager.playSound('First_screen');
       };
-      // Slight delay after preloader hides, to allow rendering to settle
-      const soundTimeout = setTimeout(playInitialSound, 50);
+
+      // Slight delay after preloader hides
+      const soundTimeout = setTimeout(playInitialSound, 100);
       return () => clearTimeout(soundTimeout);
     }
   }, [isLoadingAssets, isMounted]);
