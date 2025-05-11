@@ -83,12 +83,20 @@ export function LevelCompleteScreen({ currentLevel, onNextLevel }: LevelComplete
 
   return (
     <div 
-      className="fixed inset-0 bg-black/70 flex flex-col items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black/70 flex flex-col items-center justify-center z-50 p-4 animate-in fade-in duration-300"
       aria-modal="true"
       role="dialog"
       aria-labelledby="level-complete-title"
     >
-      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+      <Image
+        src="/assets/images/Wallpaper1.jpg"
+        alt="Celebration Background"
+        fill
+        style={{ objectFit: 'cover', zIndex: -1 }}
+        priority
+        data-ai-hint="abstract celebration"
+      />
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0"> {/* Fireworks container, z-index ensures it's above background but below dialog */}
         {pageFireworks.map((particle) => (
           <div
             key={particle.id}
@@ -108,13 +116,13 @@ export function LevelCompleteScreen({ currentLevel, onNextLevel }: LevelComplete
         ))}
       </div>
 
-      <div className="bg-card text-card-foreground p-8 rounded-xl shadow-2xl text-center z-10 transform transition-all animate-in fade-in zoom-in-90 duration-500">
-        <div className="mx-auto mb-4 h-16 w-16 relative">
+      <div className="bg-card text-card-foreground p-8 rounded-xl shadow-2xl text-center z-10 transform transition-all animate-in fade-in zoom-in-90 duration-500"> {/* Dialog content, z-index 10 ensures it's above background and fireworks */}
+        <div className="mx-auto mb-4 h-32 w-32 relative"> {/* Container for Superman image */}
           <Image 
             src="/assets/images/Superman.png" 
             alt="Superman character" 
-            width={64} 
-            height={64} 
+            width={128} 
+            height={128} 
             className="rounded-full object-cover animate-image-glow"
             data-ai-hint="superhero character"
           />
