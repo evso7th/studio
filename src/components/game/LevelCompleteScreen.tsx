@@ -1,4 +1,3 @@
-
 "use client";
 
 import type React from 'react';
@@ -116,7 +115,7 @@ export function LevelCompleteScreen({ currentLevel, onNextLevel }: LevelComplete
             alt="Superman character" 
             width={64} 
             height={64} 
-            className="rounded-full object-cover"
+            className="rounded-full object-cover animate-image-glow"
             data-ai-hint="superhero character"
           />
         </div>
