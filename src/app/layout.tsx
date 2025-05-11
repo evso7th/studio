@@ -1,3 +1,4 @@
+
 import type { Metadata } from 'next';
 import { Roboto } from 'next/font/google';
 // import { GeistSans } from 'geist/font/sans'; // Removed due to "Module not found" error
@@ -21,7 +22,7 @@ export const metadata: Metadata = {
   title: 'IPO Mad Racing',
   description: 'An exciting platformer game by Firebase Studio',
    icons: {
-    icon: '/favicon.png',
+    icon: '/public/favicon.png', // Updated as per user request
   },
 };
 
