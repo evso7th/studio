@@ -1,3 +1,4 @@
+
 "use client";
 
 import Image from 'next/image';
@@ -71,7 +72,7 @@ export default function EntryPage() {
 
     let currentAnimatedChars = Array(TARGET_TITLE.length).fill('\u00A0');
     let charRevealCount = 0;
-    const titleIntervalTime = 200; // 0.2 seconds
+    const titleIntervalTime = 100; // 0.1 seconds
 
     const titleIntervalId = setInterval(() => {
       if (charRevealCount < indices.length) {
@@ -219,3 +220,4 @@ export default function EntryPage() {
     </div>
   );
 }
+
