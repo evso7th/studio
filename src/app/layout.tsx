@@ -1,3 +1,4 @@
+
 import type { Metadata } from 'next';
 import { Roboto } from 'next/font/google';
 // import { GeistSans } from 'geist/font/sans'; // Removed due to "Module not found" error
@@ -20,8 +21,9 @@ const roboto = Roboto({
 export const metadata: Metadata = {
   title: 'IPO Mad Racing',
   description: 'An exciting platformer game by Firebase Studio',
-  // Removed explicit icons configuration to rely on Next.js default behavior
-  // Ensure src/app/favicon.ico exists
+  icons: {
+    icon: '/favicon.png', // Explicitly reference the favicon
+  },
 };
 
 export default function RootLayout({
@@ -38,3 +40,4 @@ export default function RootLayout({
     </html>
   );
 }
+
