@@ -127,9 +127,13 @@ export default function EntryPage() {
     };
   }, [isMounted]);
 
-  const handleStartGame = useCallback(() => {
-    audioManager.initAudio();
-    audioManager.playSound('First_screen');
+  const handleStartGame = useCallback(async () => {
+    try {
+      await audioManager.initAudio();
+      audioManager.playSound('First_screen');
+    } catch (error) {
+      console.error("Failed to initialize or play startup audio:", error);
+    }
     router.push('/play');
   }, [router]);
 
