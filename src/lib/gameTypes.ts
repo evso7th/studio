@@ -1,5 +1,4 @@
 
-
 export interface Position {
   x: number;
   y: number;
@@ -45,7 +44,7 @@ export interface HeroType extends GameObject {
   isArmored?: boolean;
   armorTimer?: number;
   armorCooldownTimer?: number;
-  armorRemainingTime?: number; // Added for display
+  armorRemainingTime?: number; 
 }
 
 export interface PlatformType extends GameObject {
@@ -79,7 +78,6 @@ export interface EnemyType extends GameObject {
   collisionRadius: number;
   isDefeated?: boolean;
   defeatTimer?: number;
-  // defeatExplosionProgress?: number; // Removed as per user request to remove enemy defeat explosion
   isFrozen?: boolean;
   frozenTimer?: number;
   periodicFreezeIntervalTimer?: number; 
@@ -99,7 +97,7 @@ export const COIN_EXPLOSION_DURATION_MS = 500;
 export const COIN_SPAWN_EXPLOSION_DURATION_MS = 300; 
 export const COIN_SPAWN_DELAY_MS = 500; 
 
-export const PLATFORM_GROUND_Y_FROM_BOTTOM = 55; 
+export const PLATFORM_GROUND_Y_FROM_BOTTOM = 64; // Changed from 58 to 64 for the experiment
 export const PLATFORM_GROUND_THICKNESS = 1; 
 
 export const HERO_WIDTH = 30;
@@ -129,7 +127,7 @@ export const MIN_DISTANCE_BETWEEN_PAIR_COINS_Y_FACTOR = 0.15;
 export const COIN_ZONE_TOP_OFFSET = 50; 
 
 export const HERO_BASE_SPEED = 1.25; 
-export const SLIPPERY_FRICTION_FACTOR = 0.92; // Adjusted from 0.97 to make effect more pronounced
+export const SLIPPERY_FRICTION_FACTOR = 0.92; 
 
 export const ENEMY_WIDTH = 48;
 export const ENEMY_HEIGHT = 48;
@@ -142,10 +140,10 @@ export const ENEMY_DEFEAT_DURATION_MS = 5000;
 export const ENEMY_FREEZE_DURATION_MS = 5000; 
 export const ENEMY_PERIODIC_FREEZE_INTERVAL_MS = 5000; 
 
-export const ARMOR_DURATION_LEVEL_2 = 7000; // 7 seconds
-export const ARMOR_COOLDOWN_LEVEL_2 = 7000; // 7 seconds
-export const ARMOR_DURATION_LEVEL_3 = 12000; // 12 seconds
-export const ARMOR_COOLDOWN_LEVEL_3 = 10000; // 10 seconds
+export const ARMOR_DURATION_LEVEL_2 = 7000; 
+export const ARMOR_COOLDOWN_LEVEL_2 = 7000; 
+export const ARMOR_DURATION_LEVEL_3 = 12000; 
+export const ARMOR_COOLDOWN_LEVEL_3 = 10000; 
 
 // Platform image sources
 export const PLATFORM_GRASS_SRC = "/assets/images/PlatformGrass.png";
@@ -218,4 +216,3 @@ export const heroAnimationsConfig: HeroAnimations = {
     height: HERO_HEIGHT,
   },
 };
-
