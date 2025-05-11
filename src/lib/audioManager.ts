@@ -20,6 +20,7 @@ const soundEffects: Record<string, SoundConfig> = {
   Level3: { src: '/assets/sounds/Level3.mp3', loop: true, volume: 0.25 },
   final_screen: { src: '/assets/sounds/final_screen.mp3', loop: true, volume: 0.4 },
   bear_voice: { src: '/assets/sounds/bear_voice.mp3', volume: 0.7 },
+  exit: { src: '/assets/sounds/exit.mp3', volume: 0.6 },
 };
 
 const audioElements: Record<string, HTMLAudioElement> = {};

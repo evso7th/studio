@@ -236,6 +236,7 @@ export default function PlayPage() {
   };
 
   const handleConfirmExit = () => {
+    audioManager.playSound('exit');
     audioManager.stopAllSounds();
     router.push('/');
     setShowExitConfirmation(false);
