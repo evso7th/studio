@@ -5,7 +5,6 @@ import type React from 'react';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-// import { Sparkles } from 'lucide-react'; // Sparkles icon is replaced
 
 interface LevelCompleteScreenProps {
   currentLevel: number;
@@ -14,12 +13,15 @@ interface LevelCompleteScreenProps {
 
 interface FireworkParticle {
   id: number;
-  x: string; // percentage string
-  y: string; // percentage string
+  originX: string; 
+  originY: string; 
+  targetOffsetX: string; 
+  targetOffsetY: string;
   size: number;
   color: string;
-  delay: number; // animation delay
-  duration: number; // animation duration
+  delay: number;
+  duration: number;
+  trailAngle: number;
 }
 
 const FIREWORK_COLORS = [
@@ -30,37 +32,54 @@ const FIREWORK_COLORS = [
   '#FFD700', // Gold
   '#FF69B4', // HotPink
   '#00FFFF', // Aqua
+  '#DA70D6', // Orchid
+  '#FF7F50', // Coral
 ];
 
-const NUM_FIREWORKS = 3; // Number of firework bursts
-const PARTICLES_PER_FIREWORK = 15;
+const NUM_PAGE_FIREWORKS = 5; 
+const PARTICLES_PER_PAGE_FIREWORK = 12;
+const FIREWORK_REGENERATION_INTERVAL_LCS = 3500; 
+
 
 export function LevelCompleteScreen({ currentLevel, onNextLevel }: LevelCompleteScreenProps) {
-  const [fireworks, setFireworks] = useState<FireworkParticle[][]>([]);
+  const [pageFireworks, setPageFireworks] = useState<FireworkParticle[]>([]);
 
   useEffect(() => {
-    const newFireworks: FireworkParticle[][] = [];
-    for (let i = 0; i < NUM_FIREWORKS; i++) {
-      const burst: FireworkParticle[] = [];
-      // Randomize burst origin slightly more
-      const burstOriginX = 20 + Math.random() * 60; // Burst origin X (20% to 80%)
-      const burstOriginY = 20 + Math.random() * 40; // Burst origin Y (20% to 60%)
+    const generateFireworks = () => {
+      const newFireworks: FireworkParticle[] = [];
+      for (let i = 0; i < NUM_PAGE_FIREWORKS; i++) {
+        const originXNum = 10 + Math.random() * 80; 
+        const originYNum = 10 + Math.random() * 80; 
 
-      for (let j = 0; j < PARTICLES_PER_FIREWORK; j++) {
-        burst.push({
-          id: i * PARTICLES_PER_FIREWORK + j,
-          // Particles start at the burst origin then fly out
-          x: `${burstOriginX + (Math.random() - 0.5) * 50}%`, // Target X after explosion
-          y: `${burstOriginY + (Math.random() - 0.5) * 50}%`, // Target Y after explosion
-          size: 4 + Math.random() * 4,
-          color: FIREWORK_COLORS[Math.floor(Math.random() * FIREWORK_COLORS.length)],
-          delay: i * 0.5 + Math.random() * 0.3, // Stagger bursts and particles within bursts
-          duration: 0.8 + Math.random() * 0.5,
-        });
+        for (let j = 0; j < PARTICLES_PER_PAGE_FIREWORK; j++) {
+          const angle = Math.random() * Math.PI * 2;
+          const radius = Math.random() * 20 + 10;
+          
+          const targetOffsetXNum = Math.cos(angle) * radius;
+          const targetOffsetYNum = Math.sin(angle) * radius;
+          const particleTrailAngleDeg = (Math.atan2(targetOffsetYNum, targetOffsetXNum) * (180 / Math.PI)) - 90;
+
+          newFireworks.push({
+            id: Date.now() + i * PARTICLES_PER_PAGE_FIREWORK + j + Math.random(),
+            originX: `${originXNum}%`,
+            originY: `${originYNum}%`,
+            targetOffsetX: `${targetOffsetXNum}vmin`,
+            targetOffsetY: `${targetOffsetYNum}vmin`,
+            size: (2 + Math.random() * 2) * 2 * 2, 
+            color: FIREWORK_COLORS[Math.floor(Math.random() * FIREWORK_COLORS.length)],
+            delay: Math.random() * (FIREWORK_REGENERATION_INTERVAL_LCS / 1000 / 2.5),
+            duration: 1.2 + Math.random() * 0.8,
+            trailAngle: particleTrailAngleDeg,
+          });
+        }
       }
-      newFireworks.push(burst);
-    }
-    setFireworks(newFireworks);
+      setPageFireworks(newFireworks);
+    };
+
+    generateFireworks();
+    const intervalId = setInterval(generateFireworks, FIREWORK_REGENERATION_INTERVAL_LCS);
+
+    return () => clearInterval(intervalId);
   }, []);
 
   return (
@@ -70,35 +89,35 @@ export function LevelCompleteScreen({ currentLevel, onNextLevel }: LevelComplete
       role="dialog"
       aria-labelledby="level-complete-title"
     >
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {fireworks.map((burst, burstIndex) =>
-          burst.map((particle) => (
-            <div
-              key={particle.id}
-              className="firework-particle"
-              style={{
-                left: `calc(${particle.x} - ${particle.size / 2}px)`,
-                top: `calc(${particle.y} - ${particle.size / 2}px)`,
-                width: `${particle.size}px`,
-                height: `${particle.size}px`,
-                backgroundColor: particle.color,
-                animationDelay: `${particle.delay}s`,
-                animationDuration: `${particle.duration}s`,
-              }}
-            />
-          ))
-        )}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+        {pageFireworks.map((particle) => (
+          <div
+            key={particle.id}
+            className="firework-particle"
+            style={{
+              left: particle.originX,
+              top: particle.originY,
+              backgroundColor: particle.color,
+              '--tx': particle.targetOffsetX,
+              '--ty': particle.targetOffsetY,
+              animationDelay: `${particle.delay}s`,
+              animationDuration: `${particle.duration}s`,
+              '--particle-initial-size': `${particle.size}px`,
+              '--trail-angle': `${particle.trailAngle}deg`,
+            } as React.CSSProperties}
+          />
+        ))}
       </div>
 
       <div className="bg-card text-card-foreground p-8 rounded-xl shadow-2xl text-center z-10 transform transition-all animate-in fade-in zoom-in-90 duration-500">
         <div className="mx-auto mb-4 h-16 w-16 relative">
           <Image 
-            src="/assets/images/Superman.jpg" 
-            alt="Superman" 
+            src="/assets/images/Superman.png" 
+            alt="Superman character" 
             width={64} 
             height={64} 
             className="rounded-full object-cover"
-            data-ai-hint="superhero flying"
+            data-ai-hint="superhero character"
           />
         </div>
         <h2 id="level-complete-title" className="text-3xl md:text-4xl font-bold mb-3 text-primary">
@@ -119,4 +138,3 @@ export function LevelCompleteScreen({ currentLevel, onNextLevel }: LevelComplete
     </div>
   );
 }
-
