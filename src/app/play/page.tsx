@@ -385,8 +385,9 @@ export default function PlayPage() {
             <AlertDialogTitle>Вы действительно хотите покинуть игру?</AlertDialogTitle>
           </AlertDialogHeader>
           <AlertDialogFooter>
+            {/* Order swapped for flex-col-reverse to make "Нет" appear first visually */}
+            <Button variant="destructive" onClick={handleCancelExit} className="mb-2 sm:mb-0">Нет, остаться</Button>
             <Button variant="secondary" onClick={handleConfirmExit}>Да, покинуть</Button>
-            <Button variant="destructive" onClick={handleCancelExit}>Нет, остаться</Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -402,3 +403,5 @@ export default function PlayPage() {
   );
 }
 
+
+    
