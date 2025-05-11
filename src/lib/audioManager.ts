@@ -1,4 +1,3 @@
-
 // @ts-nocheck
 "use client";
 
@@ -39,7 +38,7 @@ const preloadSounds = () => {
         audio.volume = config.volume !== undefined ? config.volume : 1.0;
         audio.preload = 'auto';
         audioElements[name] = audio;
-        console.log(`[AudioManager] Preloaded: ${name} from ${config.src}`);
+        // console.log(`[AudioManager] Preloaded: ${name} from ${config.src}`); // Reduce console noise
       } catch (error) {
         console.error(`[AudioManager] Error preloading sound ${name}:`, error);
       }
@@ -50,13 +49,12 @@ const preloadSounds = () => {
 
 const initAudio = () => {
   if (isAudioContextInitialized) {
-    console.log("[AudioManager] Audio context already initialized.");
+    // console.log("[AudioManager] Audio context already initialized."); // Reduce console noise
     return;
   }
-  console.log("[AudioManager] Attempting to initialize audio context...");
+  // console.log("[AudioManager] Attempting to initialize audio context..."); // Reduce console noise
   
   const dummyAudio = new Audio();
-  // Use a tiny silent WAV to help unlock AudioContext
   dummyAudio.src = "data:audio/wav;base64,UklGRjIAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA"; 
   dummyAudio.muted = true; 
 
@@ -68,13 +66,10 @@ const initAudio = () => {
       isAudioContextInitialized = true; 
       console.log("[AudioManager] Audio context initialized successfully by user interaction.");
     }).catch(error => {
-      console.warn("[AudioManager] Dummy audio play for context init failed. Sounds might not play until further user interaction or if browser restrictions are strict:", error);
-      // isAudioContextInitialized remains false if dummy play fails
+      console.warn("[AudioManager] Dummy audio play for context init failed:", error.name, error.message);
     });
   } else {
-    // Fallback for older browsers, less reliable
-    console.warn("[AudioManager] audio.play() did not return a promise. Audio context might not be reliably unlocked on this browser.");
-    // Avoid setting isAudioContextInitialized = true here, as it's not guaranteed.
+    console.warn("[AudioManager] audio.play() did not return a promise. Audio context might not be reliably unlocked.");
   }
 };
 
@@ -86,11 +81,25 @@ const playSound = (name: string) => {
   }
   const audio = audioElements[name];
   if (audio) {
-    audio.currentTime = 0; 
+    // If the audio is not paused, pause it first.
+    // This handles cases where play() might be called on an already playing sound,
+    // or a sound that was just played and its promise hasn't fully settled.
+    if (!audio.paused) {
+        audio.pause(); // Explicitly pause before attempting to play again.
+    }
+    // It's generally safe to set currentTime on a paused audio element.
+    audio.currentTime = 0; // Reset playback to the beginning for a fresh play.
+
     const playPromise = audio.play();
     if (playPromise !== undefined) {
-      playPromise.catch(error => { 
-        console.error(`[AudioManager] Error playing sound "${name}" (src: ${audio.src}):`, error);
+      playPromise.catch(error => {
+        // AbortError is expected if another action (like pause or another play on the same element) interrupts this one.
+        // Log it as info because it's often a normal part of rapid sound transitions.
+        if (error.name === 'AbortError') {
+          // console.info(`[AudioManager] Playback of sound "${name}" was interrupted. This is usually due to rapid sound transitions or stopping the sound.`); // Reduce console noise for this common case
+        } else {
+          console.error(`[AudioManager] Error playing sound "${name}" (src: ${audio.src}):`, error.name, error.message);
+        }
       });
     }
   } else {
@@ -128,4 +137,3 @@ export const audioManager = {
   setVolume,
   isInitialized: () => isAudioContextInitialized,
 };
-
