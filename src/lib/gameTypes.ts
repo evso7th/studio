@@ -97,7 +97,12 @@ export const COIN_EXPLOSION_DURATION_MS = 500;
 export const COIN_SPAWN_EXPLOSION_DURATION_MS = 300; 
 export const COIN_SPAWN_DELAY_MS = 500; 
 
-export const PLATFORM_GROUND_Y_FROM_BOTTOM = 64; // Changed from 58 to 64 for the experiment
+// Assuming control panel is h-20 (5rem = 80px).
+// If ground top is 64px from screen bottom, it's 16px into the control panel area from the top.
+// So, y_logic_top_of_ground = -16.
+// PLATFORM_GROUND_Y_FROM_BOTTOM (y_logic_bottom_of_ground) = -16 - PLATFORM_GROUND_THICKNESS.
+// If PLATFORM_GROUND_THICKNESS = 1, then PLATFORM_GROUND_Y_FROM_BOTTOM = -17.
+export const PLATFORM_GROUND_Y_FROM_BOTTOM = -17; 
 export const PLATFORM_GROUND_THICKNESS = 1; 
 
 export const HERO_WIDTH = 30;
@@ -216,3 +221,4 @@ export const heroAnimationsConfig: HeroAnimations = {
     height: HERO_HEIGHT,
   },
 };
+
