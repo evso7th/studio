@@ -4,6 +4,7 @@
 
 import type { useEffect } from 'react';
 import { useRef, useCallback, useEffect as useReactEffect, useState } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useGameLogic } from '@/hooks/useGameLogic';
 import { ControlPanel } from '@/components/game/ControlPanel';
@@ -374,20 +375,28 @@ export default function PlayPage() {
       </div>
       
       <AlertDialog open={showExitConfirmation} onOpenChange={(isOpen) => {
-        if (!isOpen) { // If dialog is closed by Esc or clicking outside
+        if (!isOpen) { 
             handleCancelExit();
         } else {
             setShowExitConfirmation(true);
         }
       }}>
         <AlertDialogContent>
-          <AlertDialogHeader>
+          <AlertDialogHeader className="items-center">
+            <div className="relative w-24 h-24 mb-4">
+              <Image 
+                src="/assets/images/SimplyMan.png" 
+                alt="Simply Man" 
+                fill
+                style={{ objectFit: 'contain' }}
+                data-ai-hint="man thinking cartoon"
+              />
+            </div>
             <AlertDialogTitle>Вы действительно хотите покинуть игру?</AlertDialogTitle>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            {/* Order swapped for flex-col-reverse to make "Нет" appear first visually */}
-            <Button variant="destructive" onClick={handleCancelExit} className="mb-2 sm:mb-0">Нет, остаться</Button>
-            <Button variant="secondary" onClick={handleConfirmExit}>Да, покинуть</Button>
+          <AlertDialogFooter className="flex-col-reverse sm:flex-col-reverse gap-y-2.5">
+            <Button variant="destructive" onClick={handleCancelExit} className="w-full sm:w-auto">Нет, остаться</Button>
+            <Button variant="secondary" onClick={handleConfirmExit} className="w-full sm:w-auto">Да, покинуть</Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -403,5 +412,7 @@ export default function PlayPage() {
   );
 }
 
+
+    
 
     
