@@ -14,6 +14,14 @@ import type { GameState } from '@/lib/gameTypes';
 import { HERO_APPEARANCE_DURATION_MS, BACKGROUND_LEVEL1_SRC, BACKGROUND_LEVEL2_SRC, BACKGROUND_LEVEL3_SRC } from '@/lib/gameTypes';
 import { Button } from "@/components/ui/button";
 import { audioManager } from '@/lib/audioManager';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function PlayPage() {
   const { gameState, dispatch, gameTick } = useGameLogic();
@@ -27,6 +35,9 @@ export default function PlayPage() {
 
   const [showDebugFinalScreen, setShowDebugFinalScreen] = useState(false);
   const [showDebugLevelComplete, setShowDebugLevelComplete] = useState(false);
+  const [showExitConfirmation, setShowExitConfirmation] = useState(false);
+  const [isGamePausedForDialog, setIsGamePausedForDialog] = useState(false);
+
 
   useReactEffect(() => {
     // To debug final screen:
@@ -72,6 +83,9 @@ export default function PlayPage() {
     return () => {
       window.removeEventListener('resize', updateGameAreaSize);
       audioManager.stopAllSounds();
+      if (animationFrameId.current) {
+        cancelAnimationFrame(animationFrameId.current);
+      }
     };
   }, [updateGameAreaSize]);
 
@@ -110,24 +124,32 @@ export default function PlayPage() {
   }, [gameState.hero?.x, gameState.isGameInitialized]);
 
 
+  const gameLoop = useCallback(() => {
+    if (gameState.isGameInitialized && gameState.gameArea.width > 0 && gameState.gameArea.height > 0 && !gameState.levelCompleteScreenActive && !gameState.gameOver && !gameState.gameLost && !isGamePausedForDialog) {
+       gameTick();
+    }
+    animationFrameId.current = requestAnimationFrame(gameLoop);
+  }, [gameTick, gameState.isGameInitialized, gameState.gameArea.width, gameState.gameArea.height, gameState.levelCompleteScreenActive, gameState.gameOver, gameState.gameLost, isGamePausedForDialog]);
+
   useReactEffect(() => {
-    const loop = () => {
-      if (gameState.isGameInitialized && gameState.gameArea.width > 0 && gameState.gameArea.height > 0 && !gameState.levelCompleteScreenActive && !gameState.gameOver && !gameState.gameLost) {
-         gameTick();
+    if (!isGamePausedForDialog) {
+      animationFrameId.current = requestAnimationFrame(gameLoop);
+    } else {
+      if (animationFrameId.current) {
+        cancelAnimationFrame(animationFrameId.current);
       }
-      animationFrameId.current = requestAnimationFrame(loop);
-    };
-    animationFrameId.current = requestAnimationFrame(loop);
+    }
     return () => {
       if (animationFrameId.current) {
         cancelAnimationFrame(animationFrameId.current);
       }
     };
-  }, [gameTick, gameState.isGameInitialized, gameState.gameArea.width, gameState.gameArea.height, gameState.levelCompleteScreenActive, gameState.gameOver, gameState.gameLost]);
+  }, [gameLoop, isGamePausedForDialog]);
+
 
   useReactEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (showDebugFinalScreen || gameState.heroAppearance === 'appearing' || gameState.levelCompleteScreenActive || gameState.gameLost || gameState.gameOver) return;
+      if (showExitConfirmation || showDebugFinalScreen || gameState.heroAppearance === 'appearing' || gameState.levelCompleteScreenActive || gameState.gameLost || gameState.gameOver) return;
 
       if (event.key === 'F5' || (event.ctrlKey && event.key.toLowerCase() === 'r')) return;
       if ((event.ctrlKey && event.shiftKey && event.key.toLowerCase() === 'i') ||
@@ -159,7 +181,7 @@ export default function PlayPage() {
     };
 
     const handleKeyUp = (event: KeyboardEvent) => {
-      if (showDebugFinalScreen || gameState.heroAppearance === 'appearing' || gameState.levelCompleteScreenActive || gameState.gameLost || gameState.gameOver) return;
+      if (showExitConfirmation || showDebugFinalScreen || gameState.heroAppearance === 'appearing' || gameState.levelCompleteScreenActive || gameState.gameLost || gameState.gameOver) return;
       let handled = false;
       switch (event.key.toLowerCase()) {
         case 'arrowleft':
@@ -187,7 +209,7 @@ export default function PlayPage() {
       dispatch({ type: 'MOVE_LEFT_STOP' });
       dispatch({ type: 'MOVE_RIGHT_STOP' });
     };
-  }, [dispatch, gameState.heroAppearance, gameState.levelCompleteScreenActive, gameState.gameLost, gameState.gameOver, showDebugFinalScreen]);
+  }, [dispatch, gameState.heroAppearance, gameState.levelCompleteScreenActive, gameState.gameLost, gameState.gameOver, showDebugFinalScreen, showExitConfirmation]);
 
   useReactEffect(() => {
     const preventZoom = (event: TouchEvent) => {
@@ -204,10 +226,27 @@ export default function PlayPage() {
     };
   }, []);
 
-  const handleExit = () => {
+  const handleOpenExitDialog = () => {
+    setIsGamePausedForDialog(true);
+    setShowExitConfirmation(true);
+    // Pausing looping sounds. One-shot sounds will complete.
+    // Consider a more granular sound pause/resume if needed.
+    // audioManager.pauseAllLoopingSounds(); 
+  };
+
+  const handleConfirmExit = () => {
     audioManager.stopAllSounds();
     router.push('/');
+    setShowExitConfirmation(false);
+    setIsGamePausedForDialog(false);
   };
+
+  const handleCancelExit = () => {
+    setShowExitConfirmation(false);
+    setIsGamePausedForDialog(false);
+    // audioManager.resumeAllLoopingSounds();
+  };
+
 
   const getLevelBackground = (level: number): string => {
     switch (level) {
@@ -219,7 +258,9 @@ export default function PlayPage() {
   };
 
   const getBackgroundPosition = (level: number, pX: number): string => {
-    // All levels now use top-center parallax
+    if (level === 3) {
+      return `calc(50% + ${pX + 200}px) 0%`; // Level 3 specific offset
+    }
     return `calc(50% + ${pX}px) 0%`;
   };
 
@@ -244,7 +285,7 @@ export default function PlayPage() {
           Начать сначала
         </Button>
          <Button
-          onClick={handleExit}
+          onClick={handleConfirmExit} // Changed to use confirm exit to go to main menu
           variant="outline"
           size="lg"
           className="mt-4 text-lg px-8 py-3 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
@@ -331,12 +372,33 @@ export default function PlayPage() {
           </>
         )}
       </div>
+      
+      <AlertDialog open={showExitConfirmation} onOpenChange={(isOpen) => {
+        if (!isOpen) { // If dialog is closed by Esc or clicking outside
+            handleCancelExit();
+        } else {
+            setShowExitConfirmation(true);
+        }
+      }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Вы действительно хотите покинуть игру?</AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <Button variant="secondary" onClick={handleConfirmExit}>Да, покинуть</Button>
+            <Button variant="destructive" onClick={handleCancelExit}>Нет, остаться</Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
 
       <ControlPanel
         dispatch={dispatch}
-        onExit={handleExit}
-        disabled={gameState.heroAppearance === 'appearing' || gameState.levelCompleteScreenActive || gameState.gameLost || gameState.gameOver}
+        onExit={handleOpenExitDialog}
+        disabled={gameState.heroAppearance === 'appearing' || gameState.levelCompleteScreenActive || gameState.gameLost || gameState.gameOver || showExitConfirmation}
+        currentLevel={gameState.currentLevel}
       />
     </div>
   );
 }
+

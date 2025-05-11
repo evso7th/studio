@@ -10,9 +10,10 @@ interface ControlPanelProps {
   dispatch: Dispatch<GameAction>;
   onExit: () => void;
   disabled?: boolean;
+  currentLevel: number;
 }
 
-export function ControlPanel({ dispatch, onExit, disabled = false }: ControlPanelProps) {
+export function ControlPanel({ dispatch, onExit, disabled = false, currentLevel }: ControlPanelProps) {
   const handleAction = (type: GameAction['type']) => {
     if (disabled) return;
     dispatch({ type });
@@ -33,12 +34,24 @@ export function ControlPanel({ dispatch, onExit, disabled = false }: ControlPane
   
   const getRadialGradientStyle = (isDisabled: boolean) => !isDisabled ? { backgroundImage: 'radial-gradient(circle, #f48c25, #e74210)' } : {};
 
+  const getPanelBackground = (level: number) => {
+    switch (level) {
+      case 1:
+        return 'url("/assets/images/GroundFloor.png")';
+      case 2:
+        return 'url("/assets/images/platform_ice.png")';
+      case 3:
+        return 'url("/assets/images/platform_stone.png")';
+      default:
+        return 'url("/assets/images/GroundFloor.png")';
+    }
+  };
 
   return (
     <div
       className="fixed bottom-0 left-0 right-0 h-20 shadow-lg p-2 flex items-center justify-around z-50 touch-manipulation"
       style={{ 
-        backgroundImage: 'url("https://neurostaffing.online/wp-content/uploads/2025/05/GroundFloor.png")',
+        backgroundImage: getPanelBackground(currentLevel),
         backgroundSize: 'cover',
         backgroundPosition: 'center left',
         backgroundRepeat: 'no-repeat',
@@ -99,3 +112,4 @@ export function ControlPanel({ dispatch, onExit, disabled = false }: ControlPane
     </div>
   );
 }
+
