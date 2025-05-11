@@ -1,3 +1,4 @@
+
 import type { Metadata } from 'next';
 import { Roboto } from 'next/font/google';
 // import { GeistSans } from 'geist/font/sans'; // Removed due to "Module not found" error
@@ -14,6 +15,9 @@ const roboto = Roboto({
 export const metadata: Metadata = {
   title: 'IPO Mad Racing',
   description: 'An exciting platformer game by Firebase Studio',
+  icons: {
+    icon: '/favicon.png', // Added favicon link
+  },
 };
 
 export default function RootLayout({
@@ -23,6 +27,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full">
+      <head>
+        <link rel="shortcut icon" href="/favicon.png" />
+      </head>
       <body className={`${roboto.variable} font-sans antialiased h-full dark`}>
         {/* Removed GeistSans.variable and GeistMono.variable from className to resolve build error */}
         {children}
@@ -31,3 +38,4 @@ export default function RootLayout({
     </html>
   );
 }
+
