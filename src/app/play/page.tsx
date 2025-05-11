@@ -1,4 +1,3 @@
-
 // @ts-nocheck
 "use client";
 
@@ -26,15 +25,22 @@ export default function PlayPage() {
   const PARALLAX_FACTOR = 0.2;
 
   const [showDebugFinalScreen, setShowDebugFinalScreen] = useState(false); 
+  const [showDebugLevelComplete, setShowDebugLevelComplete] = useState(false);
 
   useReactEffect(() => {
-    if (dispatch && !showDebugFinalScreen) { 
-      // dispatch({ type: 'SET_DEBUG_LEVEL_COMPLETE', payload: true }); 
-      // dispatch({ type: 'SET_DEBUG_LEVEL', payload: 1 }); 
-      // setShowDebugFinalScreen(true); 
-      // dispatch({ type: 'SET_DEBUG_LEVEL', payload: 3 });
-    }
-  }, [dispatch, showDebugFinalScreen]);
+    // To debug final screen:
+    // dispatch({ type: 'SET_DEBUG_LEVEL', payload: 3 }); 
+    // setShowDebugFinalScreen(true); 
+
+    // To debug level complete screen:
+    // dispatch({ type: 'SET_DEBUG_LEVEL_COMPLETE', payload: true });
+    // setShowDebugLevelComplete(true); // Ensure this is set to enable the screen
+    // dispatch({ type: 'SET_DEBUG_LEVEL', payload: 1 }); // Or any level to test completion for
+    
+    // To go to a specific level (e.g., level 3 for debugging):
+    // dispatch({ type: 'SET_DEBUG_LEVEL', payload: 3 });
+
+  }, [dispatch]);
 
 
   const updateGameAreaSize = useCallback(() => {
@@ -79,12 +85,11 @@ export default function PlayPage() {
       };
       const musicToPlay = levelMusicMap[gameState.currentLevel];
       if (musicToPlay) {
-        // Delay playing level music slightly to let "New_level" sound play first
         setTimeout(() => {
-          if(gameState.currentLevel === parseInt(musicToPlay.replace('Level',''))) { // Check if level hasn't changed
+          if(gameState.currentLevel === parseInt(musicToPlay.replace('Level',''))) { 
              audioManager.playSound(musicToPlay);
           }
-        }, 500); // Adjust delay as needed
+        }, 500); 
       }
     }
   }, [gameState.currentLevel, gameState.isGameInitialized]);
@@ -210,7 +215,7 @@ export default function PlayPage() {
       case 2:
         return `calc(50% + ${pX}px) 0%`; 
       case 3:
-        return `calc(100% + ${pX}px - 100px) 0%`; 
+        return `calc(100% + ${pX}px - 300px) 0%`; // Shifted right by 200px (was -100px)
       default:
         return `${pX - 100}px center`;
     }
@@ -227,7 +232,7 @@ export default function PlayPage() {
         <p className="text-xl mb-8 text-center">Кажется, наш герой немного увлекся полетом...</p>
         <Button
           onClick={() => {
-            audioManager.stopAllSounds(); // Stop sounds before restarting
+            audioManager.stopAllSounds(); 
             dispatch({ type: 'RESTART_LEVEL' });
           }}
           size="lg"
@@ -247,13 +252,14 @@ export default function PlayPage() {
     );
   }
 
-  if (gameState.levelCompleteScreenActive) {
+  if (gameState.levelCompleteScreenActive || showDebugLevelComplete) {
     return (
       <LevelCompleteScreen
         currentLevel={gameState.currentLevel}
         onNextLevel={() => {
-          audioManager.stopAllSounds(); // Stop sounds before next level
+          audioManager.stopAllSounds(); 
           dispatch({ type: 'NEXT_LEVEL' });
+          if (showDebugLevelComplete) setShowDebugLevelComplete(false);
         }}
       />
     );
