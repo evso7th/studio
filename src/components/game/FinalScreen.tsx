@@ -5,28 +5,35 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import type React from 'react';
+import { useEffect } from 'react';
+import { audioManager } from '@/lib/audioManager';
 
 export function FinalScreen() {
   const router = useRouter();
 
+  useEffect(() => {
+    audioManager.stopAllSounds();
+    audioManager.playSound('final_screen');
+    return () => {
+      audioManager.stopSound('final_screen');
+    };
+  }, []);
+
   const handlePlayAgain = () => {
+    audioManager.stopSound('final_screen');
     router.push('/'); 
   };
 
   const handleCloseGame = () => {
-    // Attempt to close the window/tab
-    // This might not work in all browsers or if the script didn't open the window
+    audioManager.stopSound('final_screen');
     try {
       const newWindow = window.open('', '_self'); 
       newWindow?.close();
       
-      // Fallback if window.close() doesn't work or isn't allowed
       if (newWindow && (newWindow.closed === false || typeof newWindow.closed === 'undefined')) {
-        // If it didn't close, or we can't tell, navigate to home
         console.warn("Could not close the tab automatically. Navigating to the entry page.");
         router.push('/');
       } else if (!newWindow) {
-        // If newWindow is null (popup blocked, etc.)
         console.warn("Could not open reference to close tab. Navigating to the entry page.");
         router.push('/');
       }
@@ -37,7 +44,7 @@ export function FinalScreen() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center text-foreground animate-in fade-in duration-700">
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center text-foreground animate-in fade-in duration-1000">
       <Image
         src="/assets/images/final.png" 
         alt="Final Screen Background"
@@ -74,4 +81,3 @@ export function FinalScreen() {
     </div>
   );
 }
-

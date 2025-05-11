@@ -39,7 +39,12 @@ import {
     ENEMY_FREEZE_DURATION_MS,
     ENEMY_PERIODIC_FREEZE_INTERVAL_MS,
     ENEMY2_LEVEL3_Y_OFFSET_FROM_PLATFORM2,
+    ARMOR_DURATION_LEVEL_2,
+    ARMOR_COOLDOWN_LEVEL_2,
+    ARMOR_DURATION_LEVEL_3,
+    ARMOR_COOLDOWN_LEVEL_3,
 } from '@/lib/gameTypes'; 
+import { audioManager } from '@/lib/audioManager';
 
 const GRAVITY_ACCELERATION = 0.4; 
 const MAX_FALL_SPEED = -8; 
@@ -67,6 +72,9 @@ const initialHeroState: HeroType = {
   currentFrame: 0,
   frameTime: 0,
   slideVelocityX: 0,
+  isArmored: false,
+  armorTimer: 0,
+  armorCooldownTimer: 0,
 };
 
 const getLevelPlatforms = (gameAreaWidth: number, gameAreaHeight: number, level: number): PlatformType[] => {
@@ -201,6 +209,7 @@ const getLevelEnemies = (gameAreaWidth: number, gameAreaHeight: number, level: n
 
 function spawnNextCoinPair(gameArea: Size, coinSize: number, currentPairId: number, platforms: PlatformType[]): CoinType[] {
   if (!gameArea.width || !gameArea.height || platforms.length < 3) return []; 
+  audioManager.playSound('Coin_splash');
   const newPair: CoinType[] = [];
   
   const groundPlatformY = calculatePlatformGroundY(gameArea.height);
@@ -273,7 +282,7 @@ const getDefaultInitialGameState = (gameAreaWidth = 800, gameAreaHeight = 600, l
   let platformSpeed = INITIAL_PLATFORM_SPEED;
 
   if (level === 2 || level === 3) {
-    heroSpeed = 1.25; // This affects initial hero speed logic elsewhere if needed
+    heroSpeed = 1.25; 
     platformSpeed = 0.75;
   }
   
@@ -290,6 +299,9 @@ const getDefaultInitialGameState = (gameAreaWidth = 800, gameAreaHeight = 600, l
       x: gameAreaWidth / 2 - initialHeroState.width / 2,
       y: groundPlatformY + PLATFORM_GROUND_THICKNESS,
       currentSpeedX: 0, 
+      isArmored: level === 2 || level === 3, // Start with armor on level 2 & 3
+      armorTimer: level === 2 ? ARMOR_DURATION_LEVEL_2 : (level === 3 ? ARMOR_DURATION_LEVEL_3 : 0),
+      armorCooldownTimer: 0,
     },
     platforms: updatedPlatforms,
     activeCoins: spawnNextCoinPair({ width: gameAreaWidth, height: gameAreaHeight }, COIN_SIZE, 0, updatedPlatforms),
@@ -306,6 +318,7 @@ const getDefaultInitialGameState = (gameAreaWidth = 800, gameAreaHeight = 600, l
     totalCoinsCollectedInLevel: 0,
     currentPairIndex: 0,
     levelCompleteScreenActive: false,
+    bearVoicePlayedForLevel: false,
   };
 };
 
@@ -338,6 +351,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       return state;
     case 'JUMP':
       if (state.heroAppearance === 'visible' && state.hero.isOnPlatform && !state.levelCompleteScreenActive && !state.gameLost && !state.gameOver) {
+        audioManager.playSound('Hero_jump1');
         return { ...state, hero: { ...state.hero, velocity: { ...state.hero.velocity!, y: JUMP_STRENGTH }, isOnPlatform: false, platformId: null, action: 'jump_up' } };
       }
       return state;
@@ -351,6 +365,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         ...newState,
         paddingTop,
         isGameInitialized: true, 
+        bearVoicePlayedForLevel: false, // Reset on new game area
       };
     }
      case 'RESTART_LEVEL': {
@@ -362,16 +377,17 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         paddingTop: state.paddingTop,
         levelCompleteScreenActive: false,
         gameOver: false, 
+        bearVoicePlayedForLevel: false,
       };
     }
     case 'NEXT_LEVEL': {
       const nextLevel = state.currentLevel + 1;
-      // If nextLevel is beyond max levels (e.g., > 3), it means game is won.
       if (nextLevel > 3) { 
+         audioManager.playSound('final_screen');
          return {
-          ...state, // Keep current state but mark game as over
+          ...state, 
           gameOver: true, 
-          levelCompleteScreenActive: false, // Ensure this is false so FinalScreen can show
+          levelCompleteScreenActive: false, 
         };
       }
       const { width, height } = state.gameArea;
@@ -382,9 +398,11 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         paddingTop: state.paddingTop,
         levelCompleteScreenActive: false,
         gameOver: false,
+        bearVoicePlayedForLevel: false,
       };
     }
-    case 'GAME_WON': // New action type
+    case 'GAME_WON': 
+      audioManager.playSound('final_screen');
       return {
         ...state,
         gameOver: true,
@@ -406,13 +424,14 @@ function gameReducer(state: GameState, action: GameAction): GameState {
           paddingTop: state.paddingTop,
           levelCompleteScreenActive: false,
           gameOver: false,
+          bearVoicePlayedForLevel: false,
         };
     }
     case 'GAME_TICK': {
       if (!state.isGameInitialized || state.levelCompleteScreenActive || state.gameLost || state.gameOver) return state;
       const { deltaTime } = action.payload;
 
-      let { hero: heroState, platforms: currentPlatforms, activeCoins: currentActiveCoins, enemies: currentEnemies, score: currentScore, totalCoinsCollectedInLevel: currentTotalCollected, currentPairIndex: currentPairIdx } = state;
+      let { hero: heroState, platforms: currentPlatforms, activeCoins: currentActiveCoins, enemies: currentEnemies, score: currentScore, totalCoinsCollectedInLevel: currentTotalCollected, currentPairIndex: currentPairIdx, bearVoicePlayedForLevel: currentBearVoicePlayed } = state;
       const gameArea = state.gameArea;
       let nextHeroAppearance = state.heroAppearance;
       let nextHeroAppearElapsedTime = state.heroAppearElapsedTime;
@@ -427,6 +446,27 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       let levelCompleteThisTick = false; 
       let gameLostThisTick = false;
       let heroHitByEnemy = false;
+      let nextBearVoicePlayed = currentBearVoicePlayed;
+
+
+      // Armor logic
+      if (state.currentLevel === 2 || state.currentLevel === 3) {
+        if (nextHero.isArmored) {
+          nextHero.armorTimer -= deltaTime;
+          if (nextHero.armorTimer <= 0) {
+            nextHero.isArmored = false;
+            nextHero.armorTimer = 0;
+            nextHero.armorCooldownTimer = state.currentLevel === 2 ? ARMOR_COOLDOWN_LEVEL_2 : ARMOR_COOLDOWN_LEVEL_3;
+          }
+        } else {
+          nextHero.armorCooldownTimer -= deltaTime;
+          if (nextHero.armorCooldownTimer <= 0) {
+            nextHero.isArmored = true;
+            nextHero.armorCooldownTimer = 0;
+            nextHero.armorTimer = state.currentLevel === 2 ? ARMOR_DURATION_LEVEL_2 : ARMOR_DURATION_LEVEL_3;
+          }
+        }
+      }
 
 
       const currentAnimationKey = nextHero.action === 'run_left' || nextHero.action === 'run_right' ? 'run' : (nextHero.action === 'jump_up' || nextHero.action === 'fall_down' ? 'jump' : 'idle');
@@ -443,6 +483,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         if (coin.isPendingSpawn && coin.spawnDelayMs !== undefined) {
           const newDelay = coin.spawnDelayMs - deltaTime;
           if (newDelay <= 0) {
+            audioManager.playSound('Coin_splash');
             return {
               ...coin,
               isPendingSpawn: false,
@@ -717,21 +758,33 @@ function gameReducer(state: GameState, action: GameAction): GameState {
           const distanceSquared = (distanceX * distanceX) + (distanceY * distanceY);
 
           if (distanceSquared < (enemy.collisionRadius * enemy.collisionRadius)) {
-              heroHitByEnemy = true;
-              nextEnemies[i] = {
-                ...enemy,
-                isDefeated: true, 
-                defeatTimer: ENEMY_DEFEAT_DURATION_MS, 
-                defeatExplosionProgress: 0, 
-                isFrozen: false, 
-                frozenTimer: 0,
-              };
+              if (!nextHero.isArmored) {
+                heroHitByEnemy = true;
+                audioManager.playSound('Hero_fail');
+                nextEnemies[i] = { // Mark enemy as defeated even if hero had armor, for consistency.
+                  ...enemy,
+                  isDefeated: true, 
+                  defeatTimer: ENEMY_DEFEAT_DURATION_MS, 
+                  isFrozen: false, 
+                  frozenTimer: 0,
+                };
+              } else {
+                // Armor protected hero, maybe a sound effect for armor hit?
+                // For now, enemy is still "defeated" to make it disappear temporarily
+                 nextEnemies[i] = {
+                  ...enemy,
+                  isDefeated: true, 
+                  defeatTimer: ENEMY_DEFEAT_DURATION_MS,
+                  isFrozen: false, 
+                  frozenTimer: 0,
+                };
+              }
               break; 
           }
         }
 
 
-        if (heroHitByEnemy) {
+        if (heroHitByEnemy && !nextHero.isArmored) { // Only reset hero if not armored
             nextHero.y = groundPlatformY + PLATFORM_GROUND_THICKNESS;
             nextHero.x = gameArea.width / 2 - nextHero.width / 2;
             nextHero.velocity = { x: 0, y: 0 };
@@ -747,7 +800,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         let collectedAnyCoinThisTick = false;
         let newlyCollectedCountThisTick = 0;
         
-        if (!heroHitByEnemy) { 
+        if (!heroHitByEnemy || (heroHitByEnemy && nextHero.isArmored)) { 
             nextActiveCoins = nextActiveCoins.map(coin => {
               if (!coin.collected && !coin.isExploding && !coin.isSpawning && !coin.isPendingSpawn) { 
                 if (nextHero.x < coin.x + coin.width &&
@@ -756,6 +809,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
                     nextHero.y + nextHero.height > coin.y) { 
                   collectedAnyCoinThisTick = true;
                   newlyCollectedCountThisTick++;
+                  audioManager.playSound('takecoin');
                   return { ...coin, collected: true, isExploding: true, explosionProgress: 0 };
                 }
               }
@@ -772,14 +826,28 @@ function gameReducer(state: GameState, action: GameAction): GameState {
                   const existingEnemy = nextEnemies.find(e => e.id === 'enemy_level2_0');
                   if (!existingEnemy) {
                     const newEnemy = getLevelEnemies(gameArea.width, gameArea.height, state.currentLevel, nextPlatforms).find(e => e.id === 'enemy_level2_0');
-                    if (newEnemy) nextEnemies.push(newEnemy);
+                    if (newEnemy) {
+                       if (!nextBearVoicePlayed) {
+                         audioManager.playSound('bear_voice');
+                         nextBearVoicePlayed = true;
+                       }
+                       nextEnemies.push(newEnemy);
+                    }
                   }
               }
               if (state.currentLevel === 3 && previousTotalCollected === 0 && nextTotalCollected > 0 && nextEnemies.filter(e => e.id.startsWith('enemy_level3_') && !e.isDefeated).length === 0) {
                   const newEnemiesL3 = getLevelEnemies(gameArea.width, gameArea.height, state.currentLevel, nextPlatforms);
+                  let addedNewEnemy = false;
                   newEnemiesL3.forEach(ne => {
-                      if (!nextEnemies.some(e => e.id === ne.id)) nextEnemies.push(ne);
+                      if (!nextEnemies.some(e => e.id === ne.id)) {
+                        nextEnemies.push(ne);
+                        addedNewEnemy = true;
+                      }
                   });
+                  if (addedNewEnemy && !nextBearVoicePlayed) {
+                    audioManager.playSound('bear_voice');
+                    nextBearVoicePlayed = true;
+                  }
               }
 
 
@@ -815,6 +883,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
                   shouldSpawnNextPair = true;
                 } else {
                   levelCompleteThisTick = true; 
+                  audioManager.playSound('allcoins');
                 }
               }
             }
@@ -828,16 +897,17 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         }
 
 
-        if (nextHero.y < 0 && !levelCompleteThisTick && !heroHitByEnemy) { 
+        if (nextHero.y < 0 && !levelCompleteThisTick && !(heroHitByEnemy && !nextHero.isArmored)) { 
           gameLostThisTick = true;
+          audioManager.playSound('Hero_fail');
         }
       } 
       
       let nextGameOver = state.gameOver;
       let nextLevelCompleteScreenActive = state.levelCompleteScreenActive;
 
-      if (levelCompleteThisTick && !heroHitByEnemy && !gameLostThisTick) {
-        if (state.currentLevel === 3) { // Assuming 3 is the final level
+      if (levelCompleteThisTick && !(heroHitByEnemy && !nextHero.isArmored) && !gameLostThisTick) {
+        if (state.currentLevel === 3) { 
           nextGameOver = true;
         } else {
           nextLevelCompleteScreenActive = true;
@@ -856,8 +926,9 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         heroAppearance: nextHeroAppearance,
         heroAppearElapsedTime: nextHeroAppearElapsedTime,
         gameOver: nextGameOver, 
-        gameLost: gameLostThisTick && !heroHitByEnemy, 
+        gameLost: gameLostThisTick && !(heroHitByEnemy && !nextHero.isArmored), 
         levelCompleteScreenActive: nextLevelCompleteScreenActive, 
+        bearVoicePlayedForLevel: nextBearVoicePlayed,
       };
     }
     case 'EXIT_GAME': 

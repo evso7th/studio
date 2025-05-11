@@ -1,12 +1,12 @@
 
 "use client";
 import type { HeroType, PlatformType, CoinType, EnemyType } from "@/lib/gameTypes";
-// ENEMY_DEFEAT_EXPLOSION_DURATION_MS is no longer used here
 import type React from 'react'; 
+import { cn } from "@/lib/utils";
 
 interface AppearanceProps {
-  type: 'heroAppear'; // Removed 'enemyDefeat'
-  progress: number; // 0 to 1
+  type: 'heroAppear'; 
+  progress: number; 
 }
 
 interface GameObjectStylePropsBase {
@@ -24,7 +24,7 @@ interface GameObjectStylePropsBase {
   isHero?: boolean; 
   isPlatform?: boolean; 
   isEnemy?: boolean;
-  isDefeated?: boolean; // For enemy - though EnemyComponent now handles this by returning null
+  isDefeated?: boolean;
 }
 
 function getGameObjectStyle({ x, y, width, height, gameAreaHeight, paddingTop, color, heroAction, heroFacingDirection, appearanceProps, shape = 'rect', isHero = false, isPlatform = false, isEnemy = false }: GameObjectStylePropsBase): React.CSSProperties {
@@ -38,7 +38,7 @@ function getGameObjectStyle({ x, y, width, height, gameAreaHeight, paddingTop, c
     width: `${width}px`,
     height: `${height}px`,
     objectFit: 'fill', 
-    transition: 'opacity 0.2s ease-out, transform 0.2s ease-out', 
+    transition: 'opacity 0.2s ease-out, transform 0.2s ease-out, filter 0.2s ease-out', 
   };
 
   if (color && !isEnemy) { 
@@ -62,7 +62,7 @@ function getGameObjectStyle({ x, y, width, height, gameAreaHeight, paddingTop, c
     animationTransform = `scale(${progress})`; 
     dynamicStyles.transformOrigin = 'center bottom'; 
     dynamicStyles.borderRadius = '2px'; 
-  } else { // Removed 'enemyDefeat' case
+  } else { 
     if (shape === 'circle') {
       dynamicStyles.borderRadius = '50%';
     } else if (!isEnemy) { 
@@ -96,9 +96,6 @@ function getGameObjectStyle({ x, y, width, height, gameAreaHeight, paddingTop, c
     dynamicStyles.transform = combinedTransform;
   }
   
-  // Removed: if (isEnemy && isDefeated && !appearanceProps) { dynamicStyles.opacity = 0; }
-  // as EnemyComponent will return null if isDefeated.
-
   return dynamicStyles;
 }
 
@@ -138,20 +135,28 @@ export function HeroComponent({ hero, gameAreaHeight, paddingTop, heroAppearance
     heroImageHint = "character jumping";
   }
 
+  const heroStyle = getGameObjectStyle({ 
+    ...hero, 
+    gameAreaHeight, 
+    paddingTop, 
+    heroAction: hero.action,
+    heroFacingDirection: hero.facingDirection,
+    appearanceProps,
+    isHero: true, 
+  });
+
+  const classNames = [];
+  if (hero.isArmored) {
+    classNames.push('hero-armored');
+  }
+
 
   return (
     <img
       src={currentHeroImageSrc}
       alt="Hero"
-      style={getGameObjectStyle({ 
-        ...hero, 
-        gameAreaHeight, 
-        paddingTop, 
-        heroAction: hero.action,
-        heroFacingDirection: hero.facingDirection,
-        appearanceProps,
-        isHero: true, 
-      })}
+      style={heroStyle}
+      className={cn(classNames)}
       role="img"
       aria-label="Hero"
       data-ai-hint={heroImageHint}
@@ -302,18 +307,13 @@ interface EnemyComponentProps extends GameObjectComponentProps {
   enemy: EnemyType;
 }
 
-// ENEMY_PARTICLE_COLOR is no longer needed if explosion is removed.
-// const ENEMY_PARTICLE_COLOR = 'hsl(30, 40%, 70%)'; 
-
 export function EnemyComponent({ enemy, gameAreaHeight, paddingTop }: EnemyComponentProps) {
   if (!gameAreaHeight && gameAreaHeight !== 0) return null;
 
-  // If enemy is defeated, render nothing. Game logic handles respawn.
   if (enemy.isDefeated) {
     return null;
   }
   
-  // No appearanceProps for defeat anymore. isDefeated will be false here.
   const enemyStyle = getGameObjectStyle({
     ...enemy,
     gameAreaHeight,
@@ -322,14 +322,6 @@ export function EnemyComponent({ enemy, gameAreaHeight, paddingTop }: EnemyCompo
     isDefeated: false, 
   });
 
-  // REMOVED: Enemy defeat particle explosion block
-  /*
-  if (enemy.isDefeated && enemy.defeatExplosionProgress != null && enemy.defeatExplosionProgress < 1) {
-    // ... particle rendering logic ...
-  }
-  */
-
-  // This will only be reached if enemy is NOT defeated
   return (
     <img
       src={enemy.imageSrc}
@@ -341,4 +333,3 @@ export function EnemyComponent({ enemy, gameAreaHeight, paddingTop }: EnemyCompo
     />
   );
 }
-

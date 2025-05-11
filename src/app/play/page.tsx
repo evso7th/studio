@@ -9,11 +9,11 @@ import { useGameLogic } from '@/hooks/useGameLogic';
 import { ControlPanel } from '@/components/game/ControlPanel';
 import { HeroComponent, PlatformComponent, CoinComponent, EnemyComponent } from '@/components/game/GameRenderer';
 import { LevelCompleteScreen } from '@/components/game/LevelCompleteScreen';
-import { FinalScreen } from '@/components/game/FinalScreen'; // Import FinalScreen
+import { FinalScreen } from '@/components/game/FinalScreen'; 
 import type { GameState } from '@/lib/gameTypes';
 import { HERO_APPEARANCE_DURATION_MS } from '@/lib/gameTypes';
 import { Button } from "@/components/ui/button";
-
+import { audioManager } from '@/lib/audioManager';
 
 export default function PlayPage() {
   const { gameState, dispatch, gameTick } = useGameLogic();
@@ -25,17 +25,13 @@ export default function PlayPage() {
   const initialHeroXRef = useRef<number | null>(null);
   const PARALLAX_FACTOR = 0.2;
 
-  // DEBUG FLAG: Set to true to show FinalScreen on start, false for normal gameplay
   const [showDebugFinalScreen, setShowDebugFinalScreen] = useState(false); 
 
   useReactEffect(() => {
     if (dispatch && !showDebugFinalScreen) { 
-      // To test LevelCompleteScreen:
       // dispatch({ type: 'SET_DEBUG_LEVEL_COMPLETE', payload: true }); 
-      // dispatch({ type: 'SET_DEBUG_LEVEL', payload: 1 }); // Or any other level number
-      // To test FinalScreen:
-      // setShowDebugFinalScreen(true); // Enable this to show final screen
-      // To test a specific level e.g. Level 3
+      // dispatch({ type: 'SET_DEBUG_LEVEL', payload: 1 }); 
+      // setShowDebugFinalScreen(true); 
       // dispatch({ type: 'SET_DEBUG_LEVEL', payload: 3 });
     }
   }, [dispatch, showDebugFinalScreen]);
@@ -58,7 +54,6 @@ export default function PlayPage() {
   useReactEffect(() => {
     updateGameAreaSize();
     window.addEventListener('resize', updateGameAreaSize);
-    // Ensure orientation lock is attempted
     if (typeof screen.orientation?.lock === 'function') {
       screen.orientation.lock('portrait-primary')
         .then(() => console.log('Screen orientation locked to portrait.'))
@@ -66,8 +61,34 @@ export default function PlayPage() {
     } else {
       console.warn('Screen Orientation API not supported.');
     }
-    return () => window.removeEventListener('resize', updateGameAreaSize);
+    
+    return () => {
+      window.removeEventListener('resize', updateGameAreaSize);
+      audioManager.stopAllSounds(); 
+    };
   }, [updateGameAreaSize]);
+
+  useReactEffect(() => {
+    if (gameState.isGameInitialized) {
+      audioManager.stopAllSounds();
+      audioManager.playSound('New_level');
+      const levelMusicMap = {
+        1: 'Level1',
+        2: 'Level2',
+        3: 'Level3',
+      };
+      const musicToPlay = levelMusicMap[gameState.currentLevel];
+      if (musicToPlay) {
+        // Delay playing level music slightly to let "New_level" sound play first
+        setTimeout(() => {
+          if(gameState.currentLevel === parseInt(musicToPlay.replace('Level',''))) { // Check if level hasn't changed
+             audioManager.playSound(musicToPlay);
+          }
+        }, 500); // Adjust delay as needed
+      }
+    }
+  }, [gameState.currentLevel, gameState.isGameInitialized]);
+
 
   useReactEffect(() => {
     if (gameState.isGameInitialized && gameState.gameArea.width > 0 && initialHeroXRef.current === null && gameState.hero) {
@@ -85,7 +106,7 @@ export default function PlayPage() {
 
   useReactEffect(() => {
     const loop = () => {
-      if (gameState.isGameInitialized && gameState.gameArea.width > 0 && gameState.gameArea.height > 0) {
+      if (gameState.isGameInitialized && gameState.gameArea.width > 0 && gameState.gameArea.height > 0 && !gameState.levelCompleteScreenActive && !gameState.gameOver && !gameState.gameLost) {
          gameTick();
       }
       animationFrameId.current = requestAnimationFrame(loop);
@@ -96,11 +117,11 @@ export default function PlayPage() {
         cancelAnimationFrame(animationFrameId.current);
       }
     };
-  }, [gameTick, gameState.isGameInitialized, gameState.gameArea.width, gameState.gameArea.height]);
+  }, [gameTick, gameState.isGameInitialized, gameState.gameArea.width, gameState.gameArea.height, gameState.levelCompleteScreenActive, gameState.gameOver, gameState.gameLost]);
 
   useReactEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (showDebugFinalScreen || gameState.heroAppearance === 'appearing' || gameState.levelCompleteScreenActive || gameState.gameLost) return;
+      if (showDebugFinalScreen || gameState.heroAppearance === 'appearing' || gameState.levelCompleteScreenActive || gameState.gameLost || gameState.gameOver) return;
 
       if (event.key === 'F5' || (event.ctrlKey && event.key.toLowerCase() === 'r')) return;
       if ((event.ctrlKey && event.shiftKey && event.key.toLowerCase() === 'i') ||
@@ -132,7 +153,7 @@ export default function PlayPage() {
     };
 
     const handleKeyUp = (event: KeyboardEvent) => {
-      if (showDebugFinalScreen || gameState.heroAppearance === 'appearing' || gameState.levelCompleteScreenActive || gameState.gameLost) return;
+      if (showDebugFinalScreen || gameState.heroAppearance === 'appearing' || gameState.levelCompleteScreenActive || gameState.gameLost || gameState.gameOver) return;
       let handled = false;
       switch (event.key.toLowerCase()) {
         case 'arrowleft':
@@ -160,7 +181,7 @@ export default function PlayPage() {
       dispatch({ type: 'MOVE_LEFT_STOP' });
       dispatch({ type: 'MOVE_RIGHT_STOP' });
     };
-  }, [dispatch, gameState.heroAppearance, gameState.levelCompleteScreenActive, gameState.gameLost, showDebugFinalScreen]);
+  }, [dispatch, gameState.heroAppearance, gameState.levelCompleteScreenActive, gameState.gameLost, gameState.gameOver, showDebugFinalScreen]);
 
   useReactEffect(() => {
     const preventZoom = (event: TouchEvent) => {
@@ -178,6 +199,7 @@ export default function PlayPage() {
   }, []);
 
   const handleExit = () => {
+    audioManager.stopAllSounds();
     router.push('/');
   };
 
@@ -186,9 +208,9 @@ export default function PlayPage() {
       case 1:
         return `${pX - 100}px center`;
       case 2:
-        return `calc(50% + ${pX}px) 0%`; // top-center parallax
+        return `calc(50% + ${pX}px) 0%`; 
       case 3:
-        return `calc(100% + ${pX}px - 100px) 0%`; // top-right parallax, shifted 100px further right (image shifted left)
+        return `calc(100% + ${pX}px - 100px) 0%`; 
       default:
         return `${pX - 100}px center`;
     }
@@ -204,14 +226,17 @@ export default function PlayPage() {
         <h2 className="text-4xl font-bold mb-4 text-destructive">Игра окончена!</h2>
         <p className="text-xl mb-8 text-center">Кажется, наш герой немного увлекся полетом...</p>
         <Button
-          onClick={() => dispatch({ type: 'RESTART_LEVEL' })}
+          onClick={() => {
+            audioManager.stopAllSounds(); // Stop sounds before restarting
+            dispatch({ type: 'RESTART_LEVEL' });
+          }}
           size="lg"
           className="text-lg px-8 py-3 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
         >
           Начать сначала
         </Button>
          <Button
-          onClick={() => router.push('/')}
+          onClick={handleExit}
           variant="outline"
           size="lg"
           className="mt-4 text-lg px-8 py-3 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
@@ -226,12 +251,14 @@ export default function PlayPage() {
     return (
       <LevelCompleteScreen
         currentLevel={gameState.currentLevel}
-        onNextLevel={() => dispatch({ type: 'NEXT_LEVEL' })}
+        onNextLevel={() => {
+          audioManager.stopAllSounds(); // Stop sounds before next level
+          dispatch({ type: 'NEXT_LEVEL' });
+        }}
       />
     );
   }
   
-  // Final screen if game is won (all levels completed)
   if (gameState.gameOver && gameState.currentLevel === 3 && !gameState.gameLost) {
      return <FinalScreen />;
   }
@@ -292,9 +319,8 @@ export default function PlayPage() {
       <ControlPanel
         dispatch={dispatch}
         onExit={handleExit}
-        disabled={gameState.heroAppearance === 'appearing' || gameState.levelCompleteScreenActive || gameState.gameLost}
+        disabled={gameState.heroAppearance === 'appearing' || gameState.levelCompleteScreenActive || gameState.gameLost || gameState.gameOver}
       />
     </div>
   );
 }
-

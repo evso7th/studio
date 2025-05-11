@@ -1,23 +1,25 @@
+
 "use client";
 
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { CreditsDialog } from '@/components/landing/CreditsDialog';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type React from 'react';
+import { audioManager } from '@/lib/audioManager';
 
 interface FireworkParticle {
   id: number;
-  originX: string; // percentage string for burst start
-  originY: string; // percentage string for burst start
-  targetOffsetX: string; // percentage string for animation translation
-  targetOffsetY: string; // percentage string for animation translation
+  originX: string; 
+  originY: string; 
+  targetOffsetX: string; 
+  targetOffsetY: string;
   size: number;
   color: string;
   delay: number;
   duration: number;
-  trailAngle: number; // For trail effect
+  trailAngle: number; 
 }
 
 const FIREWORK_COLORS = [
@@ -25,16 +27,16 @@ const FIREWORK_COLORS = [
   'hsl(var(--accent))',
   'hsl(var(--coin-color))',
   'hsl(var(--hero-color))',
-  '#FFD700', // Gold
-  '#FF69B4', // HotPink
-  '#00FFFF', // Aqua
-  '#DA70D6', // Orchid
-  '#FF7F50', // Coral
+  '#FFD700', 
+  '#FF69B4', 
+  '#00FFFF', 
+  '#DA70D6', 
+  '#FF7F50', 
 ];
 
-const NUM_BACKGROUND_FIREWORKS = 7; // Number of simultaneous firework bursts
+const NUM_BACKGROUND_FIREWORKS = 7; 
 const PARTICLES_PER_BACKGROUND_FIREWORK = 15; 
-const FIREWORK_REGENERATION_INTERVAL = 4000; // Regenerate fireworks every 4 seconds
+const FIREWORK_REGENERATION_INTERVAL = 4000; 
 
 const TARGET_TITLE = "IPO Mad Racing";
 
@@ -42,14 +44,15 @@ export default function EntryPage() {
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
   const [backgroundFireworks, setBackgroundFireworks] = useState<FireworkParticle[]>([]);
-  const [animatedTitle, setAnimatedTitle] = useState<string[]>(Array(TARGET_TITLE.length).fill('\u00A0')); // Non-breaking space for placeholders
+  const [animatedTitle, setAnimatedTitle] = useState<string[]>(Array(TARGET_TITLE.length).fill('\u00A0')); 
 
   useEffect(() => {
     setIsMounted(true);
+    audioManager.preloadSounds(); 
     if (typeof screen.orientation?.lock === 'function') {
       screen.orientation.lock('portrait-primary')
         .then(() => console.log('Screen orientation locked to portrait.'))
-        .catch((error) => console.warn('Screen orientation lock failed. This is common if not triggered by user action or if the API is unsupported/restricted.', error));
+        .catch((error) => console.warn('Screen orientation lock failed.', error));
     } else {
       console.warn('Screen Orientation API not supported.');
     }
@@ -58,7 +61,6 @@ export default function EntryPage() {
   useEffect(() => {
     if (!isMounted) return;
 
-    // Title animation
     const titleChars = TARGET_TITLE.split('');
     const indices = titleChars.map((_, i) => i);
 
@@ -70,7 +72,7 @@ export default function EntryPage() {
 
     let currentAnimatedChars = Array(TARGET_TITLE.length).fill('\u00A0');
     let charRevealCount = 0;
-    const titleIntervalTime = 50; // 0.05 seconds
+    const titleIntervalTime = 200; // 0.2 seconds
 
     const titleIntervalId = setInterval(() => {
       if (charRevealCount < indices.length) {
@@ -82,8 +84,7 @@ export default function EntryPage() {
         clearInterval(titleIntervalId);
       }
     }, titleIntervalTime);
-
-    // Background fireworks animation
+    
     const generatePageFireworks = () => {
       const newFireworks: FireworkParticle[] = [];
       for (let i = 0; i < NUM_BACKGROUND_FIREWORKS; i++) {
@@ -122,8 +123,15 @@ export default function EntryPage() {
     return () => {
       clearInterval(titleIntervalId);
       clearInterval(fireworksIntervalId);
+      audioManager.stopSound('First_screen');
     };
   }, [isMounted]);
+
+  const handleStartGame = useCallback(() => {
+    audioManager.initAudio();
+    audioManager.playSound('First_screen');
+    router.push('/play');
+  }, [router]);
 
   if (!isMounted) {
     return null; 
@@ -148,8 +156,6 @@ export default function EntryPage() {
             style={{
               left: particle.originX,
               top: particle.originY,
-              width: `${particle.size}px`, 
-              height: `${particle.size}px`, 
               backgroundColor: particle.color,
               '--tx': particle.targetOffsetX,
               '--ty': particle.targetOffsetY,
@@ -164,7 +170,6 @@ export default function EntryPage() {
 
       <div className="text-center w-full h-full flex flex-col items-center justify-between relative z-10 p-0 shadow-xl pt-3 pb-[50px]">
         <div className="max-w-2xl w-full px-6 flex flex-col items-center h-full justify-between"> 
-          {/* Top text block */}
           <div className="flex flex-col items-center">
             <h1 className="text-[44px] font-bold text-primary whitespace-nowrap pr-1 mr-1 ml-[-5px]">
               {animatedTitle.join('')}
@@ -178,23 +183,21 @@ export default function EntryPage() {
             </p>
           </div>
 
-          {/* Middle image */}
           <div className="relative w-full max-w-xs sm:max-w-sm md:max-w-md mx-auto aspect-[4/3] my-4">
             <Image
               src="/assets/images/RelaxMan.png"
               alt="Relaxing Man"
               fill
               style={{ objectFit: 'contain' }}
-              className="animate-swirl-in" // Added class for swirl-in animation
+              className="animate-swirl-in" 
               data-ai-hint="man relaxing business"
               priority
             />
           </div>
 
-          {/* Bottom controls and text */}
           <div className="flex flex-col items-center w-full">
             <Button
-              onClick={() => router.push('/play')}
+              onClick={handleStartGame}
               variant="destructive"
               size="lg"
               className="w-full max-w-xs text-xl py-4 rounded-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 mb-2.5" 

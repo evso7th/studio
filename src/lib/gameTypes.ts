@@ -41,6 +41,9 @@ export interface HeroType extends GameObject {
   currentFrame: number;
   frameTime: number;
   slideVelocityX?: number; 
+  isArmored?: boolean;
+  armorTimer?: number;
+  armorCooldownTimer?: number;
 }
 
 export interface PlatformType extends GameObject {
@@ -135,6 +138,12 @@ export const ENEMY_DEFEAT_DURATION_MS = 5000;
 export const ENEMY_FREEZE_DURATION_MS = 5000; 
 export const ENEMY_PERIODIC_FREEZE_INTERVAL_MS = 5000; 
 
+export const ARMOR_DURATION_LEVEL_2 = 7000; // 7 seconds
+export const ARMOR_COOLDOWN_LEVEL_2 = 7000; // 7 seconds
+export const ARMOR_DURATION_LEVEL_3 = 12000; // 12 seconds
+export const ARMOR_COOLDOWN_LEVEL_3 = 10000; // 10 seconds
+
+
 export interface GameState {
   hero: HeroType;
   platforms: PlatformType[];
@@ -153,6 +162,7 @@ export interface GameState {
   currentPairIndex: number; 
   debugMode?: boolean; 
   levelCompleteScreenActive: boolean;
+  bearVoicePlayedForLevel: boolean;
 }
 
 export type GameAction =
@@ -164,7 +174,7 @@ export type GameAction =
   | { type: 'EXIT_GAME' } 
   | { type: 'RESTART_LEVEL' } 
   | { type: 'NEXT_LEVEL' }
-  | { type: 'GAME_WON' } // New action for winning the game
+  | { type: 'GAME_WON' } 
   | { type: 'UPDATE_GAME_AREA', payload: { width: number; height: number; paddingTop: number; } }
   | { type: 'GAME_TICK', payload: { deltaTime: number } }
   | { type: 'SET_DEBUG_LEVEL_COMPLETE', payload: boolean }
