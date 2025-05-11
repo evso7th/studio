@@ -7,19 +7,19 @@ import { CreditsDialog } from '@/components/landing/CreditsDialog';
 import { useState, useEffect, useCallback } from 'react';
 import type React from 'react';
 import { audioManager } from '@/lib/audioManager';
-import { Preloader } from '@/components/landing/Preloader'; // Import Preloader
+import { Preloader } from '@/components/landing/Preloader';
 
 interface FireworkParticle {
   id: number;
-  originX: string; 
-  originY: string; 
-  targetOffsetX: string; 
+  originX: string;
+  originY: string;
+  targetOffsetX: string;
   targetOffsetY: string;
   size: number;
   color: string;
   delay: number;
   duration: number;
-  trailAngle: number; 
+  trailAngle: number;
 }
 
 const FIREWORK_COLORS = [
@@ -27,29 +27,30 @@ const FIREWORK_COLORS = [
   'hsl(var(--accent))',
   'hsl(var(--coin-color))',
   'hsl(var(--hero-color))',
-  '#FFD700', 
-  '#FF69B4', 
-  '#00FFFF', 
-  '#DA70D6', 
-  '#FF7F50', 
+  '#FFD700',
+  '#FF69B4',
+  '#00FFFF',
+  '#DA70D6',
+  '#FF7F50',
 ];
 
-const NUM_BACKGROUND_FIREWORKS = 7; 
-const PARTICLES_PER_BACKGROUND_FIREWORK = 15; 
-const FIREWORK_REGENERATION_INTERVAL = 4000; 
+const NUM_BACKGROUND_FIREWORKS = 7;
+const PARTICLES_PER_BACKGROUND_FIREWORK = 15;
+const FIREWORK_REGENERATION_INTERVAL = 4000;
 
 const TARGET_TITLE = "IPO Mad Racing";
 
 export default function EntryPage() {
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
-  const [isLoadingAssets, setIsLoadingAssets] = useState(true); // New state for preloader
+  const [isLoadingAssets, setIsLoadingAssets] = useState(true);
   const [backgroundFireworks, setBackgroundFireworks] = useState<FireworkParticle[]>([]);
-  const [animatedTitle, setAnimatedTitle] = useState<string[]>(Array(TARGET_TITLE.length).fill('\u00A0')); 
+  const [animatedTitle, setAnimatedTitle] = useState<string[]>(Array(TARGET_TITLE.length).fill('\u00A0'));
 
+  // Effect for one-time setup on mount (preload sounds, orientation, animations, asset timeout)
   useEffect(() => {
     setIsMounted(true);
-    audioManager.preloadSounds(); 
+    audioManager.preloadSounds();
 
     if (typeof screen.orientation?.lock === 'function') {
       screen.orientation.lock('portrait-primary')
@@ -68,7 +69,7 @@ export default function EntryPage() {
     }
     let currentAnimatedChars = Array(TARGET_TITLE.length).fill('\u00A0');
     let charRevealCount = 0;
-    const titleIntervalTime = 100; 
+    const titleIntervalTime = 100;
     const titleIntervalId = setInterval(() => {
       if (charRevealCount < indices.length) {
         const indexToReveal = indices[charRevealCount];
@@ -79,18 +80,18 @@ export default function EntryPage() {
         clearInterval(titleIntervalId);
       }
     }, titleIntervalTime);
-    
+
     // Fireworks
     const generatePageFireworks = () => {
       const newFireworks: FireworkParticle[] = [];
       for (let i = 0; i < NUM_BACKGROUND_FIREWORKS; i++) {
-        const originXNum = 5 + Math.random() * 90; 
-        const originYNum = 5 + Math.random() * 90; 
+        const originXNum = 5 + Math.random() * 90;
+        const originYNum = 5 + Math.random() * 90;
 
         for (let j = 0; j < PARTICLES_PER_BACKGROUND_FIREWORK; j++) {
           const angle = Math.random() * Math.PI * 2;
-          const radius = Math.random() * 25 + 15; 
-          
+          const radius = Math.random() * 25 + 15;
+
           const targetOffsetXNum = Math.cos(angle) * radius;
           const targetOffsetYNum = Math.sin(angle) * radius;
           const particleTrailAngleDeg = (Math.atan2(targetOffsetYNum, targetOffsetXNum) * (180 / Math.PI)) - 90;
@@ -99,12 +100,12 @@ export default function EntryPage() {
             id: Date.now() + i * PARTICLES_PER_BACKGROUND_FIREWORK + j + Math.random(),
             originX: `${originXNum}%`,
             originY: `${originYNum}%`,
-            targetOffsetX: `${targetOffsetXNum}vmin`, 
+            targetOffsetX: `${targetOffsetXNum}vmin`,
             targetOffsetY: `${targetOffsetYNum}vmin`,
-            size: (2 + Math.random() * 2.5) * 2 * 2, 
+            size: (2 + Math.random() * 2.5) * 2 * 2,
             color: FIREWORK_COLORS[Math.floor(Math.random() * FIREWORK_COLORS.length)],
-            delay: Math.random() * (FIREWORK_REGENERATION_INTERVAL / 1000 / 2), 
-            duration: 1.5 + Math.random() * 1, 
+            delay: Math.random() * (FIREWORK_REGENERATION_INTERVAL / 1000 / 2),
+            duration: 1.5 + Math.random() * 1,
             trailAngle: particleTrailAngleDeg,
           });
         }
@@ -114,13 +115,6 @@ export default function EntryPage() {
     generatePageFireworks();
     const fireworksIntervalId = setInterval(generatePageFireworks, FIREWORK_REGENERATION_INTERVAL);
 
-    // Attempt to play First_screen sound
-    const playInitialSound = async () => {
-      audioManager.playSound('First_screen');
-    };
-    const initialSoundTimeout = setTimeout(playInitialSound, 100);
-
-
     // Asset Loading timeout for preloader
     const assetLoadingTimeout = setTimeout(() => {
       setIsLoadingAssets(false);
@@ -129,15 +123,26 @@ export default function EntryPage() {
     return () => {
       clearInterval(titleIntervalId);
       clearInterval(fireworksIntervalId);
-      clearTimeout(initialSoundTimeout);
       clearTimeout(assetLoadingTimeout);
       audioManager.stopSound('First_screen'); // Ensure it stops on unmount
     };
-  }, [isMounted]);
+  }, []); // Empty dependency array ensures this runs once on mount
+
+  // Effect to attempt playing initial sound after preloader is done
+  useEffect(() => {
+    if (!isLoadingAssets && isMounted) {
+      const playInitialSound = () => {
+        audioManager.playSound('First_screen');
+      };
+      // Slight delay after preloader hides, to allow rendering to settle
+      const soundTimeout = setTimeout(playInitialSound, 50);
+      return () => clearTimeout(soundTimeout);
+    }
+  }, [isLoadingAssets, isMounted]);
 
   const handleStartGame = useCallback(async () => {
     try {
-      if (!audioManager.isInitialized()) { 
+      if (!audioManager.isInitialized()) {
         await audioManager.initAudio();
       }
       audioManager.stopSound('First_screen'); // Stop the entry page music
@@ -148,25 +153,25 @@ export default function EntryPage() {
   }, [router]);
 
   if (!isMounted || isLoadingAssets) {
-    return <Preloader />; 
+    return <Preloader />;
   }
 
   return (
     <div className="min-h-screen w-screen flex flex-col items-center justify-center text-foreground overflow-hidden relative p-0 m-0">
       <Image
-        src="/assets/images/Wallpaper2.jpg" 
+        src="/assets/images/Wallpaper2.jpg"
         alt="Background Wallpaper"
         fill
-        style={{ objectFit: 'cover', zIndex: -10, objectPosition: 'top center' }} 
+        style={{ objectFit: 'cover', zIndex: -10, objectPosition: 'top center' }}
         priority
         data-ai-hint="starry sky space"
       />
-      
+
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
         {backgroundFireworks.map((particle) => (
           <div
             key={particle.id}
-            className="firework-particle" 
+            className="firework-particle"
             style={{
               left: particle.originX,
               top: particle.originY,
@@ -175,15 +180,15 @@ export default function EntryPage() {
               '--ty': particle.targetOffsetY,
               animationDelay: `${particle.delay}s`,
               animationDuration: `${particle.duration}s`,
-              '--particle-initial-size': `${particle.size}px`, 
-              '--trail-angle': `${particle.trailAngle}deg`,     
-            } as React.CSSProperties} 
+              '--particle-initial-size': `${particle.size}px`,
+              '--trail-angle': `${particle.trailAngle}deg`,
+            } as React.CSSProperties}
           />
         ))}
       </div>
 
       <div className="text-center w-full h-full flex flex-col items-center justify-between relative z-10 p-0 shadow-xl pt-3 pb-[50px]">
-        <div className="max-w-2xl w-full px-6 flex flex-col items-center h-full justify-between"> 
+        <div className="max-w-2xl w-full px-6 flex flex-col items-center h-full justify-between">
           <div className="flex flex-col items-center">
             <h1 className="text-[44px] font-bold text-primary whitespace-nowrap pr-1 mr-1 ml-[-5px]">
               {animatedTitle.join('')}
@@ -203,7 +208,7 @@ export default function EntryPage() {
               alt="Relaxing Man"
               fill
               style={{ objectFit: 'contain' }}
-              className="animate-swirl-in" 
+              className="animate-swirl-in"
               data-ai-hint="man relaxing business"
               priority
             />
@@ -214,16 +219,16 @@ export default function EntryPage() {
               onClick={handleStartGame}
               variant="destructive"
               size="lg"
-              className="w-full max-w-xs text-xl py-4 rounded-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 mb-2.5" 
+              className="w-full max-w-xs text-xl py-4 rounded-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 mb-2.5"
             >
               Начать игру
             </Button>
 
-            <div className="mb-2.5 w-full max-w-xs">  
+            <div className="mb-2.5 w-full max-w-xs">
                <CreditsDialog />
             </div>
-            
-            <p className="text-md md:text-lg text-muted-foreground"> 
+
+            <p className="text-md md:text-lg text-muted-foreground">
               Собери все монетки и выйди на IPO!
               <br />
               Опасайся медведей!
