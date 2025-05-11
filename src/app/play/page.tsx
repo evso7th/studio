@@ -42,16 +42,21 @@ export default function PlayPage() {
 
   useReactEffect(() => {
     // To debug final screen:
-    // dispatch({ type: 'SET_DEBUG_LEVEL', payload: 3 });
+    // dispatch({ type: 'SET_DEBUG_LEVEL', payload: 3 }); // Ensure current level is 3 for final screen logic
     // setShowDebugFinalScreen(true);
 
     // To debug level complete screen:
     // dispatch({ type: 'SET_DEBUG_LEVEL_COMPLETE', payload: true });
-    // setShowDebugLevelComplete(true); // Ensure this is set to enable the screen
-    // dispatch({ type: 'SET_DEBUG_LEVEL', payload: 1 }); // Or any level to test completion for
+    // setShowDebugLevelComplete(true); 
+    // dispatch({ type: 'SET_DEBUG_LEVEL', payload: 1 }); 
 
     // To go to a specific level (e.g., level 3 for debugging):
     // dispatch({ type: 'SET_DEBUG_LEVEL', payload: 1 }); // Default to level 1
+    // Or to go to level 2 directly:
+    // dispatch({ type: 'SET_DEBUG_LEVEL', payload: 2 });
+    // Or to go to level 3 directly:
+    // dispatch({ type: 'SET_DEBUG_LEVEL', payload: 3 });
+
 
   }, [dispatch]);
 
@@ -218,8 +223,10 @@ export default function PlayPage() {
         event.preventDefault();
       }
     };
-    document.body.addEventListener('touchmove', preventZoom, { passive: false });
+    
+    // Ensure touch-action is set on body to prevent default browser touch behaviors.
     document.body.style.touchAction = 'none';
+    document.body.addEventListener('touchmove', preventZoom, { passive: false });
 
     // Lock screen orientation
     if (typeof screen.orientation?.lock === 'function') {
@@ -232,35 +239,32 @@ export default function PlayPage() {
 
     return () => {
       document.body.removeEventListener('touchmove', preventZoom);
-      document.body.style.touchAction = '';
-      // It's generally good practice to unlock orientation when the component unmounts, 
-      // but for a game that should always be portrait, this might not be necessary.
-      // if (typeof screen.orientation?.unlock === 'function') {
-      //   screen.orientation.unlock();
-      // }
+      document.body.style.touchAction = ''; // Reset touch-action
     };
   }, []);
 
   const handleOpenExitDialog = () => {
     setIsGamePausedForDialog(true);
     setShowExitConfirmation(true);
-    // Pausing looping sounds. One-shot sounds will complete.
-    // Consider a more granular sound pause/resume if needed.
-    // audioManager.pauseAllLoopingSounds(); 
   };
 
   const handleConfirmExit = () => {
-    audioManager.playSound('exit');
-    audioManager.stopAllSounds();
-    router.push('/');
+    audioManager.stopAllSounds(); // Stop other sounds first
+    audioManager.playSound('exit'); // Play the exit sound
+    
     setShowExitConfirmation(false);
     setIsGamePausedForDialog(false);
+
+    // Delay navigation to allow the 'exit' sound to play
+    setTimeout(() => {
+      router.push('/'); 
+      // The unmount effect of PlayPage will call stopAllSounds again, which is fine.
+    }, 500); // Adjust delay if needed (e.g., for longer sounds)
   };
 
   const handleCancelExit = () => {
     setShowExitConfirmation(false);
     setIsGamePausedForDialog(false);
-    // audioManager.resumeAllLoopingSounds();
   };
 
 
@@ -275,7 +279,7 @@ export default function PlayPage() {
 
   const getBackgroundPosition = (level: number, pX: number): string => {
     if (level === 3) {
-      return `calc(50% + ${pX + 200}px) 0%`; // Level 3 specific offset
+      return `calc(50% + ${pX + 200}px) 0%`; 
     }
     return `calc(50% + ${pX}px) 0%`;
   };
@@ -301,7 +305,7 @@ export default function PlayPage() {
           Начать сначала
         </Button>
          <Button
-          onClick={handleConfirmExit} // Changed to use confirm exit to go to main menu
+          onClick={handleConfirmExit} 
           variant="outline"
           size="lg"
           className="mt-4 text-lg px-8 py-3 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
@@ -390,10 +394,11 @@ export default function PlayPage() {
       </div>
       
       <AlertDialog open={showExitConfirmation} onOpenChange={(isOpen) => {
-        if (!isOpen) { 
-            handleCancelExit();
-        } else {
-            setShowExitConfirmation(true);
+        if (!isOpen && !isGamePausedForDialog) { // Check if dialog is being closed by means other than buttons
+             handleCancelExit(); // Treat as cancel if closed externally
+        } else if (isOpen && !showExitConfirmation) { // Ensure it's being opened
+            setShowExitConfirmation(true); // Sync state if opened externally
+            setIsGamePausedForDialog(true);
         }
       }}>
         <AlertDialogContent>
@@ -426,9 +431,3 @@ export default function PlayPage() {
     </div>
   );
 }
-
-
-    
-
-    
-

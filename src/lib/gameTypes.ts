@@ -1,4 +1,5 @@
 
+
 export interface Position {
   x: number;
   y: number;
@@ -78,7 +79,7 @@ export interface EnemyType extends GameObject {
   collisionRadius: number;
   isDefeated?: boolean;
   defeatTimer?: number;
-  defeatExplosionProgress?: number; 
+  // defeatExplosionProgress?: number; // Removed as per user request to remove enemy defeat explosion
   isFrozen?: boolean;
   frozenTimer?: number;
   periodicFreezeIntervalTimer?: number; 
@@ -128,7 +129,7 @@ export const MIN_DISTANCE_BETWEEN_PAIR_COINS_Y_FACTOR = 0.15;
 export const COIN_ZONE_TOP_OFFSET = 50; 
 
 export const HERO_BASE_SPEED = 1.25; 
-export const SLIPPERY_FRICTION_FACTOR = 0.97; 
+export const SLIPPERY_FRICTION_FACTOR = 0.92; // Adjusted from 0.97 to make effect more pronounced
 
 export const ENEMY_WIDTH = 48;
 export const ENEMY_HEIGHT = 48;
@@ -217,3 +218,4 @@ export const heroAnimationsConfig: HeroAnimations = {
     height: HERO_HEIGHT,
   },
 };
+
