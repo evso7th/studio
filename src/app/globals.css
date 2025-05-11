@@ -172,7 +172,7 @@
 
   @keyframes image-glow {
     0%, 100% {
-      filter: drop-shadow(0 0 3px hsl(var(--primary) / 0.8)) drop-shadow(0 0 8px hsl(var(--primary) / 0.6));
+      filter: drop-shadow(0 0 3px hsl(var(--primary) / 0.8)) drop-shadow(0  0 8px hsl(var(--primary) / 0.6));
     }
     50% {
       filter: drop-shadow(0 0 8px hsl(var(--accent) / 1)) drop-shadow(0 0 15px hsl(var(--accent) / 0.9));
@@ -180,5 +180,26 @@
   }
   .animate-image-glow {
     animation: image-glow 3s ease-in-out infinite;
+  }
+
+  @keyframes swirl-in {
+    0% {
+      transform: scale(0.1) rotate(-360deg);
+      clip-path: circle(40px at center);
+      opacity: 0;
+    }
+    30% {
+      opacity: 0.3;
+    }
+    100% {
+      transform: scale(1) rotate(0deg);
+      clip-path: circle(150% at center); /* Large enough to reveal full rectangular image */
+      opacity: 1;
+    }
+  }
+
+  .animate-swirl-in {
+    animation: swirl-in 1.5s ease-out forwards;
+    transform-origin: center; /* Important for scale and rotate */
   }
 }

@@ -1,4 +1,3 @@
-
 "use client";
 
 import Image from 'next/image';
@@ -37,10 +36,13 @@ const NUM_BACKGROUND_FIREWORKS = 7; // Number of simultaneous firework bursts
 const PARTICLES_PER_BACKGROUND_FIREWORK = 15; 
 const FIREWORK_REGENERATION_INTERVAL = 4000; // Regenerate fireworks every 4 seconds
 
+const TARGET_TITLE = "IPO Mad Racing";
+
 export default function EntryPage() {
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
   const [backgroundFireworks, setBackgroundFireworks] = useState<FireworkParticle[]>([]);
+  const [animatedTitle, setAnimatedTitle] = useState<string[]>(Array(TARGET_TITLE.length).fill('\u00A0')); // Non-breaking space for placeholders
 
   useEffect(() => {
     setIsMounted(true);
@@ -56,6 +58,32 @@ export default function EntryPage() {
   useEffect(() => {
     if (!isMounted) return;
 
+    // Title animation
+    const titleChars = TARGET_TITLE.split('');
+    const indices = titleChars.map((_, i) => i);
+
+    // Shuffle indices for random appearance order
+    for (let i = indices.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [indices[i], indices[j]] = [indices[j], indices[i]];
+    }
+
+    let currentAnimatedChars = Array(TARGET_TITLE.length).fill('\u00A0');
+    let charRevealCount = 0;
+    const titleIntervalTime = 50; // 0.05 seconds
+
+    const titleIntervalId = setInterval(() => {
+      if (charRevealCount < indices.length) {
+        const indexToReveal = indices[charRevealCount];
+        currentAnimatedChars[indexToReveal] = titleChars[indexToReveal];
+        setAnimatedTitle([...currentAnimatedChars]);
+        charRevealCount++;
+      } else {
+        clearInterval(titleIntervalId);
+      }
+    }, titleIntervalTime);
+
+    // Background fireworks animation
     const generatePageFireworks = () => {
       const newFireworks: FireworkParticle[] = [];
       for (let i = 0; i < NUM_BACKGROUND_FIREWORKS; i++) {
@@ -89,9 +117,12 @@ export default function EntryPage() {
     };
 
     generatePageFireworks();
-    const intervalId = setInterval(generatePageFireworks, FIREWORK_REGENERATION_INTERVAL);
+    const fireworksIntervalId = setInterval(generatePageFireworks, FIREWORK_REGENERATION_INTERVAL);
 
-    return () => clearInterval(intervalId);
+    return () => {
+      clearInterval(titleIntervalId);
+      clearInterval(fireworksIntervalId);
+    };
   }, [isMounted]);
 
   if (!isMounted) {
@@ -135,7 +166,9 @@ export default function EntryPage() {
         <div className="max-w-2xl w-full px-6 flex flex-col items-center h-full justify-between"> 
           {/* Top text block */}
           <div className="flex flex-col items-center">
-            <h1 className="text-[44px] font-bold text-primary whitespace-nowrap pr-1 mr-1 ml-[-5px]">IPO Mad Racing</h1>
+            <h1 className="text-[44px] font-bold text-primary whitespace-nowrap pr-1 mr-1 ml-[-5px]">
+              {animatedTitle.join('')}
+            </h1>
             <p className="text-xl md:text-2xl text-foreground/90 mt-1">
               Специальное издание <br />
               в честь Дня Рождения
@@ -152,6 +185,7 @@ export default function EntryPage() {
               alt="Relaxing Man"
               fill
               style={{ objectFit: 'contain' }}
+              className="animate-swirl-in" // Added class for swirl-in animation
               data-ai-hint="man relaxing business"
               priority
             />
@@ -183,4 +217,3 @@ export default function EntryPage() {
     </div>
   );
 }
-
