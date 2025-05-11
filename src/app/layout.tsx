@@ -22,7 +22,13 @@ export const metadata: Metadata = {
   title: 'IPO Mad Racing',
   description: 'An exciting platformer game by Firebase Studio',
   icons: {
-    icon: '/favicon.png', // Explicitly reference the favicon
+    icon: [
+      { url: '/favicon.png', type: 'image/png', sizes: 'any' }, // More explicit
+    ],
+    // For completeness, browsers often look for these as well.
+    // If you have these files in /public, uncomment them.
+    // apple: '/apple-touch-icon.png',
+    // shortcut: '/favicon.ico',
   },
 };
 
