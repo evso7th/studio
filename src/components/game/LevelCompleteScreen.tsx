@@ -1,3 +1,4 @@
+
 "use client";
 
 import type React from 'react';
@@ -83,7 +84,7 @@ export function LevelCompleteScreen({ currentLevel, onNextLevel }: LevelComplete
 
   return (
     <div 
-      className="fixed inset-0 bg-black/70 flex flex-col items-center justify-center z-50 p-4 animate-in fade-in duration-300"
+      className="fixed inset-0 bg-black/70 flex flex-col items-center justify-center z-50 p-4 animate-in fade-in duration-700"
       aria-modal="true"
       role="dialog"
       aria-labelledby="level-complete-title"
@@ -116,7 +117,7 @@ export function LevelCompleteScreen({ currentLevel, onNextLevel }: LevelComplete
         ))}
       </div>
 
-      <div className="bg-card text-card-foreground p-8 rounded-xl shadow-2xl text-center z-10 transform transition-all animate-in fade-in zoom-in-90 duration-500"> {/* Dialog content, z-index 10 ensures it's above background and fireworks */}
+      <div className="bg-card text-card-foreground p-8 rounded-xl shadow-2xl text-center z-10 transform transition-all animate-in fade-in zoom-in-90 duration-1000"> {/* Dialog content, z-index 10 ensures it's above background and fireworks */}
         <div className="mx-auto mb-4 h-32 w-32 relative"> {/* Container for Superman image */}
           <Image 
             src="/assets/images/Superman.png" 
@@ -145,3 +146,4 @@ export function LevelCompleteScreen({ currentLevel, onNextLevel }: LevelComplete
     </div>
   );
 }
+

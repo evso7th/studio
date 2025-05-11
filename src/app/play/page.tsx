@@ -1,3 +1,4 @@
+
 // @ts-nocheck
 "use client";
 
@@ -25,12 +26,12 @@ export default function PlayPage() {
   const PARALLAX_FACTOR = 0.2;
 
   // DEBUG FLAG: Set to true to show FinalScreen on start, false for normal gameplay
-  const [showDebugFinalScreen, setShowDebugFinalScreen] = useState(true); 
+  const [showDebugFinalScreen, setShowDebugFinalScreen] = useState(false); 
 
   useReactEffect(() => {
-    if (dispatch && !showDebugFinalScreen) { // Only set debug level if not showing final screen
-      // dispatch({ type: 'SET_DEBUG_LEVEL_COMPLETE', payload: true }); // Keep this if needed for LevelCompleteScreen testing
-      // To set a specific level for the LevelCompleteScreen, you can also dispatch:
+    if (dispatch && !showDebugFinalScreen) { 
+      // To test LevelCompleteScreen:
+      // dispatch({ type: 'SET_DEBUG_LEVEL_COMPLETE', payload: true }); 
       // dispatch({ type: 'SET_DEBUG_LEVEL', payload: 1 }); // Or any other level number
     }
   }, [dispatch, showDebugFinalScreen]);
@@ -292,3 +293,4 @@ export default function PlayPage() {
     </div>
   );
 }
+
