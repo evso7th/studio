@@ -24,12 +24,13 @@ export default function PlayPage() {
   const initialHeroXRef = useRef<number | null>(null);
   const PARALLAX_FACTOR = 0.2;
 
-  // useReactEffect(() => {
-  //   if (dispatch && gameState.gameArea.width > 0) {
-  //     // dispatch({ type: 'SET_DEBUG_LEVEL_COMPLETE', payload: true });
-  //     // dispatch({ type: 'SET_DEBUG_LEVEL', payload: 3 });
-  //   }
-  // }, [dispatch, gameState.gameArea.width]);
+  useReactEffect(() => {
+    if (dispatch) {
+      dispatch({ type: 'SET_DEBUG_LEVEL_COMPLETE', payload: true });
+      // To set a specific level for the LevelCompleteScreen, you can also dispatch:
+      // dispatch({ type: 'SET_DEBUG_LEVEL', payload: 1 }); // Or any other level number
+    }
+  }, [dispatch]);
 
 
   const updateGameAreaSize = useCallback(() => {
@@ -290,3 +291,4 @@ export default function PlayPage() {
     </div>
   );
 }
+
