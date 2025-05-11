@@ -33,6 +33,10 @@ export default function PlayPage() {
       // To test LevelCompleteScreen:
       // dispatch({ type: 'SET_DEBUG_LEVEL_COMPLETE', payload: true }); 
       // dispatch({ type: 'SET_DEBUG_LEVEL', payload: 1 }); // Or any other level number
+      // To test FinalScreen:
+      // setShowDebugFinalScreen(true); // Enable this to show final screen
+      // To test a specific level e.g. Level 3
+      // dispatch({ type: 'SET_DEBUG_LEVEL', payload: 3 });
     }
   }, [dispatch, showDebugFinalScreen]);
 
@@ -182,9 +186,9 @@ export default function PlayPage() {
       case 1:
         return `${pX - 100}px center`;
       case 2:
-        return `calc(50% + ${pX}px) 0%`;
+        return `calc(50% + ${pX}px) 0%`; // top-center parallax
       case 3:
-        return `calc(100% + ${pX}px) 0%`;
+        return `calc(100% + ${pX}px - 100px) 0%`; // top-right parallax, shifted 100px further right (image shifted left)
       default:
         return `${pX - 100}px center`;
     }
