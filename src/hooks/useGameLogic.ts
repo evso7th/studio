@@ -1,5 +1,4 @@
 
-
 // @ts-nocheck
 "use client";
 
@@ -37,7 +36,6 @@ import {
     ENEMY_IMAGE_SRC,
     ENEMY_DEFAULT_SPEED,
     ENEMY_DEFEAT_DURATION_MS, 
-    // ENEMY_DEFEAT_EXPLOSION_DURATION_MS, // No longer used for explosion timing
     ENEMY_FREEZE_DURATION_MS,
     ENEMY_PERIODIC_FREEZE_INTERVAL_MS,
     ENEMY2_LEVEL3_Y_OFFSET_FROM_PLATFORM2,
@@ -132,7 +130,7 @@ const getLevelEnemies = (gameAreaWidth: number, gameAreaHeight: number, level: n
   if (level === 2) {
     enemies.push({
       id: `enemy_level2_0`,
-      enemyId: 'enemy1', // For specific logic if needed
+      enemyId: 'enemy1', 
       x: gameAreaWidth / 2 - ENEMY_WIDTH / 2, 
       y: enemyYPositionL2,
       width: ENEMY_WIDTH,
@@ -151,7 +149,7 @@ const getLevelEnemies = (gameAreaWidth: number, gameAreaHeight: number, level: n
       periodicFreezeIntervalTimer: ENEMY_PERIODIC_FREEZE_INTERVAL_MS,
     });
   } else if (level === 3) {
-    // Enemy 1 (similar to level 2)
+    
     enemies.push({
       id: `enemy_level3_0`,
       enemyId: 'enemy1',
@@ -275,7 +273,7 @@ const getDefaultInitialGameState = (gameAreaWidth = 800, gameAreaHeight = 600, l
   let platformSpeed = INITIAL_PLATFORM_SPEED;
 
   if (level === 2 || level === 3) {
-    heroSpeed = 1.25;
+    heroSpeed = 1.25; // This affects initial hero speed logic elsewhere if needed
     platformSpeed = 0.75;
   }
   
@@ -317,29 +315,29 @@ let initialGameState = getDefaultInitialGameState(undefined, undefined, 1);
 function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
     case 'MOVE_LEFT_START':
-      if (state.heroAppearance === 'visible' && !state.levelCompleteScreenActive && !state.gameLost) {
+      if (state.heroAppearance === 'visible' && !state.levelCompleteScreenActive && !state.gameLost && !state.gameOver) {
         const currentHeroSpeed = (state.currentLevel === 2 || state.currentLevel === 3) ? 1.25 : HERO_BASE_SPEED;
         return { ...state, hero: { ...state.hero, currentSpeedX: -currentHeroSpeed, action: 'run_left', facingDirection: 'left', slideVelocityX: 0 } };
       }
       return state;
     case 'MOVE_LEFT_STOP':
-      if (state.heroAppearance === 'visible' && !state.levelCompleteScreenActive && !state.gameLost) {
+      if (state.heroAppearance === 'visible' && !state.levelCompleteScreenActive && !state.gameLost && !state.gameOver) {
         return { ...state, hero: { ...state.hero, currentSpeedX: state.hero.currentSpeedX < 0 ? 0 : state.hero.currentSpeedX, action: state.hero.currentSpeedX === 0 && state.hero.isOnPlatform && (state.hero.velocity?.y ?? 0) === 0 ? 'idle' : state.hero.action } };
       }
       return state;
     case 'MOVE_RIGHT_START':
-      if (state.heroAppearance === 'visible' && !state.levelCompleteScreenActive && !state.gameLost) {
+      if (state.heroAppearance === 'visible' && !state.levelCompleteScreenActive && !state.gameLost && !state.gameOver) {
          const currentHeroSpeed = (state.currentLevel === 2 || state.currentLevel === 3) ? 1.25 : HERO_BASE_SPEED;
         return { ...state, hero: { ...state.hero, currentSpeedX: currentHeroSpeed, action: 'run_right', facingDirection: 'right', slideVelocityX: 0 } };
       }
       return state;
     case 'MOVE_RIGHT_STOP':
-      if (state.heroAppearance === 'visible' && !state.levelCompleteScreenActive && !state.gameLost) {
+      if (state.heroAppearance === 'visible' && !state.levelCompleteScreenActive && !state.gameLost && !state.gameOver) {
         return { ...state, hero: { ...state.hero, currentSpeedX: state.hero.currentSpeedX > 0 ? 0 : state.hero.currentSpeedX, action: state.hero.currentSpeedX === 0 && state.hero.isOnPlatform && (state.hero.velocity?.y ?? 0) === 0 ? 'idle' : state.hero.action } };
       }
       return state;
     case 'JUMP':
-      if (state.heroAppearance === 'visible' && state.hero.isOnPlatform && !state.levelCompleteScreenActive && !state.gameLost) {
+      if (state.heroAppearance === 'visible' && state.hero.isOnPlatform && !state.levelCompleteScreenActive && !state.gameLost && !state.gameOver) {
         return { ...state, hero: { ...state.hero, velocity: { ...state.hero.velocity!, y: JUMP_STRENGTH }, isOnPlatform: false, platformId: null, action: 'jump_up' } };
       }
       return state;
@@ -363,18 +361,17 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         isGameInitialized: true,
         paddingTop: state.paddingTop,
         levelCompleteScreenActive: false,
+        gameOver: false, 
       };
     }
     case 'NEXT_LEVEL': {
       const nextLevel = state.currentLevel + 1;
+      // If nextLevel is beyond max levels (e.g., > 3), it means game is won.
       if (nextLevel > 3) { 
-        const { width, height } = state.gameArea;
-        const newState = getDefaultInitialGameState(width, height, 1); 
          return {
-          ...newState,
-          isGameInitialized: true,
-          paddingTop: state.paddingTop,
-          levelCompleteScreenActive: false, 
+          ...state, // Keep current state but mark game as over
+          gameOver: true, 
+          levelCompleteScreenActive: false, // Ensure this is false so FinalScreen can show
         };
       }
       const { width, height } = state.gameArea;
@@ -384,8 +381,15 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         isGameInitialized: true,
         paddingTop: state.paddingTop,
         levelCompleteScreenActive: false,
+        gameOver: false,
       };
     }
+    case 'GAME_WON': // New action type
+      return {
+        ...state,
+        gameOver: true,
+        levelCompleteScreenActive: false,
+      };
     case 'SET_DEBUG_LEVEL_COMPLETE': { 
       return {
         ...state,
@@ -395,16 +399,17 @@ function gameReducer(state: GameState, action: GameAction): GameState {
     case 'SET_DEBUG_LEVEL': {
         const { width, height } = state.gameArea;
         const newState = getDefaultInitialGameState(width, height, action.payload);
-        initialGameState = newState; // Update the global initialGameState for subsequent resets
+        initialGameState = newState; 
         return {
           ...newState,
           isGameInitialized: true,
           paddingTop: state.paddingTop,
           levelCompleteScreenActive: false,
+          gameOver: false,
         };
     }
     case 'GAME_TICK': {
-      if (!state.isGameInitialized || state.levelCompleteScreenActive || state.gameLost) return state;
+      if (!state.isGameInitialized || state.levelCompleteScreenActive || state.gameLost || state.gameOver) return state;
       const { deltaTime } = action.payload;
 
       let { hero: heroState, platforms: currentPlatforms, activeCoins: currentActiveCoins, enemies: currentEnemies, score: currentScore, totalCoinsCollectedInLevel: currentTotalCollected, currentPairIndex: currentPairIdx } = state;
@@ -419,7 +424,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       let nextScore = currentScore;
       let nextTotalCollected = currentTotalCollected;
       let nextPairIdx = currentPairIdx;
-      let levelComplete = false; 
+      let levelCompleteThisTick = false; 
       let gameLostThisTick = false;
       let heroHitByEnemy = false;
 
@@ -507,7 +512,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
                 ...updatedEnemy,
                 isDefeated: false,
                 defeatTimer: 0,
-                defeatExplosionProgress: 0, // Keep this at 0
+                defeatExplosionProgress: 0, 
                 x: gameArea.width / 2 - updatedEnemy.width / 2, 
                 y: updatedEnemy.y, 
                 direction: 1, 
@@ -516,7 +521,6 @@ function gameReducer(state: GameState, action: GameAction): GameState {
                 periodicFreezeIntervalTimer: ENEMY_PERIODIC_FREEZE_INTERVAL_MS,
              };
           } else {
-             // No explosion progress update needed
              return { ...updatedEnemy, defeatTimer: newDefeatTimer, defeatExplosionProgress: 0 };
           }
         }
@@ -718,7 +722,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
                 ...enemy,
                 isDefeated: true, 
                 defeatTimer: ENEMY_DEFEAT_DURATION_MS, 
-                defeatExplosionProgress: 0, // Ensure this is 0
+                defeatExplosionProgress: 0, 
                 isFrozen: false, 
                 frozenTimer: 0,
               };
@@ -810,7 +814,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
                   nextPairIdx = currentPairIdx + 1;
                   shouldSpawnNextPair = true;
                 } else {
-                  levelComplete = true; 
+                  levelCompleteThisTick = true; 
                 }
               }
             }
@@ -824,10 +828,21 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         }
 
 
-        if (nextHero.y < 0 && !levelComplete && !heroHitByEnemy) { 
+        if (nextHero.y < 0 && !levelCompleteThisTick && !heroHitByEnemy) { 
           gameLostThisTick = true;
         }
       } 
+      
+      let nextGameOver = state.gameOver;
+      let nextLevelCompleteScreenActive = state.levelCompleteScreenActive;
+
+      if (levelCompleteThisTick && !heroHitByEnemy && !gameLostThisTick) {
+        if (state.currentLevel === 3) { // Assuming 3 is the final level
+          nextGameOver = true;
+        } else {
+          nextLevelCompleteScreenActive = true;
+        }
+      }
       
       return { 
         ...state, 
@@ -840,14 +855,14 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         currentPairIndex: nextPairIdx,
         heroAppearance: nextHeroAppearance,
         heroAppearElapsedTime: nextHeroAppearElapsedTime,
-        gameOver: levelComplete && !heroHitByEnemy, 
+        gameOver: nextGameOver, 
         gameLost: gameLostThisTick && !heroHitByEnemy, 
-        levelCompleteScreenActive: levelComplete && !gameLostThisTick && !heroHitByEnemy, 
+        levelCompleteScreenActive: nextLevelCompleteScreenActive, 
       };
     }
     case 'EXIT_GAME': 
       initialGameState = getDefaultInitialGameState(state.gameArea.width, state.gameArea.height, 1);
-      return initialGameState; 
+      return {...initialGameState, gameOver: false, gameLost: false, levelCompleteScreenActive: false}; 
     default:
       return state;
   }
@@ -885,8 +900,3 @@ export function useGameLogic() {
 
   return { gameState, dispatch: handleGameAction, gameTick };
 }
-
-
-
-
-

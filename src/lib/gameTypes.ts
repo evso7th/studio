@@ -40,7 +40,7 @@ export interface HeroType extends GameObject {
   animations: HeroAnimations;
   currentFrame: number;
   frameTime: number;
-  slideVelocityX?: number; // For slippery platforms
+  slideVelocityX?: number; 
 }
 
 export interface PlatformType extends GameObject {
@@ -65,7 +65,7 @@ export interface CoinType extends GameObject {
 }
 
 export interface EnemyType extends GameObject {
-  enemyId?: 'enemy1' | 'enemy2'; // To distinguish for freezing logic
+  enemyId?: 'enemy1' | 'enemy2'; 
   imageSrc: string;
   speed: number;
   direction: 1 | -1;
@@ -74,7 +74,7 @@ export interface EnemyType extends GameObject {
   collisionRadius: number;
   isDefeated?: boolean;
   defeatTimer?: number;
-  defeatExplosionProgress?: number; // Kept for data structure, but visual effect removed
+  defeatExplosionProgress?: number; 
   isFrozen?: boolean;
   frozenTimer?: number;
   periodicFreezeIntervalTimer?: number; 
@@ -132,7 +132,6 @@ export const ENEMY_COLLISION_RADIUS = 24;
 export const ENEMY_IMAGE_SRC = "/assets/images/bearFace.png";
 export const ENEMY_DEFAULT_SPEED = 0.4; 
 export const ENEMY_DEFEAT_DURATION_MS = 5000; 
-// export const ENEMY_DEFEAT_EXPLOSION_DURATION_MS = 500; // No longer used for explosion rendering
 export const ENEMY_FREEZE_DURATION_MS = 5000; 
 export const ENEMY_PERIODIC_FREEZE_INTERVAL_MS = 5000; 
 
@@ -164,7 +163,8 @@ export type GameAction =
   | { type: 'JUMP' }
   | { type: 'EXIT_GAME' } 
   | { type: 'RESTART_LEVEL' } 
-  | { type: 'NEXT_LEVEL' } 
+  | { type: 'NEXT_LEVEL' }
+  | { type: 'GAME_WON' } // New action for winning the game
   | { type: 'UPDATE_GAME_AREA', payload: { width: number; height: number; paddingTop: number; } }
   | { type: 'GAME_TICK', payload: { deltaTime: number } }
   | { type: 'SET_DEBUG_LEVEL_COMPLETE', payload: boolean }
@@ -194,4 +194,3 @@ export const heroAnimationsConfig: HeroAnimations = {
     height: HERO_HEIGHT,
   },
 };
-

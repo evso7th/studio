@@ -8,6 +8,7 @@ import { useGameLogic } from '@/hooks/useGameLogic';
 import { ControlPanel } from '@/components/game/ControlPanel';
 import { HeroComponent, PlatformComponent, CoinComponent, EnemyComponent } from '@/components/game/GameRenderer';
 import { LevelCompleteScreen } from '@/components/game/LevelCompleteScreen';
+import { FinalScreen } from '@/components/game/FinalScreen'; // Import FinalScreen
 import type { GameState } from '@/lib/gameTypes';
 import { HERO_APPEARANCE_DURATION_MS } from '@/lib/gameTypes';
 import { Button } from "@/components/ui/button";
@@ -23,13 +24,16 @@ export default function PlayPage() {
   const initialHeroXRef = useRef<number | null>(null);
   const PARALLAX_FACTOR = 0.2;
 
+  // DEBUG FLAG: Set to true to show FinalScreen on start, false for normal gameplay
+  const [showDebugFinalScreen, setShowDebugFinalScreen] = useState(true); 
+
   useReactEffect(() => {
-    if (dispatch) {
-      dispatch({ type: 'SET_DEBUG_LEVEL_COMPLETE', payload: true });
+    if (dispatch && !showDebugFinalScreen) { // Only set debug level if not showing final screen
+      // dispatch({ type: 'SET_DEBUG_LEVEL_COMPLETE', payload: true }); // Keep this if needed for LevelCompleteScreen testing
       // To set a specific level for the LevelCompleteScreen, you can also dispatch:
       // dispatch({ type: 'SET_DEBUG_LEVEL', payload: 1 }); // Or any other level number
     }
-  }, [dispatch]);
+  }, [dispatch, showDebugFinalScreen]);
 
 
   const updateGameAreaSize = useCallback(() => {
@@ -49,6 +53,14 @@ export default function PlayPage() {
   useReactEffect(() => {
     updateGameAreaSize();
     window.addEventListener('resize', updateGameAreaSize);
+    // Ensure orientation lock is attempted
+    if (typeof screen.orientation?.lock === 'function') {
+      screen.orientation.lock('portrait-primary')
+        .then(() => console.log('Screen orientation locked to portrait.'))
+        .catch((error) => console.warn('Screen orientation lock failed.', error));
+    } else {
+      console.warn('Screen Orientation API not supported.');
+    }
     return () => window.removeEventListener('resize', updateGameAreaSize);
   }, [updateGameAreaSize]);
 
@@ -83,7 +95,7 @@ export default function PlayPage() {
 
   useReactEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (gameState.heroAppearance === 'appearing' || gameState.levelCompleteScreenActive || gameState.gameLost) return;
+      if (showDebugFinalScreen || gameState.heroAppearance === 'appearing' || gameState.levelCompleteScreenActive || gameState.gameLost) return;
 
       if (event.key === 'F5' || (event.ctrlKey && event.key.toLowerCase() === 'r')) return;
       if ((event.ctrlKey && event.shiftKey && event.key.toLowerCase() === 'i') ||
@@ -115,7 +127,7 @@ export default function PlayPage() {
     };
 
     const handleKeyUp = (event: KeyboardEvent) => {
-      if (gameState.heroAppearance === 'appearing' || gameState.levelCompleteScreenActive || gameState.gameLost) return;
+      if (showDebugFinalScreen || gameState.heroAppearance === 'appearing' || gameState.levelCompleteScreenActive || gameState.gameLost) return;
       let handled = false;
       switch (event.key.toLowerCase()) {
         case 'arrowleft':
@@ -143,7 +155,7 @@ export default function PlayPage() {
       dispatch({ type: 'MOVE_LEFT_STOP' });
       dispatch({ type: 'MOVE_RIGHT_STOP' });
     };
-  }, [dispatch, gameState.heroAppearance, gameState.levelCompleteScreenActive, gameState.gameLost]);
+  }, [dispatch, gameState.heroAppearance, gameState.levelCompleteScreenActive, gameState.gameLost, showDebugFinalScreen]);
 
   useReactEffect(() => {
     const preventZoom = (event: TouchEvent) => {
@@ -152,30 +164,11 @@ export default function PlayPage() {
       }
     };
     document.body.addEventListener('touchmove', preventZoom, { passive: false });
-    document.body.style.touchAction = 'none'; // Apply to body
-
-    const requestFullscreen = async () => {
-      const elem = document.documentElement as any;
-      try {
-        if (elem.requestFullscreen) {
-          await elem.requestFullscreen({ navigationUI: "hide" });
-        } else if (elem.mozRequestFullScreen) {
-          await elem.mozRequestFullScreen({ navigationUI: "hide" });
-        } else if (elem.webkitRequestFullscreen) {
-          await elem.webkitRequestFullscreen();
-        } else if (elem.msRequestFullscreen) {
-          await elem.msRequestFullscreen();
-        }
-      } catch (e) {
-        // Silently fail.
-      }
-    };
-
-    // requestFullscreen(); // Auto fullscreen can be annoying
+    document.body.style.touchAction = 'none'; 
 
     return () => {
       document.body.removeEventListener('touchmove', preventZoom);
-      document.body.style.touchAction = ''; // Reset on component unmount
+      document.body.style.touchAction = ''; 
     };
   }, []);
 
@@ -196,6 +189,9 @@ export default function PlayPage() {
     }
   };
 
+  if (showDebugFinalScreen) {
+    return <FinalScreen />;
+  }
 
   if (gameState.gameLost) {
     return (
@@ -229,6 +225,12 @@ export default function PlayPage() {
       />
     );
   }
+  
+  // Final screen if game is won (all levels completed)
+  if (gameState.gameOver && gameState.currentLevel === 3 && !gameState.gameLost) {
+     return <FinalScreen />;
+  }
+
 
   return (
     <div
@@ -248,7 +250,7 @@ export default function PlayPage() {
 
       <div
         ref={gameAreaRef}
-        className="flex-grow relative w-full overflow-hidden pt-16 pb-20" // pt-16 for header, pb-20 for control panel
+        className="flex-grow relative w-full overflow-hidden pt-16 pb-20" 
         style={{
           backgroundImage: 'url("/assets/images/BackGroundBase.png")',
           backgroundSize: 'cover',
