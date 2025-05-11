@@ -221,9 +221,23 @@ export default function PlayPage() {
     document.body.addEventListener('touchmove', preventZoom, { passive: false });
     document.body.style.touchAction = 'none';
 
+    // Lock screen orientation
+    if (typeof screen.orientation?.lock === 'function') {
+      screen.orientation.lock('portrait-primary')
+        .then(() => console.log('Screen orientation locked to portrait.'))
+        .catch((error) => console.warn('Screen orientation lock failed during touch setup.', error));
+    } else {
+      console.warn('Screen Orientation API not supported during touch setup.');
+    }
+
     return () => {
       document.body.removeEventListener('touchmove', preventZoom);
       document.body.style.touchAction = '';
+      // It's generally good practice to unlock orientation when the component unmounts, 
+      // but for a game that should always be portrait, this might not be necessary.
+      // if (typeof screen.orientation?.unlock === 'function') {
+      //   screen.orientation.unlock();
+      // }
     };
   }, []);
 
@@ -417,3 +431,4 @@ export default function PlayPage() {
     
 
     
+

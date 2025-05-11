@@ -1,3 +1,4 @@
+
 "use client";
 
 import Image from 'next/image';
@@ -125,6 +126,11 @@ export default function EntryPage() {
       clearInterval(fireworksIntervalId);
       clearTimeout(assetLoadingTimeout);
       audioManager.stopSound('First_screen'); // Ensure it stops on unmount
+      // It's generally good practice to unlock orientation when the component unmounts,
+      // but for a game that should always be portrait, this might not be necessary.
+      // if (typeof screen.orientation?.unlock === 'function') {
+      //   screen.orientation.unlock();
+      // }
     };
   }, []); // Empty dependency array ensures this runs once on mount
 
@@ -249,3 +255,4 @@ export default function EntryPage() {
     </div>
   );
 }
+
