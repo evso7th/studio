@@ -3,8 +3,8 @@
 "use client";
 
 import type { Reducer} from 'react';
-import { useReducer, useCallback, useEffect as useReactEffect, useRef } from 'react'; 
-import type { GameState, GameAction, HeroType, PlatformType, CoinType, Size, EnemyType } from '@/lib/gameTypes'; 
+import { useReducer, useCallback, useEffect, useRef } from 'react'; 
+import type { GameState, GameAction, HeroType, PlatformType, CoinType, Size } from '@/lib/gameTypes'; 
 import { 
     HERO_APPEARANCE_DURATION_MS, 
     PLATFORM_GROUND_Y_FROM_BOTTOM, 
@@ -33,7 +33,9 @@ import {
     ENEMY_WIDTH,
     ENEMY_HEIGHT,
     ENEMY_COLLISION_RADIUS,
-    ENEMY_IMAGE_SRC,
+    ENEMY_IMAGE_SRC_LVL2,
+    ENEMY_IMAGE_SRC_LVL3_ENEMY1,
+    ENEMY_IMAGE_SRC_LVL3_ENEMY2,
     ENEMY_DEFAULT_SPEED,
     ENEMY_DEFEAT_DURATION_MS, 
     ENEMY_FREEZE_DURATION_MS,
@@ -43,6 +45,9 @@ import {
     ARMOR_COOLDOWN_LEVEL_2,
     ARMOR_DURATION_LEVEL_3,
     ARMOR_COOLDOWN_LEVEL_3,
+    PLATFORM_GRASS_SRC,
+    PLATFORM_ICE_SRC,
+    PLATFORM_STONE_SRC,
 } from '@/lib/gameTypes'; 
 import { audioManager } from '@/lib/audioManager';
 
@@ -75,18 +80,30 @@ const initialHeroState: HeroType = {
   isArmored: false,
   armorTimer: 0,
   armorCooldownTimer: 0,
+  armorRemainingTime: 0,
 };
 
 const getLevelPlatforms = (gameAreaWidth: number, gameAreaHeight: number, level: number): PlatformType[] => {
   const groundPlatformY = calculatePlatformGroundY(gameAreaHeight);
   let platformSpeed = INITIAL_PLATFORM_SPEED;
+  let isPlatform1Slippery = false;
   let isPlatform2Slippery = false;
+  let platform1ImageSrc = PLATFORM_GRASS_SRC;
+  let platform2ImageSrc = PLATFORM_GRASS_SRC;
+
 
   if (level === 2) {
     platformSpeed = 0.75;
+    isPlatform1Slippery = true;
+    isPlatform2Slippery = true;
+    platform1ImageSrc = PLATFORM_ICE_SRC;
+    platform2ImageSrc = PLATFORM_ICE_SRC;
   } else if (level === 3) {
     platformSpeed = 0.75; 
-    isPlatform2Slippery = true;
+    isPlatform1Slippery = false; // Platform 1 is stone, not slippery
+    isPlatform2Slippery = true; // Only platform 2 is slippery (ice or similar effect on stone)
+    platform1ImageSrc = PLATFORM_STONE_SRC;
+    platform2ImageSrc = PLATFORM_STONE_SRC; // Level 3 platforms are stone
   }
 
 
@@ -95,7 +112,7 @@ const getLevelPlatforms = (gameAreaWidth: number, gameAreaHeight: number, level:
       id: 'platform_ground', x: -100, y: groundPlatformY, 
       width: gameAreaWidth + 200, height: PLATFORM_GROUND_THICKNESS, 
       isMoving: false, speed: 0, direction: 1, moveAxis: 'x',
-      imageSrc: "/assets/images/PlatformGrass.png", 
+      imageSrc: PLATFORM_GRASS_SRC, // Ground is always grass for now
     },
     {
       id: 'platform1', 
@@ -105,7 +122,8 @@ const getLevelPlatforms = (gameAreaWidth: number, gameAreaHeight: number, level:
       isMoving: true, speed: platformSpeed, direction: 1, 
       moveAxis: 'x',
       moveRange: { min: 0, max: gameAreaWidth - PLATFORM_DEFAULT_WIDTH },
-      imageSrc: "/assets/images/PlatformGrass.png",
+      imageSrc: platform1ImageSrc,
+      isSlippery: isPlatform1Slippery,
     },
     {
       id: 'platform2', 
@@ -115,7 +133,7 @@ const getLevelPlatforms = (gameAreaWidth: number, gameAreaHeight: number, level:
       isMoving: true, speed: platformSpeed, direction: -1, 
       moveAxis: 'x',
       moveRange: { min: 0, max: gameAreaWidth - PLATFORM_DEFAULT_WIDTH },
-      imageSrc: "/assets/images/PlatformGrass.png",
+      imageSrc: platform2ImageSrc,
       isSlippery: isPlatform2Slippery,
     },
   ];
@@ -143,7 +161,7 @@ const getLevelEnemies = (gameAreaWidth: number, gameAreaHeight: number, level: n
       y: enemyYPositionL2,
       width: ENEMY_WIDTH,
       height: ENEMY_HEIGHT,
-      imageSrc: ENEMY_IMAGE_SRC,
+      imageSrc: ENEMY_IMAGE_SRC_LVL2,
       speed: ENEMY_DEFAULT_SPEED, 
       direction: 1,
       moveAxis: 'x',
@@ -151,7 +169,6 @@ const getLevelEnemies = (gameAreaWidth: number, gameAreaHeight: number, level: n
       collisionRadius: ENEMY_COLLISION_RADIUS,
       isDefeated: false, 
       defeatTimer: 0,
-      defeatExplosionProgress: 0,
       isFrozen: false,
       frozenTimer: 0,
       periodicFreezeIntervalTimer: ENEMY_PERIODIC_FREEZE_INTERVAL_MS,
@@ -162,10 +179,10 @@ const getLevelEnemies = (gameAreaWidth: number, gameAreaHeight: number, level: n
       id: `enemy_level3_0`,
       enemyId: 'enemy1',
       x: gameAreaWidth / 3 - ENEMY_WIDTH / 2, 
-      y: enemyYPositionL2,
+      y: enemyYPositionL2, // Same Y as level 2 enemy 1
       width: ENEMY_WIDTH,
       height: ENEMY_HEIGHT,
-      imageSrc: ENEMY_IMAGE_SRC,
+      imageSrc: ENEMY_IMAGE_SRC_LVL3_ENEMY1,
       speed: ENEMY_DEFAULT_SPEED, 
       direction: 1,
       moveAxis: 'x',
@@ -173,7 +190,6 @@ const getLevelEnemies = (gameAreaWidth: number, gameAreaHeight: number, level: n
       collisionRadius: ENEMY_COLLISION_RADIUS,
       isDefeated: false, 
       defeatTimer: 0,
-      defeatExplosionProgress: 0,
       isFrozen: false,
       frozenTimer: 0,
       periodicFreezeIntervalTimer: ENEMY_PERIODIC_FREEZE_INTERVAL_MS,
@@ -188,7 +204,7 @@ const getLevelEnemies = (gameAreaWidth: number, gameAreaHeight: number, level: n
         y: enemy2YPosition,
         width: ENEMY_WIDTH,
         height: ENEMY_HEIGHT,
-        imageSrc: "/assets/images/BearFaceDark.png", 
+        imageSrc: ENEMY_IMAGE_SRC_LVL3_ENEMY2,
         speed: ENEMY_DEFAULT_SPEED, 
         direction: -1, 
         moveAxis: 'x',
@@ -196,7 +212,6 @@ const getLevelEnemies = (gameAreaWidth: number, gameAreaHeight: number, level: n
         collisionRadius: ENEMY_COLLISION_RADIUS,
         isDefeated: false, 
         defeatTimer: 0,
-        defeatExplosionProgress: 0,
         isFrozen: false,
         frozenTimer: 0,
         periodicFreezeIntervalTimer: ENEMY_PERIODIC_FREEZE_INTERVAL_MS,
@@ -293,15 +308,18 @@ const getDefaultInitialGameState = (gameAreaWidth = 800, gameAreaHeight = 600, l
     return p;
   });
 
+  const initialArmorTimer = level === 2 ? ARMOR_DURATION_LEVEL_2 : (level === 3 ? ARMOR_DURATION_LEVEL_3 : 0);
+
   return {
     hero: {
       ...initialHeroState,
       x: gameAreaWidth / 2 - initialHeroState.width / 2,
       y: groundPlatformY + PLATFORM_GROUND_THICKNESS,
       currentSpeedX: 0, 
-      isArmored: level === 2 || level === 3, // Start with armor on level 2 & 3
-      armorTimer: level === 2 ? ARMOR_DURATION_LEVEL_2 : (level === 3 ? ARMOR_DURATION_LEVEL_3 : 0),
+      isArmored: level === 2 || level === 3, 
+      armorTimer: initialArmorTimer,
       armorCooldownTimer: 0,
+      armorRemainingTime: Math.ceil(initialArmorTimer / 1000),
     },
     platforms: updatedPlatforms,
     activeCoins: spawnNextCoinPair({ width: gameAreaWidth, height: gameAreaHeight }, COIN_SIZE, 0, updatedPlatforms),
@@ -365,7 +383,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         ...newState,
         paddingTop,
         isGameInitialized: true, 
-        bearVoicePlayedForLevel: false, // Reset on new game area
+        bearVoicePlayedForLevel: false, 
       };
     }
      case 'RESTART_LEVEL': {
@@ -466,6 +484,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
             nextHero.armorTimer = state.currentLevel === 2 ? ARMOR_DURATION_LEVEL_2 : ARMOR_DURATION_LEVEL_3;
           }
         }
+        nextHero.armorRemainingTime = Math.ceil(nextHero.armorTimer / 1000);
       }
 
 
@@ -545,6 +564,8 @@ function gameReducer(state: GameState, action: GameAction): GameState {
 
       nextEnemies = nextEnemies.map(enemy => {
         let updatedEnemy = { ...enemy };
+        const previousEnemyState = state.enemies.find(e => e.id === enemy.id);
+
 
         if (updatedEnemy.isDefeated && updatedEnemy.defeatTimer !== undefined) {
           const newDefeatTimer = updatedEnemy.defeatTimer - deltaTime;
@@ -553,7 +574,6 @@ function gameReducer(state: GameState, action: GameAction): GameState {
                 ...updatedEnemy,
                 isDefeated: false,
                 defeatTimer: 0,
-                defeatExplosionProgress: 0, 
                 x: gameArea.width / 2 - updatedEnemy.width / 2, 
                 y: updatedEnemy.y, 
                 direction: 1, 
@@ -561,8 +581,11 @@ function gameReducer(state: GameState, action: GameAction): GameState {
                 frozenTimer: 0,
                 periodicFreezeIntervalTimer: ENEMY_PERIODIC_FREEZE_INTERVAL_MS,
              };
+             if (previousEnemyState && previousEnemyState.isDefeated && !updatedEnemy.isDefeated) {
+                audioManager.playSound('bear_voice'); 
+             }
           } else {
-             return { ...updatedEnemy, defeatTimer: newDefeatTimer, defeatExplosionProgress: 0 };
+             return { ...updatedEnemy, defeatTimer: newDefeatTimer };
           }
         }
 
@@ -637,7 +660,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
             if (currentPlatformInstance.isMoving && currentPlatformInstance.velocity?.x) {
               platformMovementEffectX = currentPlatformInstance.velocity.x * (deltaTime / (1000/60));
             }
-            if (currentPlatformInstance.isSlippery && state.currentLevel === 3) {
+            if (currentPlatformInstance.isSlippery) { 
               onSlipperyPlatform = true;
             }
           }
@@ -699,9 +722,9 @@ function gameReducer(state: GameState, action: GameAction): GameState {
               resolvedPlatformId = platform.id;
               if (nextHero.action === 'fall_down' || nextHero.action === 'jump_up') { 
                  nextHero.action = nextHero.currentSpeedX !==0 ? (nextHero.facingDirection === 'right' ? 'run_right' : 'run_left') : 'idle';
-                 if (platform.isSlippery && state.currentLevel === 3 && nextHero.currentSpeedX === 0) {
+                 if (platform.isSlippery && nextHero.currentSpeedX === 0) {
                     // Keep existing slideVelocity if landing on slippery without input
-                 } else if (!platform.isSlippery || state.currentLevel !== 3) {
+                 } else if (!platform.isSlippery) {
                     nextHero.slideVelocityX = 0;
                  }
               }
@@ -724,7 +747,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
 
         if (nextHero.isOnPlatform) {
           const currentPlatform = nextPlatforms.find(p => p.id === nextHero.platformId);
-          if (currentPlatform?.isSlippery && state.currentLevel === 3) {
+          if (currentPlatform?.isSlippery) {
             if (nextHero.currentSpeedX === 0 && Math.abs(nextHero.slideVelocityX || 0) < 0.1) {
               nextHero.action = 'idle';
             } else if (Math.abs(nextHero.slideVelocityX || 0) >= 0.1) {
@@ -761,30 +784,26 @@ function gameReducer(state: GameState, action: GameAction): GameState {
               if (!nextHero.isArmored) {
                 heroHitByEnemy = true;
                 audioManager.playSound('Hero_fail');
-                nextEnemies[i] = { // Mark enemy as defeated even if hero had armor, for consistency.
-                  ...enemy,
-                  isDefeated: true, 
-                  defeatTimer: ENEMY_DEFEAT_DURATION_MS, 
-                  isFrozen: false, 
-                  frozenTimer: 0,
-                };
-              } else {
-                // Armor protected hero, maybe a sound effect for armor hit?
-                // For now, enemy is still "defeated" to make it disappear temporarily
-                 nextEnemies[i] = {
-                  ...enemy,
-                  isDefeated: true, 
-                  defeatTimer: ENEMY_DEFEAT_DURATION_MS,
-                  isFrozen: false, 
-                  frozenTimer: 0,
-                };
               }
+              
+              const prevEnemyState = state.enemies.find(e => e.id === enemy.id);
+              if (prevEnemyState && !prevEnemyState.isDefeated) {
+                  audioManager.playSound('bear_voice'); 
+              }
+              nextEnemies[i] = { 
+                ...enemy,
+                isDefeated: true, 
+                defeatTimer: ENEMY_DEFEAT_DURATION_MS, 
+                isFrozen: false, 
+                frozenTimer: 0,
+              };
+              if (nextHero.isArmored) heroHitByEnemy = false; 
               break; 
           }
         }
 
 
-        if (heroHitByEnemy && !nextHero.isArmored) { // Only reset hero if not armored
+        if (heroHitByEnemy && !nextHero.isArmored) { 
             nextHero.y = groundPlatformY + PLATFORM_GROUND_THICKNESS;
             nextHero.x = gameArea.width / 2 - nextHero.width / 2;
             nextHero.velocity = { x: 0, y: 0 };
@@ -828,7 +847,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
                     const newEnemy = getLevelEnemies(gameArea.width, gameArea.height, state.currentLevel, nextPlatforms).find(e => e.id === 'enemy_level2_0');
                     if (newEnemy) {
                        if (!nextBearVoicePlayed) {
-                         audioManager.playSound('bear_voice');
+                         audioManager.playSound('bear_voice'); 
                          nextBearVoicePlayed = true;
                        }
                        nextEnemies.push(newEnemy);
@@ -845,7 +864,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
                       }
                   });
                   if (addedNewEnemy && !nextBearVoicePlayed) {
-                    audioManager.playSound('bear_voice');
+                    audioManager.playSound('bear_voice'); 
                     nextBearVoicePlayed = true;
                   }
               }
@@ -955,7 +974,7 @@ export function useGameLogic() {
     dispatch(action);
   }, []); 
   
-  useReactEffect(() => {
+  useEffect(() => {
     if (gameState.gameArea.width > 0 && gameState.gameArea.height > 0 && !gameState.isGameInitialized) {
       dispatch({ 
         type: 'UPDATE_GAME_AREA', 

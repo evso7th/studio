@@ -44,6 +44,7 @@ export interface HeroType extends GameObject {
   isArmored?: boolean;
   armorTimer?: number;
   armorCooldownTimer?: number;
+  armorRemainingTime?: number; // Added for display
 }
 
 export interface PlatformType extends GameObject {
@@ -132,7 +133,9 @@ export const SLIPPERY_FRICTION_FACTOR = 0.97;
 export const ENEMY_WIDTH = 48;
 export const ENEMY_HEIGHT = 48;
 export const ENEMY_COLLISION_RADIUS = 24; 
-export const ENEMY_IMAGE_SRC = "/assets/images/bearFace.png";
+export const ENEMY_IMAGE_SRC_LVL2 = "/assets/images/bearFace.png";
+export const ENEMY_IMAGE_SRC_LVL3_ENEMY1 = "/assets/images/bearFace.png";
+export const ENEMY_IMAGE_SRC_LVL3_ENEMY2 = "/assets/images/BearFaceDark.png";
 export const ENEMY_DEFAULT_SPEED = 0.4; 
 export const ENEMY_DEFEAT_DURATION_MS = 5000; 
 export const ENEMY_FREEZE_DURATION_MS = 5000; 
@@ -142,6 +145,16 @@ export const ARMOR_DURATION_LEVEL_2 = 7000; // 7 seconds
 export const ARMOR_COOLDOWN_LEVEL_2 = 7000; // 7 seconds
 export const ARMOR_DURATION_LEVEL_3 = 12000; // 12 seconds
 export const ARMOR_COOLDOWN_LEVEL_3 = 10000; // 10 seconds
+
+// Platform image sources
+export const PLATFORM_GRASS_SRC = "/assets/images/PlatformGrass.png";
+export const PLATFORM_ICE_SRC = "/assets/images/platform_ice.png";
+export const PLATFORM_STONE_SRC = "/assets/images/platform_stone.png";
+
+// Background image sources
+export const BACKGROUND_LEVEL1_SRC = "/assets/images/BackGroundBase.png";
+export const BACKGROUND_LEVEL2_SRC = "/assets/images/level2_bkg.png";
+export const BACKGROUND_LEVEL3_SRC = "/assets/images/level3_bkg.png";
 
 
 export interface GameState {
@@ -204,3 +217,5 @@ export const heroAnimationsConfig: HeroAnimations = {
     height: HERO_HEIGHT,
   },
 };
+
+```

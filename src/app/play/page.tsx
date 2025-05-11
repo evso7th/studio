@@ -1,3 +1,4 @@
+
 // @ts-nocheck
 "use client";
 
@@ -8,9 +9,9 @@ import { useGameLogic } from '@/hooks/useGameLogic';
 import { ControlPanel } from '@/components/game/ControlPanel';
 import { HeroComponent, PlatformComponent, CoinComponent, EnemyComponent } from '@/components/game/GameRenderer';
 import { LevelCompleteScreen } from '@/components/game/LevelCompleteScreen';
-import { FinalScreen } from '@/components/game/FinalScreen'; 
+import { FinalScreen } from '@/components/game/FinalScreen';
 import type { GameState } from '@/lib/gameTypes';
-import { HERO_APPEARANCE_DURATION_MS } from '@/lib/gameTypes';
+import { HERO_APPEARANCE_DURATION_MS, BACKGROUND_LEVEL1_SRC, BACKGROUND_LEVEL2_SRC, BACKGROUND_LEVEL3_SRC } from '@/lib/gameTypes';
 import { Button } from "@/components/ui/button";
 import { audioManager } from '@/lib/audioManager';
 
@@ -24,21 +25,21 @@ export default function PlayPage() {
   const initialHeroXRef = useRef<number | null>(null);
   const PARALLAX_FACTOR = 0.2;
 
-  const [showDebugFinalScreen, setShowDebugFinalScreen] = useState(false); 
+  const [showDebugFinalScreen, setShowDebugFinalScreen] = useState(false);
   const [showDebugLevelComplete, setShowDebugLevelComplete] = useState(false);
 
   useReactEffect(() => {
     // To debug final screen:
-    // dispatch({ type: 'SET_DEBUG_LEVEL', payload: 3 }); 
-    // setShowDebugFinalScreen(true); 
+    // dispatch({ type: 'SET_DEBUG_LEVEL', payload: 3 });
+    // setShowDebugFinalScreen(true);
 
     // To debug level complete screen:
     // dispatch({ type: 'SET_DEBUG_LEVEL_COMPLETE', payload: true });
     // setShowDebugLevelComplete(true); // Ensure this is set to enable the screen
     // dispatch({ type: 'SET_DEBUG_LEVEL', payload: 1 }); // Or any level to test completion for
-    
+
     // To go to a specific level (e.g., level 3 for debugging):
-    // dispatch({ type: 'SET_DEBUG_LEVEL', payload: 3 });
+    // dispatch({ type: 'SET_DEBUG_LEVEL', payload: 1 }); // Default to level 1
 
   }, [dispatch]);
 
@@ -67,10 +68,10 @@ export default function PlayPage() {
     } else {
       console.warn('Screen Orientation API not supported.');
     }
-    
+
     return () => {
       window.removeEventListener('resize', updateGameAreaSize);
-      audioManager.stopAllSounds(); 
+      audioManager.stopAllSounds();
     };
   }, [updateGameAreaSize]);
 
@@ -86,10 +87,10 @@ export default function PlayPage() {
       const musicToPlay = levelMusicMap[gameState.currentLevel];
       if (musicToPlay) {
         setTimeout(() => {
-          if(gameState.currentLevel === parseInt(musicToPlay.replace('Level',''))) { 
+          if(gameState.currentLevel === parseInt(musicToPlay.replace('Level',''))) {
              audioManager.playSound(musicToPlay);
           }
-        }, 500); 
+        }, 500);
       }
     }
   }, [gameState.currentLevel, gameState.isGameInitialized]);
@@ -195,11 +196,11 @@ export default function PlayPage() {
       }
     };
     document.body.addEventListener('touchmove', preventZoom, { passive: false });
-    document.body.style.touchAction = 'none'; 
+    document.body.style.touchAction = 'none';
 
     return () => {
       document.body.removeEventListener('touchmove', preventZoom);
-      document.body.style.touchAction = ''; 
+      document.body.style.touchAction = '';
     };
   }, []);
 
@@ -208,18 +209,20 @@ export default function PlayPage() {
     router.push('/');
   };
 
-  const getBackgroundPosition = (level: number, pX: number): string => {
+  const getLevelBackground = (level: number): string => {
     switch (level) {
-      case 1:
-        return `${pX - 100}px center`;
-      case 2:
-        return `calc(50% + ${pX}px) 0%`; 
-      case 3:
-        return `calc(100% + ${pX}px - 300px) 0%`; // Shifted right by 200px (was -100px)
-      default:
-        return `${pX - 100}px center`;
+      case 1: return `url(${BACKGROUND_LEVEL1_SRC})`;
+      case 2: return `url(${BACKGROUND_LEVEL2_SRC})`;
+      case 3: return `url(${BACKGROUND_LEVEL3_SRC})`;
+      default: return `url(${BACKGROUND_LEVEL1_SRC})`;
     }
   };
+
+  const getBackgroundPosition = (level: number, pX: number): string => {
+    // All levels now use top-center parallax
+    return `calc(50% + ${pX}px) 0%`;
+  };
+
 
   if (showDebugFinalScreen) {
     return <FinalScreen />;
@@ -232,7 +235,7 @@ export default function PlayPage() {
         <p className="text-xl mb-8 text-center">Кажется, наш герой немного увлекся полетом...</p>
         <Button
           onClick={() => {
-            audioManager.stopAllSounds(); 
+            audioManager.stopAllSounds();
             dispatch({ type: 'RESTART_LEVEL' });
           }}
           size="lg"
@@ -257,14 +260,14 @@ export default function PlayPage() {
       <LevelCompleteScreen
         currentLevel={gameState.currentLevel}
         onNextLevel={() => {
-          audioManager.stopAllSounds(); 
+          audioManager.stopAllSounds();
           dispatch({ type: 'NEXT_LEVEL' });
           if (showDebugLevelComplete) setShowDebugLevelComplete(false);
         }}
       />
     );
   }
-  
+
   if (gameState.gameOver && gameState.currentLevel === 3 && !gameState.gameLost) {
      return <FinalScreen />;
   }
@@ -279,7 +282,14 @@ export default function PlayPage() {
       aria-label="Главное окно игры"
     >
       <header className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center z-10 pointer-events-none">
-        <h1 className="text-xs font-normal text-white font-roboto shadow-md">IPO Mad Racing</h1>
+        <div>
+          <h1 className="text-xs font-normal text-white font-roboto shadow-md">IPO Mad Racing</h1>
+          {gameState.hero?.isArmored && gameState.hero.armorRemainingTime > 0 && (
+            <p className="text-xs font-normal text-accent font-roboto shadow-md">
+              Броня: {gameState.hero.armorRemainingTime}с
+            </p>
+          )}
+        </div>
         <div className="flex flex-col items-end">
             <p className="text-xs font-normal text-white font-roboto shadow-md">Level: {gameState.currentLevel}</p>
             <p className="text-xs font-normal text-white font-roboto shadow-md">Спасибки: {gameState.score}</p>
@@ -288,9 +298,9 @@ export default function PlayPage() {
 
       <div
         ref={gameAreaRef}
-        className="flex-grow relative w-full overflow-hidden pt-16 pb-20" 
+        className="flex-grow relative w-full overflow-hidden pt-16 pb-20"
         style={{
-          backgroundImage: 'url("/assets/images/BackGroundBase.png")',
+          backgroundImage: getLevelBackground(gameState.currentLevel),
           backgroundSize: 'cover',
           backgroundPosition: getBackgroundPosition(gameState.currentLevel, parallaxBgX),
           backgroundRepeat: 'no-repeat',
