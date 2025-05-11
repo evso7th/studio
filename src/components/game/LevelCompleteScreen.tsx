@@ -3,8 +3,9 @@
 
 import type React from 'react';
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Sparkles } from 'lucide-react';
+// import { Sparkles } from 'lucide-react'; // Sparkles icon is replaced
 
 interface LevelCompleteScreenProps {
   currentLevel: number;
@@ -90,7 +91,16 @@ export function LevelCompleteScreen({ currentLevel, onNextLevel }: LevelComplete
       </div>
 
       <div className="bg-card text-card-foreground p-8 rounded-xl shadow-2xl text-center z-10 transform transition-all animate-in fade-in zoom-in-90 duration-500">
-        <Sparkles className="h-16 w-16 text-yellow-400 mx-auto mb-4 animate-pulse" />
+        <div className="mx-auto mb-4 h-16 w-16 relative">
+          <Image 
+            src="/assets/images/Superman.jpg" 
+            alt="Superman" 
+            width={64} 
+            height={64} 
+            className="rounded-full object-cover"
+            data-ai-hint="superhero flying"
+          />
+        </div>
         <h2 id="level-complete-title" className="text-3xl md:text-4xl font-bold mb-3 text-primary">
           Поздравляем!
         </h2>
@@ -109,3 +119,4 @@ export function LevelCompleteScreen({ currentLevel, onNextLevel }: LevelComplete
     </div>
   );
 }
+
