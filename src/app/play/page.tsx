@@ -2,7 +2,7 @@
 // @ts-nocheck
 "use client";
 
-import type { useEffect } from 'react';
+import type { useEffect as useEffectType } from 'react'; // Renamed type import to avoid conflict if we decide to import useEffect directly
 import { useRef, useCallback, useEffect as useReactEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useGameLogic } from '@/hooks/useGameLogic';
@@ -35,7 +35,7 @@ export default function PlayPage() {
   const [isGamePausedForDialog, setIsGamePausedForDialog] = useState(false);
   const [userAgentString, setUserAgentString] = useState('');
 
-  useEffect(() => {
+  useReactEffect(() => {
     if (typeof window !== 'undefined') {
       setUserAgentString(navigator.userAgent);
     }
@@ -382,3 +382,4 @@ export default function PlayPage() {
     </div>
   );
 }
+
