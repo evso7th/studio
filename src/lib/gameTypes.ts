@@ -97,11 +97,7 @@ export const COIN_EXPLOSION_DURATION_MS = 500;
 export const COIN_SPAWN_EXPLOSION_DURATION_MS = 300; 
 export const COIN_SPAWN_DELAY_MS = 500; 
 
-// PLATFORM_GROUND_Y_FROM_BOTTOM: The y-coordinate of the BOTTOM of the ground platform, 
-// measured from the bottom of the game area (where game's Y=0 is).
-// If the ground platform's top surface is to be at Y=0 (i.e. at the top edge of the control panel),
-// then its bottom Y will be 0 - PLATFORM_GROUND_THICKNESS.
-export const PLATFORM_GROUND_Y_FROM_BOTTOM = -1; // Changed from 59 to -1. Top of ground will be at Y=0.
+export const PLATFORM_GROUND_Y_FROM_BOTTOM = -1; 
 export const PLATFORM_GROUND_THICKNESS = 1; 
 
 export const HERO_WIDTH = 30;
@@ -220,4 +216,5 @@ export const heroAnimationsConfig: HeroAnimations = {
     height: HERO_HEIGHT,
   },
 };
+
 
