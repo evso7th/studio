@@ -99,7 +99,10 @@ export const COIN_SPAWN_DELAY_MS = 500;
 
 
 export const PLATFORM_GROUND_THICKNESS = 1; 
-export const PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET = 0;
+// This is the Y coordinate (from the bottom of the game view) for the ground platform's bottom edge.
+// Since the game view's height is 90% of the screen and control panel is 10%,
+// this offset effectively places the ground at the top of the control panel.
+export const PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET = 0; // Ground is at the very bottom of the playable game area.
 
 
 export const HERO_WIDTH = 30;
@@ -108,19 +111,29 @@ export const COIN_SIZE = 20;
 export const PLATFORM_DEFAULT_WIDTH = 130; 
 export const PLATFORM_NON_GROUND_HEIGHT = 24;
 
-export const TARGET_JUMP_HEIGHT_PX = 250; // Updated from 180
+// Absolute Y coordinates (from game ground / top of control panel) for platform tops
+export const LOWER_PLATFORM_TOP_Y_ABS = 200;
+export const UPPER_PLATFORM_TOP_Y_ABS = 400;
 
-// Assuming Platform 1 is the lower moving platform and Platform 2 is the upper moving platform.
-// Ground offset = PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET + PLATFORM_GROUND_THICKNESS = 0 + 1 = 1
-// Lower platform (platform1) top surface at Y=200px:
-// PLATFORM1_Y_OFFSET = (desired_top_Y - PLATFORM_NON_GROUND_HEIGHT) - ground_offset
-// PLATFORM1_Y_OFFSET = (200 - 24) - 1 = 176 - 1 = 175
-export const PLATFORM1_Y_OFFSET = 175; // Was 136. New: (200-24)-1 = 175
+// TARGET_JUMP_HEIGHT_PX is the desired height the hero can jump *above* their current standing surface.
+export const TARGET_JUMP_HEIGHT_PX = 250; 
 
-// Upper platform (platform2) top surface at Y=400px:
-// PLATFORM2_Y_OFFSET = (desired_top_Y - PLATFORM_NON_GROUND_HEIGHT) - ground_offset
-// PLATFORM2_Y_OFFSET = (400 - 24) - 1 = 376 - 1 = 375
-export const PLATFORM2_Y_OFFSET = 375; // Was 275. New: (400-24)-1 = 375
+// Y offsets for moving platforms, relative to the top of the ground platform.
+// PLATFORM1_Y_OFFSET is for the lower moving platform. Its top surface will be at:
+// PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET + PLATFORM_GROUND_THICKNESS + PLATFORM1_Y_OFFSET
+// = 0 + 1 + PLATFORM1_Y_OFFSET.
+// To make its top surface at LOWER_PLATFORM_TOP_Y_ABS (200):
+// 1 + PLATFORM1_Y_OFFSET = LOWER_PLATFORM_TOP_Y_ABS
+// PLATFORM1_Y_OFFSET = LOWER_PLATFORM_TOP_Y_ABS - 1
+export const PLATFORM1_Y_OFFSET = LOWER_PLATFORM_TOP_Y_ABS - PLATFORM_GROUND_THICKNESS; // Lower moving platform
+
+// PLATFORM2_Y_OFFSET is for the upper moving platform. Its top surface will be at:
+// PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET + PLATFORM_GROUND_THICKNESS + PLATFORM2_Y_OFFSET
+// To make its top surface at UPPER_PLATFORM_TOP_Y_ABS (400):
+// 1 + PLATFORM2_Y_OFFSET = UPPER_PLATFORM_TOP_Y_ABS
+// PLATFORM2_Y_OFFSET = UPPER_PLATFORM_TOP_Y_ABS - 1
+export const PLATFORM2_Y_OFFSET = UPPER_PLATFORM_TOP_Y_ABS - PLATFORM_GROUND_THICKNESS; // Upper moving platform
+
 
 export const ENEMY2_LEVEL3_Y_OFFSET_FROM_PLATFORM2 = 50;
 
@@ -137,9 +150,12 @@ export const MIN_DISTANCE_BETWEEN_PAIR_COINS_Y_FACTOR = 0.15;
 
 
 // COIN_ZONE_TOP_OFFSET is the distance from the top of the game area to the top of the coin spawn zone.
-// If gameArea.height = 650 and COIN_ZONE_TOP_OFFSET = 50, then top of coin spawn area (for top of coin) is 650 - 50 = 600px from bottom.
-// Keeping this at 50 to align with "Верхняя граница зоны монеток 600 пикс" for typical screen heights.
-export const COIN_ZONE_TOP_OFFSET = 50; 
+// If gameArea.height is ~650px, and this is 100, then the top of the coin zone is 650-100 = 550px from ground.
+export const COIN_ZONE_TOP_OFFSET = 100; 
+// Comment: Previous "Верхняя граница зоны монеток 600 пикс." implied offset 50 for gameArea.height 650.
+// New request: "ограничим зону монеток по высоте в 550 пикселей от верхнего края панели управления"
+// Assuming top of control panel is y=0 for game area, this means absolute Y for top of coin zone is 550.
+// If gameArea.height (playable) is ~650px, then COIN_ZONE_TOP_OFFSET should be 650 - 550 = 100.
 
 export const HERO_BASE_SPEED = 1.25; 
 export const SLIPPERY_FRICTION_FACTOR = 0.92; 
