@@ -94,6 +94,28 @@ export default function PlayPage() {
       console.warn('Screen Orientation API not supported.');
     }
 
+    // Request fullscreen when the component mounts
+    const requestGameFullScreen = async () => {
+      const element = document.documentElement;
+      if (element.requestFullscreen) {
+        await element.requestFullscreen().catch(err => console.warn("Fullscreen request failed:", err.message));
+      } // @ts-ignore 
+      else if (element.mozRequestFullScreen) { // Firefox
+         // @ts-ignore
+        await element.mozRequestFullScreen().catch(err => console.warn("Fullscreen request failed (Firefox):", err.message));
+      } // @ts-ignore
+      else if (element.webkitRequestFullscreen) { // Chrome, Safari and Opera
+         // @ts-ignore
+        await element.webkitRequestFullscreen().catch(err => console.warn("Fullscreen request failed (WebKit):", err.message));
+      } // @ts-ignore
+      else if (element.msRequestFullscreen) { // IE/Edge
+         // @ts-ignore
+        await element.msRequestFullscreen().catch(err => console.warn("Fullscreen request failed (MS):", err.message));
+      }
+    };
+    requestGameFullScreen();
+
+
     return () => {
       window.removeEventListener('resize', updateGameAreaSize);
       audioManager.stopAllSounds();
@@ -289,12 +311,12 @@ export default function PlayPage() {
 
   const getBackgroundPosition = (level: number, pX: number): string => {
     let xOffset = pX;
-    if (level === 2) { // level2_bkg.png is wider
-      xOffset = pX * 0.8; // Adjust parallax factor if needed for this specific background
-    } else if (level === 3) { // level3_bkg.png might be wider or need specific centering
-      xOffset = pX * 1.2 + 200; // Example adjustment for level 3
+    if (level === 2) { 
+      xOffset = pX * 0.8; 
+    } else if (level === 3) { 
+      xOffset = pX * 1.2 + 200; 
     }
-    return `calc(50% + ${xOffset}px) top`; // Changed to 'top' for consistent vertical alignment
+    return `calc(50% + ${xOffset}px) top`; 
   };
 
 
@@ -351,7 +373,9 @@ export default function PlayPage() {
     <div
       className="h-screen w-screen flex flex-col overflow-hidden select-none"
       style={{
-        backgroundColor: 'hsl(var(--background))', // Fallback color
+        backgroundColor: 'hsl(var(--background))',
+        paddingBottom: 'env(safe-area-inset-bottom)', // Added for safe area
+        boxSizing: 'border-box', // Ensure padding is included correctly
       }}
       aria-label="Главное окно игры"
     >
@@ -372,13 +396,12 @@ export default function PlayPage() {
 
       <div
         ref={gameAreaRef}
-        className="relative w-full overflow-hidden flex-grow" // Use flex-grow for game area
+        className="relative w-full overflow-hidden flex-grow" 
         style={{
           backgroundImage: getLevelBackground(gameState.currentLevel),
           backgroundSize: 'cover',
           backgroundPosition: getBackgroundPosition(gameState.currentLevel, parallaxBgX),
           backgroundRepeat: 'no-repeat',
-          // backgroundColor: 'hsl(var(--game-bg))', // This might be overridden by backgroundImage
           perspective: '1000px',
         }}
         data-ai-hint="abstract pattern"
@@ -407,7 +430,7 @@ export default function PlayPage() {
       </div>
       
       <AlertDialog open={showExitConfirmation} onOpenChange={(isOpen) => {
-        if (!isOpen && isGamePausedForDialog) {  // Check if dialog was paused by us
+        if (!isOpen && isGamePausedForDialog) {
              handleCancelExit(); 
         } else if (isOpen && !showExitConfirmation) { 
             setShowExitConfirmation(true); 
@@ -434,7 +457,7 @@ export default function PlayPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <div className="h-[10vh] w-full shrink-0"> {/* Ensure control panel doesn't shrink */}
+      <div className="w-full shrink-0" style={{ height: '10vh' }}> {/* Control panel takes 10% of the available height */}
         <ControlPanel
           dispatch={dispatch}
           onExit={handleOpenExitDialog}
@@ -445,3 +468,4 @@ export default function PlayPage() {
     </div>
   );
 }
+

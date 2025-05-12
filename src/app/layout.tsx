@@ -22,12 +22,10 @@ export const metadata: Metadata = {
   title: 'IPO Mad Racing',
   description: 'An exciting platformer game by Firebase Studio',
   icons: {
-    icon: '/favicon.ico', // Referenced .ico file as per user confirmation
-    // For completeness, browsers often look for these as well.
-    // If you have these files in /public, uncomment them.
-    // apple: '/apple-touch-icon.png',
-    // shortcut: '/favicon.ico', // Redundant if icon above is .ico, but harmless
+    icon: '/favicon.ico',
   },
+  // Add viewport-fit=cover to allow content to extend into safe areas
+  viewport: 'width=device-width, initial-scale=1, viewport-fit=cover',
 };
 
 export default function RootLayout({
@@ -38,11 +36,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full">
       <head>
-        {/* Next.js handles favicon injection through metadata.
-            Explicitly adding link tags here can sometimes conflict.
-            If metadata.icons doesn't work, this is an alternative:
-            <link rel="icon" href="/favicon.ico" type="image/x-icon" sizes="any" />
-        */}
+        {/* The viewport meta tag is now handled by the metadata object above */}
       </head>
       <body className={`${roboto.variable} font-sans antialiased h-full dark`}>
         {children}
