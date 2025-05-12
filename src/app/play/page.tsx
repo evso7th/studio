@@ -30,10 +30,7 @@ export default function PlayPage() {
   const animationFrameId = useRef<number>();
   const router = useRouter();
 
-  const [parallaxBgX, setParallaxBgX] = useState(0);
-  const initialHeroXRef = useRef<number | null>(null);
-  const PARALLAX_FACTOR = 0.2;
-
+  // Removed parallaxBgX, initialHeroXRef, PARALLAX_FACTOR
   const [showDebugFinalScreen, setShowDebugFinalScreen] = useState(false);
   const [showDebugLevelComplete, setShowDebugLevelComplete] = useState(false);
   const [showExitConfirmation, setShowExitConfirmation] = useState(false);
@@ -42,32 +39,36 @@ export default function PlayPage() {
 
   useReactEffect(() => {
     // To debug final screen:
-    // dispatch({ type: 'SET_DEBUG_LEVEL', payload: 3 }); 
+    // dispatch({ type: 'SET_DEBUG_LEVEL', payload: 3 });
     // setShowDebugFinalScreen(true);
 
     // To debug level complete screen:
     // dispatch({ type: 'SET_DEBUG_LEVEL_COMPLETE', payload: true });
-    // setShowDebugLevelComplete(true); 
-    // dispatch({ type: 'SET_DEBUG_LEVEL', payload: 1 }); 
+    // setShowDebugLevelComplete(true);
+    // dispatch({ type: 'SET_DEBUG_LEVEL', payload: 1 });
 
     // To go to a specific level:
-    // dispatch({ type: 'SET_DEBUG_LEVEL', payload: 1 }); 
+    // dispatch({ type: 'SET_DEBUG_LEVEL', payload: 1 });
   }, [dispatch]);
 
 
   const updateGameAreaSize = useCallback(() => {
     if (gameAreaRef.current) {
       const { clientWidth, clientHeight } = gameAreaRef.current;
-      
-      dispatch({ type: 'UPDATE_GAME_AREA', payload: { width: clientWidth, height: clientHeight, paddingTop: 0 } });
+      const controlPanelHeight = gameAreaRef.current.nextElementSibling?.clientHeight || 0;
+      const effectiveGameAreaHeight = clientHeight; // Game area itself now takes 90vh
+
+      dispatch({
+        type: 'UPDATE_GAME_AREA',
+        payload: { width: clientWidth, height: effectiveGameAreaHeight, paddingTop: 0 }
+      });
     }
   }, [dispatch]);
 
   useReactEffect(() => {
     updateGameAreaSize();
     window.addEventListener('resize', updateGameAreaSize);
-    
-    // Attempt to lock screen orientation to portrait when the game page loads
+
     if (typeof screen.orientation?.lock === 'function') {
       screen.orientation.lock('portrait-primary')
         .then(() => console.log('Screen orientation locked to portrait.'))
@@ -82,11 +83,9 @@ export default function PlayPage() {
       if (animationFrameId.current) {
         cancelAnimationFrame(animationFrameId.current);
       }
-       // Attempt to unlock orientation when leaving the game page
       if (typeof screen.orientation?.unlock === 'function') {
         screen.orientation.unlock();
       }
-      // Fullscreen exit removed
     };
   }, [updateGameAreaSize]);
 
@@ -110,20 +109,7 @@ export default function PlayPage() {
     }
   }, [gameState.currentLevel, gameState.isGameInitialized]);
 
-
-  useReactEffect(() => {
-    if (gameState.isGameInitialized && gameState.gameArea.width > 0 && initialHeroXRef.current === null && gameState.hero) {
-      initialHeroXRef.current = gameState.hero.x;
-    }
-  }, [gameState.isGameInitialized, gameState.gameArea.width, gameState.hero]);
-
-  useReactEffect(() => {
-    if (gameState.isGameInitialized && initialHeroXRef.current !== null && gameState.hero) {
-      const heroDisplacement = gameState.hero.x - initialHeroXRef.current;
-      setParallaxBgX(-heroDisplacement * PARALLAX_FACTOR);
-    }
-  }, [gameState.hero?.x, gameState.isGameInitialized]);
-
+  // Removed useEffect for parallaxBgX calculation
 
   const gameLoop = useCallback(() => {
     if (gameState.isGameInitialized && gameState.gameArea.width > 0 && gameState.gameArea.height > 0 && !gameState.levelCompleteScreenActive && !gameState.gameOver && !gameState.gameLost && !isGamePausedForDialog) {
@@ -218,15 +204,13 @@ export default function PlayPage() {
         event.preventDefault();
       }
     };
-    
-    document.body.style.touchAction = 'none'; 
-    document.body.addEventListener('touchmove', preventZoom, { passive: false });
 
-    // Removed user-agent check for Yandex Browser
+    document.body.style.touchAction = 'none';
+    document.body.addEventListener('touchmove', preventZoom, { passive: false });
 
     return () => {
       document.body.removeEventListener('touchmove', preventZoom);
-      document.body.style.touchAction = ''; 
+      document.body.style.touchAction = '';
     };
   }, []);
 
@@ -236,16 +220,15 @@ export default function PlayPage() {
   };
 
   const handleConfirmExit = async () => {
-    audioManager.stopAllSounds(); 
-    audioManager.playSound('exit'); 
-    
+    audioManager.stopAllSounds();
+    audioManager.playSound('exit');
+
     setShowExitConfirmation(false);
     setIsGamePausedForDialog(false);
-    // Fullscreen exit removed
 
     setTimeout(() => {
-      router.push('/'); 
-    }, 300); 
+      router.push('/');
+    }, 300);
   };
 
   const handleCancelExit = () => {
@@ -263,16 +246,7 @@ export default function PlayPage() {
     }
   };
 
-  const getBackgroundPosition = (level: number, pX: number): string => {
-    let xOffset = pX;
-    if (level === 2) { 
-      xOffset = pX * 0.8; 
-    } else if (level === 3) { 
-      xOffset = pX * 1.2 + 200; 
-    }
-    return `calc(50% + ${xOffset}px) top`; 
-  };
-
+  // Removed getBackgroundPosition function as parallax is removed
 
   if (showDebugFinalScreen) {
     return <FinalScreen />;
@@ -294,7 +268,7 @@ export default function PlayPage() {
           Начать сначала
         </Button>
          <Button
-          onClick={handleConfirmExit} 
+          onClick={handleConfirmExit}
           variant="outline"
           size="lg"
           className="mt-4 text-lg px-8 py-3 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
@@ -328,7 +302,7 @@ export default function PlayPage() {
       className="h-screen w-screen flex flex-col overflow-hidden select-none"
       style={{
         backgroundColor: 'hsl(var(--background))',
-        paddingBottom: `env(safe-area-inset-bottom, 0px)`, // Removed extraBottomPadding calculation
+        paddingBottom: `env(safe-area-inset-bottom, 0px)`,
         boxSizing: 'border-box',
       }}
       aria-label="Главное окно игры"
@@ -350,14 +324,14 @@ export default function PlayPage() {
 
       <div
         ref={gameAreaRef}
-        className="relative w-full overflow-hidden flex-grow" 
+        className="relative w-full overflow-hidden flex-grow"
         style={{
           backgroundImage: getLevelBackground(gameState.currentLevel),
-          backgroundSize: 'cover',
-          backgroundPosition: getBackgroundPosition(gameState.currentLevel, parallaxBgX),
+          backgroundSize: 'cover', // Ensure background covers the area
+          backgroundPosition: 'center center', // Center the background image
           backgroundRepeat: 'no-repeat',
           perspective: '1000px',
-          height: '90vh', // Game area takes 90% of viewport height
+          height: '90vh',
         }}
         data-ai-hint="abstract pattern"
       >
@@ -383,21 +357,21 @@ export default function PlayPage() {
           </>
         )}
       </div>
-      
+
       <AlertDialog open={showExitConfirmation} onOpenChange={(isOpen) => {
         if (!isOpen && isGamePausedForDialog) {
-             handleCancelExit(); 
-        } else if (isOpen && !showExitConfirmation) { 
-            setShowExitConfirmation(true); 
+             handleCancelExit();
+        } else if (isOpen && !showExitConfirmation) {
+            setShowExitConfirmation(true);
             setIsGamePausedForDialog(true);
         }
       }}>
         <AlertDialogContent>
           <AlertDialogHeader className="items-center">
             <div className="relative w-24 h-24 mb-4">
-              <Image 
-                src="/assets/images/SimplyMan.png" 
-                alt="Simply Man" 
+              <Image
+                src="/assets/images/SimplyMan.png"
+                alt="Simply Man"
                 fill
                 style={{ objectFit: 'contain' }}
                 data-ai-hint="man thinking cartoon"
