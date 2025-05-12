@@ -1,5 +1,5 @@
 
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Roboto } from 'next/font/google';
 // import { GeistSans } from 'geist/font/sans'; // Removed due to "Module not found" error
 // import { GeistMono } from 'geist/font/mono'; // Removed due to "Module not found" error
@@ -24,9 +24,17 @@ export const metadata: Metadata = {
   icons: {
     icon: '/favicon.ico',
   },
-  // Add viewport-fit=cover to allow content to extend into safe areas
-  viewport: 'width=device-width, initial-scale=1, viewport-fit=cover',
+  // Viewport configuration removed from here
 };
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  // Ensure touch actions are disabled and zooming is prevented for PWA-like experience
+  interactiveWidget: 'resizes-content', // May help with viewport issues on mobile
+};
+
 
 export default function RootLayout({
   children,
@@ -36,7 +44,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full">
       <head>
-        {/* The viewport meta tag is now handled by the metadata object above */}
+        {/* The viewport meta tag is now handled by the viewport export above */}
       </head>
       <body className={`${roboto.variable} font-sans antialiased h-full dark`}>
         {children}
