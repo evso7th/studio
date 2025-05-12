@@ -17,12 +17,6 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
-      {
-        protocol: 'https',
-        hostname: 'neurostaffing.online',
-        port: '',
-        pathname: '/wp-content/uploads/**',
-      },
     ],
   },
 };

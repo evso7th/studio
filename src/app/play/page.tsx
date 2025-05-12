@@ -4,7 +4,6 @@
 
 import type { useEffect } from 'react';
 import { useRef, useCallback, useEffect as useReactEffect, useState } from 'react';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useGameLogic } from '@/hooks/useGameLogic';
 import { ControlPanel } from '@/components/game/ControlPanel';
@@ -30,11 +29,20 @@ export default function PlayPage() {
   const animationFrameId = useRef<number>();
   const router = useRouter();
 
-  // Removed parallaxBgX, initialHeroXRef, PARALLAX_FACTOR
   const [showDebugFinalScreen, setShowDebugFinalScreen] = useState(false);
   const [showDebugLevelComplete, setShowDebugLevelComplete] = useState(false);
   const [showExitConfirmation, setShowExitConfirmation] = useState(false);
   const [isGamePausedForDialog, setIsGamePausedForDialog] = useState(false);
+  const [userAgentString, setUserAgentString] = useState('');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setUserAgentString(navigator.userAgent);
+    }
+  }, []);
+
+  const isYandexBrowser = userAgentString.includes('YaBrowser');
+  const bottomPadding = isYandexBrowser ? '80px' : '48px'; // 32px + 48px for Yandex
 
 
   useReactEffect(() => {
@@ -55,8 +63,7 @@ export default function PlayPage() {
   const updateGameAreaSize = useCallback(() => {
     if (gameAreaRef.current) {
       const { clientWidth, clientHeight } = gameAreaRef.current;
-      const controlPanelHeight = gameAreaRef.current.nextElementSibling?.clientHeight || 0;
-      const effectiveGameAreaHeight = clientHeight; // Game area itself now takes 90vh
+      const effectiveGameAreaHeight = clientHeight;
 
       dispatch({
         type: 'UPDATE_GAME_AREA',
@@ -69,22 +76,11 @@ export default function PlayPage() {
     updateGameAreaSize();
     window.addEventListener('resize', updateGameAreaSize);
 
-    if (typeof screen.orientation?.lock === 'function') {
-      screen.orientation.lock('portrait-primary')
-        .then(() => console.log('Screen orientation locked to portrait.'))
-        .catch((error) => console.warn('Screen orientation lock failed.', error));
-    } else {
-      console.warn('Screen Orientation API not supported or permission denied.');
-    }
-
     return () => {
       window.removeEventListener('resize', updateGameAreaSize);
       audioManager.stopAllSounds();
       if (animationFrameId.current) {
         cancelAnimationFrame(animationFrameId.current);
-      }
-      if (typeof screen.orientation?.unlock === 'function') {
-        screen.orientation.unlock();
       }
     };
   }, [updateGameAreaSize]);
@@ -100,16 +96,18 @@ export default function PlayPage() {
       };
       const musicToPlay = levelMusicMap[gameState.currentLevel];
       if (musicToPlay) {
-        setTimeout(() => {
-          if(gameState.currentLevel === parseInt(musicToPlay.replace('Level',''))) {
-             audioManager.playSound(musicToPlay);
-          }
-        }, 500);
+        const currentAudio = audioManager.getCurrentPlayingLoop();
+        if (currentAudio !== musicToPlay) { // Only play if different music or nothing is playing
+          setTimeout(() => {
+            if(gameState.currentLevel === parseInt(musicToPlay.replace('Level',''))) {
+               audioManager.playSound(musicToPlay);
+            }
+          }, 500);
+        }
       }
     }
   }, [gameState.currentLevel, gameState.isGameInitialized]);
 
-  // Removed useEffect for parallaxBgX calculation
 
   const gameLoop = useCallback(() => {
     if (gameState.isGameInitialized && gameState.gameArea.width > 0 && gameState.gameArea.height > 0 && !gameState.levelCompleteScreenActive && !gameState.gameOver && !gameState.gameLost && !isGamePausedForDialog) {
@@ -198,21 +196,6 @@ export default function PlayPage() {
     };
   }, [dispatch, gameState.heroAppearance, gameState.levelCompleteScreenActive, gameState.gameLost, gameState.gameOver, showDebugFinalScreen, showExitConfirmation]);
 
-  useReactEffect(() => {
-    const preventZoom = (event: TouchEvent) => {
-      if (event.touches.length > 1) {
-        event.preventDefault();
-      }
-    };
-
-    document.body.style.touchAction = 'none';
-    document.body.addEventListener('touchmove', preventZoom, { passive: false });
-
-    return () => {
-      document.body.removeEventListener('touchmove', preventZoom);
-      document.body.style.touchAction = '';
-    };
-  }, []);
 
   const handleOpenExitDialog = () => {
     setIsGamePausedForDialog(true);
@@ -246,7 +229,6 @@ export default function PlayPage() {
     }
   };
 
-  // Removed getBackgroundPosition function as parallax is removed
 
   if (showDebugFinalScreen) {
     return <FinalScreen />;
@@ -302,7 +284,7 @@ export default function PlayPage() {
       className="h-screen w-screen flex flex-col overflow-hidden select-none"
       style={{
         backgroundColor: 'hsl(var(--background))',
-        paddingBottom: `env(safe-area-inset-bottom, 0px)`,
+        paddingBottom: bottomPadding, 
         boxSizing: 'border-box',
       }}
       aria-label="Главное окно игры"
@@ -327,11 +309,11 @@ export default function PlayPage() {
         className="relative w-full overflow-hidden flex-grow"
         style={{
           backgroundImage: getLevelBackground(gameState.currentLevel),
-          backgroundSize: 'cover', // Ensure background covers the area
-          backgroundPosition: 'center center', // Center the background image
+          backgroundSize: 'cover', 
+          backgroundPosition: 'center center', 
           backgroundRepeat: 'no-repeat',
           perspective: '1000px',
-          height: '90vh',
+          height: '90vh', // Game area takes 90% of viewport height
         }}
         data-ai-hint="abstract pattern"
       >
@@ -368,15 +350,18 @@ export default function PlayPage() {
       }}>
         <AlertDialogContent>
           <AlertDialogHeader className="items-center">
-            <div className="relative w-24 h-24 mb-4">
-              <Image
-                src="/assets/images/SimplyMan.png"
-                alt="Simply Man"
-                fill
-                style={{ objectFit: 'contain' }}
-                data-ai-hint="man thinking cartoon"
-              />
-            </div>
+            <div 
+              className="relative w-24 h-24 mb-4"
+              style={{
+                backgroundImage: 'url(/assets/images/SimplyMan.png)',
+                backgroundSize: 'contain',
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'center',
+              }}
+              role="img"
+              aria-label="Simply Man"
+              data-ai-hint="man thinking cartoon"
+            />
             <AlertDialogTitle>Вы действительно хотите покинуть игру?</AlertDialogTitle>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-col-reverse sm:flex-col-reverse gap-y-2.5">
@@ -397,4 +382,3 @@ export default function PlayPage() {
     </div>
   );
 }
-

@@ -1,7 +1,6 @@
 
 "use client";
 
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import type React from 'react';
@@ -44,15 +43,17 @@ export function FinalScreen() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center text-foreground animate-in fade-in duration-1000">
-      <Image
-        src="/assets/images/final.png" 
-        alt="Final Screen Background"
-        fill
-        style={{ objectFit: 'cover', zIndex: -1 }}
-        data-ai-hint="victory celebration achievement"
-        priority
-      />
+    <div 
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center text-foreground animate-in fade-in duration-1000"
+      style={{
+        backgroundImage: 'url(/assets/images/final.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+      data-ai-hint="victory celebration achievement"
+      role="img"
+      aria-label="Final Screen Background"
+    >
       <div className="bg-card/70 backdrop-blur-sm text-card-foreground p-8 rounded-xl shadow-2xl text-center max-w-md w-full transform transition-all animate-in fade-in zoom-in-90 duration-1000">
         <h1 className="text-4xl font-bold text-primary mb-4">Поздравляем!</h1>
         <p className="text-xl text-foreground/90 mb-2">Главный приз - ваш!</p>

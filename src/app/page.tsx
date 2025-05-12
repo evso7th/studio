@@ -1,7 +1,6 @@
 
 "use client";
 
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { CreditsDialog } from '@/components/landing/CreditsDialog';
@@ -149,7 +148,6 @@ export default function EntryPage() {
         await audioManager.initAudio();
       }
       audioManager.stopSound('First_screen'); 
-      // Fullscreen request removed
     } catch (error) {
       console.error("Failed to initialize/manage audio for game start:", error);
     }
@@ -161,16 +159,17 @@ export default function EntryPage() {
   }
 
   return (
-    <div className="min-h-screen w-screen flex flex-col items-center justify-center text-foreground overflow-hidden relative p-0 m-0">
-      <Image
-        src="/assets/images/wallpaper2.jpg"
-        alt="Background Wallpaper"
-        fill
-        style={{ objectFit: 'cover', zIndex: -10, objectPosition: 'top center' }}
-        priority
-        data-ai-hint="starry sky space"
-      />
-
+    <div 
+      className="min-h-screen w-screen flex flex-col items-center justify-center text-foreground overflow-hidden relative p-0 m-0"
+      style={{ 
+        backgroundImage: 'url(/assets/images/wallpaper2.jpg)', 
+        backgroundSize: 'cover', 
+        backgroundPosition: 'top center',
+      }}
+      data-ai-hint="starry sky space"
+      role="img"
+      aria-label="Background Wallpaper"
+    >
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
         {backgroundFireworks.map((particle) => (
           <div
@@ -206,18 +205,18 @@ export default function EntryPage() {
             </p>
           </div>
 
-          <div className="relative w-full max-w-xs sm:max-w-sm md:max-w-md mx-auto aspect-[4/3] my-4">
-            <Image
-              src="/assets/images/RelaxMan.png"
-              alt="Relaxing Man"
-              fill
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              style={{ objectFit: 'contain' }}
-              className="animate-swirl-in"
-              data-ai-hint="man relaxing business"
-              priority
-            />
-          </div>
+          <div 
+            className="relative w-full max-w-xs sm:max-w-sm md:max-w-md mx-auto aspect-[4/3] my-4 animate-swirl-in"
+            style={{
+              backgroundImage: 'url(/assets/images/RelaxMan.png)',
+              backgroundSize: 'contain',
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'center',
+            }}
+            role="img"
+            aria-label="Relaxing Man"
+            data-ai-hint="man relaxing business"
+          />
 
           <div className="flex flex-col items-center w-full">
             <Button
@@ -244,4 +243,3 @@ export default function EntryPage() {
     </div>
   );
 }
-

@@ -180,7 +180,7 @@ export function PlatformComponent({ platform, gameAreaHeight, paddingTop }: { pl
   const platformStyle: React.CSSProperties = {
     ...baseStyle,
     backgroundImage: platform.id === 'platform_ground'
-      ? 'url("https://neurostaffing.online/wp-content/uploads/2025/05/GroundFloor.png")'
+      ? 'url("/assets/images/GroundFloor.png")' 
       : `url(${platform.imageSrc || PLATFORM_GRASS_SRC})`,
     backgroundSize: platform.id === 'platform_ground' ? 'auto 100%' : '100% 100%',
     backgroundPosition: platform.id === 'platform_ground' ? 'left bottom' : 'center',
@@ -291,7 +291,7 @@ export function CoinComponent({ coin, gameAreaHeight, paddingTop }: { coin: Coin
         className="animate-rotate-y"
         style={{
           ...baseStyle,
-          transformStyle: 'preserve-3d',
+          transformStyle: 'preserve-3d', // Important for 3D rotation
           boxShadow: '2px 2px 3px rgba(0,0,0,0.2), inset 0 0 2px rgba(255,255,255,0.3)',
         }}
         role="img"
@@ -311,7 +311,7 @@ interface EnemyComponentProps extends GameObjectComponentProps {
 export function EnemyComponent({ enemy, gameAreaHeight, paddingTop }: EnemyComponentProps) {
   if (!gameAreaHeight && gameAreaHeight !== 0) return null;
 
-  if (enemy.isDefeated && enemy.defeatTimer > 0) { // Only render nothing if fully "gone" (timer up or no explosion)
+  if (enemy.isDefeated && enemy.defeatTimer > 0) { 
     return null;
   }
 
