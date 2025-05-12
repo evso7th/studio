@@ -3,7 +3,7 @@
 "use client";
 
 import type { Reducer} from 'react';
-import { useReducer, useCallback, useEffect as useReactEffect, useRef } from 'react'; 
+import { useReducer, useCallback, useEffect, useRef } from 'react'; 
 import type { GameState, GameAction, HeroType, PlatformType, CoinType, Size } from '@/lib/gameTypes'; 
 import { 
     HERO_APPEARANCE_DURATION_MS, 
@@ -58,8 +58,6 @@ const MAX_FALL_SPEED = -8;
 const JUMP_STRENGTH = (-GRAVITY_ACCELERATION + Math.sqrt(GRAVITY_ACCELERATION * GRAVITY_ACCELERATION + 8 * GRAVITY_ACCELERATION * TARGET_JUMP_HEIGHT_PX)) / 2;
 
 const calculatePlatformGroundY = (gameAreaHeight: number) => {
-  // PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET is the distance from the *bottom* of the game area to the *bottom* of the ground platform.
-  // So, the Y coordinate (which is from bottom of screen) is simply this offset.
   return PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET;
 };
 
@@ -94,7 +92,10 @@ const getLevelPlatforms = (gameAreaWidth: number, gameAreaHeight: number, level:
   let platform2ImageSrc = PLATFORM_GRASS_SRC;
 
 
-  if (level === 2) {
+  if (level === 1) {
+    platform1ImageSrc = "/assets/images/PlatformGrass.png";
+    platform2ImageSrc = "/assets/images/PlatformGrass.png";
+  } else if (level === 2) {
     platformSpeed = 0.75;
     isPlatform1Slippery = true;
     isPlatform2Slippery = true;
@@ -114,7 +115,7 @@ const getLevelPlatforms = (gameAreaWidth: number, gameAreaHeight: number, level:
       id: 'platform_ground', x: -100, y: groundPlatformY, 
       width: gameAreaWidth + 200, height: PLATFORM_GROUND_THICKNESS, 
       isMoving: false, speed: 0, direction: 1, moveAxis: 'x',
-      imageSrc: PLATFORM_GRASS_SRC, 
+      imageSrc: "https://neurostaffing.online/wp-content/uploads/2025/05/GroundFloor.png", 
     },
     {
       id: 'platform1', 
@@ -338,6 +339,7 @@ const getDefaultInitialGameState = (gameAreaWidth = 800, gameAreaHeight = 600, l
     totalCoinsCollectedInLevel: 0,
     currentPairIndex: 0,
     levelCompleteScreenActive: false,
+    showDebugLevelComplete: false,
     bearVoicePlayedForLevel: false,
   };
 };
@@ -432,6 +434,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       return {
         ...state,
         levelCompleteScreenActive: action.payload,
+        showDebugLevelComplete: action.payload,
       };
     }
     case 'SET_DEBUG_LEVEL': {
@@ -976,7 +979,7 @@ export function useGameLogic() {
     dispatch(action);
   }, []); 
   
-  useReactEffect(() => {
+  useEffect(() => {
     if (gameState.gameArea.width > 0 && gameState.gameArea.height > 0 && !gameState.isGameInitialized) {
       dispatch({ 
         type: 'UPDATE_GAME_AREA', 
