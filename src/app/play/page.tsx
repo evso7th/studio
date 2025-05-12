@@ -17,7 +17,6 @@ import { audioManager } from '@/lib/audioManager';
 import {
   AlertDialog,
   AlertDialogContent,
-  AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
@@ -86,34 +85,12 @@ export default function PlayPage() {
   useReactEffect(() => {
     updateGameAreaSize();
     window.addEventListener('resize', updateGameAreaSize);
-    if (typeof screen.orientation?.lock === 'function') {
-      screen.orientation.lock('portrait-primary')
-        .then(() => console.log('Screen orientation locked to portrait.'))
-        .catch((error) => console.warn('Screen orientation lock failed.', error));
-    } else {
-      console.warn('Screen Orientation API not supported.');
-    }
+    
+    // Screen orientation lock logic moved to after user interaction (e.g., game start)
+    // to comply with browser security policies.
 
-    // Request fullscreen when the component mounts
-    const requestGameFullScreen = async () => {
-      const element = document.documentElement;
-      if (element.requestFullscreen) {
-        await element.requestFullscreen().catch(err => console.warn("Fullscreen request failed:", err.message));
-      } // @ts-ignore 
-      else if (element.mozRequestFullScreen) { // Firefox
-         // @ts-ignore
-        await element.mozRequestFullScreen().catch(err => console.warn("Fullscreen request failed (Firefox):", err.message));
-      } // @ts-ignore
-      else if (element.webkitRequestFullscreen) { // Chrome, Safari and Opera
-         // @ts-ignore
-        await element.webkitRequestFullscreen().catch(err => console.warn("Fullscreen request failed (WebKit):", err.message));
-      } // @ts-ignore
-      else if (element.msRequestFullscreen) { // IE/Edge
-         // @ts-ignore
-        await element.msRequestFullscreen().catch(err => console.warn("Fullscreen request failed (MS):", err.message));
-      }
-    };
-    requestGameFullScreen();
+    // Fullscreen request moved to after user interaction.
+    // requestGameFullScreen();
 
 
     return () => {
@@ -259,16 +236,9 @@ export default function PlayPage() {
       }
     };
     
-    document.body.style.touchAction = 'none';
+    document.body.style.touchAction = 'none'; // Prevents default touch actions like scrolling or zooming.
     document.body.addEventListener('touchmove', preventZoom, { passive: false });
 
-    if (typeof screen.orientation?.lock === 'function') {
-      screen.orientation.lock('portrait-primary')
-        .then(() => console.log('Screen orientation locked to portrait.'))
-        .catch((error) => console.warn('Screen orientation lock failed during touch setup.', error));
-    } else {
-      console.warn('Screen Orientation API not supported during touch setup.');
-    }
 
     return () => {
       document.body.removeEventListener('touchmove', preventZoom);
@@ -374,8 +344,8 @@ export default function PlayPage() {
       className="h-screen w-screen flex flex-col overflow-hidden select-none"
       style={{
         backgroundColor: 'hsl(var(--background))',
-        paddingBottom: 'env(safe-area-inset-bottom)', // Added for safe area
-        boxSizing: 'border-box', // Ensure padding is included correctly
+        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 48px)', // Added 48px bottom padding
+        boxSizing: 'border-box',
       }}
       aria-label="Главное окно игры"
     >
@@ -403,6 +373,7 @@ export default function PlayPage() {
           backgroundPosition: getBackgroundPosition(gameState.currentLevel, parallaxBgX),
           backgroundRepeat: 'no-repeat',
           perspective: '1000px',
+          // Game area height will be 90% of the (screen height - bottom padding)
         }}
         data-ai-hint="abstract pattern"
       >
@@ -457,7 +428,7 @@ export default function PlayPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <div className="w-full shrink-0" style={{ height: '10vh' }}> {/* Control panel takes 10% of the available height */}
+      <div className="w-full shrink-0" style={{ height: '10vh' }}> {/* Control panel takes 10% of the (screen height - bottom padding) */}
         <ControlPanel
           dispatch={dispatch}
           onExit={handleOpenExitDialog}
@@ -468,4 +439,3 @@ export default function PlayPage() {
     </div>
   );
 }
-
