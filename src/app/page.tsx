@@ -158,7 +158,10 @@ export default function EntryPage() {
             console.warn("EntryPage: Audio initialization failed after preloader.", error);
           }
         }
-        audioManager.playSound('First_screen');
+        // Only play if initialization was successful or if it was already initialized
+        if (audioManager.isInitialized()) {
+          audioManager.playSound('First_screen');
+        }
       };
 
       const soundTimeout = setTimeout(playInitialSound, 100);
@@ -234,6 +237,7 @@ export default function EntryPage() {
               src="/assets/images/RelaxMan.png"
               alt="Relaxing Man"
               fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               style={{ objectFit: 'contain' }}
               className="animate-swirl-in"
               data-ai-hint="man relaxing business"
