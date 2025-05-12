@@ -1,3 +1,4 @@
+
 "use client";
 
 import Image from 'next/image';
@@ -40,25 +41,6 @@ const FIREWORK_REGENERATION_INTERVAL = 4000;
 
 const TARGET_TITLE = "IPO Mad Racing";
 
-async function requestFullScreen() {
-  const element = document.documentElement;
-  if (element.requestFullscreen) {
-    await element.requestFullscreen().catch(err => console.warn("Fullscreen request failed:", err.message));
-    // @ts-ignore
-  } else if (element.mozRequestFullScreen) { // Firefox
-    // @ts-ignore
-    await element.mozRequestFullScreen().catch(err => console.warn("Fullscreen request failed (Firefox):", err.message));
-    // @ts-ignore
-  } else if (element.webkitRequestFullscreen) { // Chrome, Safari and Opera
-    // @ts-ignore
-    await element.webkitRequestFullscreen().catch(err => console.warn("Fullscreen request failed (WebKit):", err.message));
-    // @ts-ignore
-  } else if (element.msRequestFullscreen) { // IE/Edge
-    // @ts-ignore
-    await element.msRequestFullscreen().catch(err => console.warn("Fullscreen request failed (MS):", err.message));
-  }
-}
-
 
 export default function EntryPage() {
   const router = useRouter();
@@ -71,14 +53,6 @@ export default function EntryPage() {
   useEffect(() => {
     setIsMounted(true);
     audioManager.preloadSounds();
-
-    if (typeof screen.orientation?.lock === 'function') {
-      screen.orientation.lock('portrait-primary')
-        .then(() => console.log('Screen orientation locked to portrait.'))
-        .catch((error) => console.warn('Screen orientation lock failed.', error));
-    } else {
-      console.warn('Screen Orientation API not supported.');
-    }
 
     // Title Animation
     const titleChars = TARGET_TITLE.split('');
@@ -175,9 +149,9 @@ export default function EntryPage() {
         await audioManager.initAudio();
       }
       audioManager.stopSound('First_screen'); 
-      await requestFullScreen();
+      // Fullscreen request removed
     } catch (error) {
-      console.error("Failed to initialize/manage audio or fullscreen for game start:", error);
+      console.error("Failed to initialize/manage audio for game start:", error);
     }
     router.push('/play');
   }, [router]);

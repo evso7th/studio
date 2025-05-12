@@ -1,3 +1,4 @@
+
 // @ts-nocheck
 "use client";
 
@@ -23,26 +24,6 @@ import {
 } from "@/components/ui/alert-dialog";
 
 
-async function exitFullScreen() {
-  if (document.fullscreenElement) {
-    if (document.exitFullscreen) {
-      await document.exitFullscreen().catch(err => console.warn("Exit fullscreen failed:", err.message));
-      // @ts-ignore
-    } else if (document.mozCancelFullScreen) { // Firefox
-      // @ts-ignore
-      await document.mozCancelFullScreen().catch(err => console.warn("Exit fullscreen failed (Firefox):", err.message));
-      // @ts-ignore
-    } else if (document.webkitExitFullscreen) { // Chrome, Safari and Opera
-      // @ts-ignore
-      await document.webkitExitFullscreen().catch(err => console.warn("Exit fullscreen failed (WebKit):", err.message));
-      // @ts-ignore
-    } else if (document.msExitFullscreen) { // IE/Edge
-      // @ts-ignore
-      await document.msExitFullscreen().catch(err => console.warn("Exit fullscreen failed (MS):", err.message));
-    }
-  }
-}
-
 export default function PlayPage() {
   const { gameState, dispatch, gameTick } = useGameLogic();
   const gameAreaRef = useRef<HTMLDivElement>(null);
@@ -57,7 +38,6 @@ export default function PlayPage() {
   const [showDebugLevelComplete, setShowDebugLevelComplete] = useState(false);
   const [showExitConfirmation, setShowExitConfirmation] = useState(false);
   const [isGamePausedForDialog, setIsGamePausedForDialog] = useState(false);
-  const [extraBottomPadding, setExtraBottomPadding] = useState(0);
 
 
   useReactEffect(() => {
@@ -87,12 +67,14 @@ export default function PlayPage() {
     updateGameAreaSize();
     window.addEventListener('resize', updateGameAreaSize);
     
-    // Screen orientation lock logic moved to after user interaction (e.g., game start)
-    // to comply with browser security policies.
-
-    // Fullscreen request moved to after user interaction.
-    // requestGameFullScreen();
-
+    // Attempt to lock screen orientation to portrait when the game page loads
+    if (typeof screen.orientation?.lock === 'function') {
+      screen.orientation.lock('portrait-primary')
+        .then(() => console.log('Screen orientation locked to portrait.'))
+        .catch((error) => console.warn('Screen orientation lock failed.', error));
+    } else {
+      console.warn('Screen Orientation API not supported or permission denied.');
+    }
 
     return () => {
       window.removeEventListener('resize', updateGameAreaSize);
@@ -104,7 +86,7 @@ export default function PlayPage() {
       if (typeof screen.orientation?.unlock === 'function') {
         screen.orientation.unlock();
       }
-      exitFullScreen(); // Attempt to exit fullscreen when component unmounts
+      // Fullscreen exit removed
     };
   }, [updateGameAreaSize]);
 
@@ -237,14 +219,10 @@ export default function PlayPage() {
       }
     };
     
-    document.body.style.touchAction = 'none'; // Prevents default touch actions like scrolling or zooming.
+    document.body.style.touchAction = 'none'; 
     document.body.addEventListener('touchmove', preventZoom, { passive: false });
 
-    const ua = navigator.userAgent;
-    if (ua.includes("YandexBrowser") || ua === "Mozilla/5.0 (Linux; arm_64; Android 15; SM-G965F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.7103.87 YaBrowser/25.4.1.100 Mobile Safari/537.36") {
-      setExtraBottomPadding(32);
-    }
-
+    // Removed user-agent check for Yandex Browser
 
     return () => {
       document.body.removeEventListener('touchmove', preventZoom);
@@ -263,7 +241,7 @@ export default function PlayPage() {
     
     setShowExitConfirmation(false);
     setIsGamePausedForDialog(false);
-    await exitFullScreen();
+    // Fullscreen exit removed
 
     setTimeout(() => {
       router.push('/'); 
@@ -350,7 +328,7 @@ export default function PlayPage() {
       className="h-screen w-screen flex flex-col overflow-hidden select-none"
       style={{
         backgroundColor: 'hsl(var(--background))',
-        paddingBottom: `calc(env(safe-area-inset-bottom, 0px) + ${48 + extraBottomPadding}px)`, 
+        paddingBottom: `env(safe-area-inset-bottom, 0px)`, // Removed extraBottomPadding calculation
         boxSizing: 'border-box',
       }}
       aria-label="Главное окно игры"
