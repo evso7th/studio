@@ -1,3 +1,4 @@
+
 // @ts-nocheck
 "use client";
 
@@ -9,7 +10,7 @@ interface SoundConfig {
 
 // Define a type for audio elements that might have our custom handler
 interface ExtendedHTMLAudioElement extends HTMLAudioElement {
-  _loopHandler?: () => void;
+  // No custom handler needed for this approach, but keeping for potential future use
 }
 
 const soundEffects: Record<string, SoundConfig> = {
@@ -40,19 +41,17 @@ const preloadSounds = () => {
       try {
         const config = soundEffects[name];
         const audio = new Audio(config.src) as ExtendedHTMLAudioElement;
-        audio.loop = config.loop || false; // Keep native loop attribute
+        audio.loop = false; // Disable native loop, we'll handle it manually for seamlessness
         audio.volume = config.volume !== undefined ? config.volume : 1.0;
-        audio.preload = 'auto';
+        audio.preload = 'auto'; // Ensure entire audio is buffered
         audioElements[name] = audio;
 
-        // Add custom loop handler for sounds marked with loop: true
-        // This is an attempt to make looping smoother if native 'loop' has gaps
+        // Custom loop handler for sounds marked with loop: true
         if (config.loop) {
-          audio._loopHandler = function(this: ExtendedHTMLAudioElement) {
+          audio.addEventListener('ended', function(this: ExtendedHTMLAudioElement) {
             this.currentTime = 0;
             this.play().catch(e => console.warn(`[AudioManager] Custom loop restart for ${name} failed:`, e.name, e.message));
-          };
-          audio.addEventListener('ended', audio._loopHandler);
+          });
         }
 
       } catch (error) {
@@ -104,6 +103,9 @@ const initAudio = (): Promise<void> => {
         resolve(); 
       });
     } else {
+      // For browsers that don't return a promise from play() or if it's not supported.
+      // We assume initialization if no immediate error is thrown, or rely on user interaction.
+      isAudioContextInitialized = true; // Tentatively set to true, subsequent plays will confirm
       resolve();
     }
   });
@@ -129,17 +131,17 @@ const playSound = async (name: string) => {
   const audio = audioElements[name];
   if (audio) {
     // If it's a non-looping sound and already playing, restart it.
-    // If it's a looping sound and already playing, let the loop attribute or our 'ended' handler manage it.
+    // If it's a looping sound (handled by 'ended' event) and already playing, let it be.
     // If it's paused, always reset currentTime and play.
-    if (!audio.paused && !audio.loop) {
+    const isLoopingSound = soundEffects[name]?.loop || false;
+
+    if (!audio.paused && !isLoopingSound) { // Non-looping sound currently playing
       audio.pause();
       audio.currentTime = 0;
-    } else if (audio.paused) {
+    } else if (audio.paused) { // Sound is paused (looping or not)
       audio.currentTime = 0;
     }
     
-    // For a looping sound that's already playing, calling play() again is usually a no-op
-    // or might restart it, depending on browser. The primary looping is handled by `loop` attr or `ended` event.
     const playPromise = audio.play();
     if (playPromise !== undefined) {
       playPromise.catch(error => {
@@ -162,9 +164,6 @@ const stopSound = (name: string) => {
   if (audio) {
     audio.pause();
     audio.currentTime = 0;
-    // Note: The custom _loopHandler remains attached. If playSound is called again,
-    // and it's a looping sound, the custom handler will still be active.
-    // This is generally fine as pausing prevents 'ended' from firing.
   }
 };
 
