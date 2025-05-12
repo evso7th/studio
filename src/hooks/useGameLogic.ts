@@ -3,11 +3,11 @@
 "use client";
 
 import type { Reducer} from 'react';
-import { useReducer, useCallback, useEffect, useRef } from 'react'; 
+import { useReducer, useCallback, useEffect as useReactEffect, useRef } from 'react'; 
 import type { GameState, GameAction, HeroType, PlatformType, CoinType, Size } from '@/lib/gameTypes'; 
 import { 
     HERO_APPEARANCE_DURATION_MS, 
-    PLATFORM_GROUND_Y_FROM_BOTTOM, 
+    PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET, 
     PLATFORM_GROUND_THICKNESS, 
     HERO_WIDTH,
     HERO_HEIGHT, 
@@ -58,7 +58,9 @@ const MAX_FALL_SPEED = -8;
 const JUMP_STRENGTH = (-GRAVITY_ACCELERATION + Math.sqrt(GRAVITY_ACCELERATION * GRAVITY_ACCELERATION + 8 * GRAVITY_ACCELERATION * TARGET_JUMP_HEIGHT_PX)) / 2;
 
 const calculatePlatformGroundY = (gameAreaHeight: number) => {
-  return PLATFORM_GROUND_Y_FROM_BOTTOM; 
+  // PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET is the distance from the *bottom* of the game area to the *bottom* of the ground platform.
+  // So, the Y coordinate (which is from bottom of screen) is simply this offset.
+  return PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET;
 };
 
 const initialHeroState: HeroType = {
@@ -100,10 +102,10 @@ const getLevelPlatforms = (gameAreaWidth: number, gameAreaHeight: number, level:
     platform2ImageSrc = PLATFORM_ICE_SRC;
   } else if (level === 3) {
     platformSpeed = 0.75; 
-    isPlatform1Slippery = false; // Platform 1 is stone, not slippery
-    isPlatform2Slippery = true; // Only platform 2 is slippery (ice or similar effect on stone)
+    isPlatform1Slippery = false; 
+    isPlatform2Slippery = true; 
     platform1ImageSrc = PLATFORM_STONE_SRC;
-    platform2ImageSrc = PLATFORM_STONE_SRC; // Level 3 platforms are stone
+    platform2ImageSrc = PLATFORM_STONE_SRC; 
   }
 
 
@@ -112,7 +114,7 @@ const getLevelPlatforms = (gameAreaWidth: number, gameAreaHeight: number, level:
       id: 'platform_ground', x: -100, y: groundPlatformY, 
       width: gameAreaWidth + 200, height: PLATFORM_GROUND_THICKNESS, 
       isMoving: false, speed: 0, direction: 1, moveAxis: 'x',
-      imageSrc: PLATFORM_GRASS_SRC, // Ground is always grass for now
+      imageSrc: PLATFORM_GRASS_SRC, 
     },
     {
       id: 'platform1', 
@@ -179,7 +181,7 @@ const getLevelEnemies = (gameAreaWidth: number, gameAreaHeight: number, level: n
       id: `enemy_level3_0`,
       enemyId: 'enemy1',
       x: gameAreaWidth / 3 - ENEMY_WIDTH / 2, 
-      y: enemyYPositionL2, // Same Y as level 2 enemy 1
+      y: enemyYPositionL2, 
       width: ENEMY_WIDTH,
       height: ENEMY_HEIGHT,
       imageSrc: ENEMY_IMAGE_SRC_LVL3_ENEMY1,
@@ -974,7 +976,7 @@ export function useGameLogic() {
     dispatch(action);
   }, []); 
   
-  useEffect(() => {
+  useReactEffect(() => {
     if (gameState.gameArea.width > 0 && gameState.gameArea.height > 0 && !gameState.isGameInitialized) {
       dispatch({ 
         type: 'UPDATE_GAME_AREA', 
@@ -990,3 +992,4 @@ export function useGameLogic() {
 
   return { gameState, dispatch: handleGameAction, gameTick };
 }
+

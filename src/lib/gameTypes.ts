@@ -97,8 +97,12 @@ export const COIN_EXPLOSION_DURATION_MS = 500;
 export const COIN_SPAWN_EXPLOSION_DURATION_MS = 300; 
 export const COIN_SPAWN_DELAY_MS = 500; 
 
-export const PLATFORM_GROUND_Y_FROM_BOTTOM = 64; // Y-coordinate of the ground platform from the bottom of gameAreaRef
+
 export const PLATFORM_GROUND_THICKNESS = 1; 
+// This offset defines the Y-coordinate of the BOTTOM of the ground platform, 
+// relative to the BOTTOM of the game's drawable area (where y=0 is the bottom).
+export const PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET = 64;
+
 
 export const HERO_WIDTH = 30;
 export const HERO_HEIGHT = 80; 
@@ -146,7 +150,7 @@ export const ARMOR_DURATION_LEVEL_3 = 12000;
 export const ARMOR_COOLDOWN_LEVEL_3 = 10000; 
 
 // Platform image sources
-export const PLATFORM_GRASS_SRC = "/assets/images/PlatformGrass.png";
+export const PLATFORM_GRASS_SRC = "https://neurostaffing.online/wp-content/uploads/2025/05/PlatformGrassShort.png";
 export const PLATFORM_ICE_SRC = "/assets/images/platform_ice.png";
 export const PLATFORM_STONE_SRC = "/assets/images/platform_stone.png";
 
@@ -195,27 +199,25 @@ export type GameAction =
 
 export const heroAnimationsConfig: HeroAnimations = {
   idle: {
-    src: "/assets/images/HeroJeans3.png", 
+    src: "https://neurostaffing.online/wp-content/uploads/2025/05/HeroJeans3.png", 
     frames: 1,
     fps: 1,
     width: HERO_WIDTH, 
     height: HERO_HEIGHT, 
   },
   run: {
-    src: "/assets/images/HeroJeans3.png", 
+    src: "https://neurostaffing.online/wp-content/uploads/2025/05/HeroJeans3.png", 
     frames: 1, 
     fps: 10, 
     width: HERO_WIDTH, 
     height: HERO_HEIGHT,
   },
   jump: {
-    src: "/assets/images/HeroJeans3.png", 
+    src: "https://neurostaffing.online/wp-content/uploads/2025/05/HeroJeans3.png", 
     frames: 1, 
     fps: 1,
     width: HERO_WIDTH,
     height: HERO_HEIGHT,
   },
 };
-
-
 
