@@ -31,6 +31,7 @@ const soundEffects: Record<string, SoundConfig> = {
 const audioElements: Record<string, ExtendedHTMLAudioElement> = {};
 let isAudioContextInitialized = false;
 let soundsPreloaded = false;
+let currentLoopingSound: string | null = null; // Tracks the currently playing looping sound
 
 const preloadSounds = () => {
   if (soundsPreloaded) return;
@@ -48,8 +49,11 @@ const preloadSounds = () => {
         // Custom loop handler for sounds marked with loop: true
         if (config.loop) {
           audio.addEventListener('ended', function(this: ExtendedHTMLAudioElement) {
-            this.currentTime = 0;
-            this.play().catch(e => console.warn(`[AudioManager] Custom loop restart for ${name} failed:`, e.name, e.message));
+            // Only restart if it's still the designated currentLoopingSound
+            if (currentLoopingSound === name) {
+              this.currentTime = 0;
+              this.play().catch(e => console.warn(`[AudioManager] Custom loop restart for ${name} failed:`, e.name, e.message));
+            }
           });
         }
 
@@ -124,17 +128,22 @@ const playSound = async (name: string) => {
 
   const audio = audioElements[name];
   if (audio) {
-    const isLoopingSound = soundEffects[name]?.loop || false;
+    const soundConfig = soundEffects[name];
+    const isLoopingSound = soundConfig?.loop || false;
 
-    // If it's a looping sound and already playing, let the 'ended' event handle the loop.
-    // Don't call play() again here as it might cause a hiccup.
-    if (isLoopingSound && !audio.paused) {
-      return;
+    if (isLoopingSound) {
+      // If this sound is already the current looping sound and is playing, do nothing.
+      if (currentLoopingSound === name && !audio.paused) {
+        return;
+      }
+      // If another looping sound is playing, stop it.
+      if (currentLoopingSound && currentLoopingSound !== name && audioElements[currentLoopingSound]) {
+        stopSound(currentLoopingSound); // This will set currentLoopingSound to null
+      }
+      currentLoopingSound = name; // Set the new looping sound
     }
-
-    // For non-looping sounds that are playing, or any sound that is paused/stopped,
-    // reset its time before playing.
-    // If it's a looping sound that was paused, this will restart it from the beginning.
+    
+    // For non-looping sounds, or if the looping sound was stopped/changed, reset and play.
     audio.currentTime = 0;
     
     const playPromise = audio.play();
@@ -159,14 +168,22 @@ const stopSound = (name: string) => {
   if (audio) {
     audio.pause();
     audio.currentTime = 0;
+    if (currentLoopingSound === name) {
+      currentLoopingSound = null;
+    }
   }
 };
 
 const stopAllSounds = () => {
   for (const name in audioElements) {
     if (name === 'dummy_sound_for_init') continue; 
-    stopSound(name);
+    const audio = audioElements[name];
+    if (audio) {
+      audio.pause();
+      audio.currentTime = 0;
+    }
   }
+  currentLoopingSound = null;
 };
 
 const setVolume = (name: string, volume: number) => {
@@ -174,6 +191,14 @@ const setVolume = (name: string, volume: number) => {
   if (audio) {
     audio.volume = Math.max(0, Math.min(1, volume));
   }
+};
+
+const getCurrentPlayingLoop = (): string | null => {
+  // Check if the currentLoopingSound is actually playing
+  if (currentLoopingSound && audioElements[currentLoopingSound] && !audioElements[currentLoopingSound].paused) {
+    return currentLoopingSound;
+  }
+  return null; // Return null if no loop is playing or the tracked one isn't active
 };
 
 export const audioManager = {
@@ -184,4 +209,5 @@ export const audioManager = {
   stopAllSounds,
   setVolume,
   isInitialized: () => isAudioContextInitialized,
+  getCurrentPlayingLoop,
 };

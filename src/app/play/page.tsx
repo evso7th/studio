@@ -42,7 +42,8 @@ export default function PlayPage() {
   }, []);
 
   const isYandexBrowser = userAgentString.includes('YaBrowser');
-  const bottomPadding = isYandexBrowser ? '80px' : '48px'; // 32px + 48px for Yandex
+  // Adjusted padding calculation to ensure it's always a string with 'px'
+  const bottomPadding = `${64 + (isYandexBrowser ? 32 : 0)}px`;
 
 
   useReactEffect(() => {
@@ -56,7 +57,7 @@ export default function PlayPage() {
     // dispatch({ type: 'SET_DEBUG_LEVEL', payload: 1 });
 
     // To go to a specific level:
-    // dispatch({ type: 'SET_DEBUG_LEVEL', payload: 1 });
+    // dispatch({ type: 'SET_DEBUG_LEVEL', payload: 1 }); // Ensure this is used if page is reloaded on /play
   }, [dispatch]);
 
 
@@ -87,23 +88,25 @@ export default function PlayPage() {
 
   useReactEffect(() => {
     if (gameState.isGameInitialized) {
-      audioManager.stopAllSounds();
-      audioManager.playSound('New_level');
-      const levelMusicMap = {
+      audioManager.stopAllSounds(); // Stop all sounds first to ensure clean transition
+      audioManager.playSound('New_level'); // Play new level sound
+
+      const levelMusicMap: Record<number, string> = {
         1: 'Level1',
         2: 'Level2',
         3: 'Level3',
       };
       const musicToPlay = levelMusicMap[gameState.currentLevel];
+
       if (musicToPlay) {
-        const currentAudio = audioManager.getCurrentPlayingLoop();
-        if (currentAudio !== musicToPlay) { // Only play if different music or nothing is playing
-          setTimeout(() => {
-            if(gameState.currentLevel === parseInt(musicToPlay.replace('Level',''))) {
-               audioManager.playSound(musicToPlay);
-            }
-          }, 500);
-        }
+        // No need to check currentAudio here if stopAllSounds is effective
+        // The playSound in audioManager will handle not restarting if it's already the target looping sound
+        setTimeout(() => {
+          // Check currentLevel again inside setTimeout to ensure it hasn't changed by another action
+           if (gameState.isGameInitialized && gameState.currentLevel === parseInt(musicToPlay.replace('Level',''))) {
+            audioManager.playSound(musicToPlay);
+          }
+        }, 500); // Delay to allow New_level sound to play a bit
       }
     }
   }, [gameState.currentLevel, gameState.isGameInitialized]);
@@ -222,10 +225,10 @@ export default function PlayPage() {
 
   const getLevelBackground = (level: number): string => {
     switch (level) {
-      case 1: return `url(${BACKGROUND_LEVEL1_SRC})`;
-      case 2: return `url(${BACKGROUND_LEVEL2_SRC})`;
-      case 3: return `url(${BACKGROUND_LEVEL3_SRC})`;
-      default: return `url(${BACKGROUND_LEVEL1_SRC})`;
+      case 1: return BACKGROUND_LEVEL1_SRC;
+      case 2: return BACKGROUND_LEVEL2_SRC;
+      case 3: return BACKGROUND_LEVEL3_SRC;
+      default: return BACKGROUND_LEVEL1_SRC;
     }
   };
 
@@ -306,14 +309,11 @@ export default function PlayPage() {
 
       <div
         ref={gameAreaRef}
-        className="relative w-full overflow-hidden flex-grow"
+        className="relative w-full overflow-hidden flex-grow bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage: getLevelBackground(gameState.currentLevel),
-          backgroundSize: 'cover', 
-          backgroundPosition: 'center center', 
-          backgroundRepeat: 'no-repeat',
+          backgroundImage: `url(${getLevelBackground(gameState.currentLevel)})`,
           perspective: '1000px',
-          height: '90vh', // Game area takes 90% of viewport height
+          height: 'calc(100% - 10vh)', // Game area takes 90% of viewport height (100% - 10vh for control panel)
         }}
         data-ai-hint="abstract pattern"
       >
@@ -351,12 +351,9 @@ export default function PlayPage() {
         <AlertDialogContent>
           <AlertDialogHeader className="items-center">
             <div 
-              className="relative w-24 h-24 mb-4"
+              className="relative w-24 h-24 mb-4 bg-contain bg-no-repeat bg-center"
               style={{
                 backgroundImage: 'url(/assets/images/SimplyMan.png)',
-                backgroundSize: 'contain',
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'center',
               }}
               role="img"
               aria-label="Simply Man"
@@ -382,4 +379,3 @@ export default function PlayPage() {
     </div>
   );
 }
-
