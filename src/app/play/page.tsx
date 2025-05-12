@@ -240,8 +240,8 @@ export default function PlayPage() {
     document.body.style.touchAction = 'none'; // Prevents default touch actions like scrolling or zooming.
     document.body.addEventListener('touchmove', preventZoom, { passive: false });
 
-    // Check for Yandex Browser
-    if (navigator.userAgent.includes("YandexBrowser")) {
+    const ua = navigator.userAgent;
+    if (ua.includes("YandexBrowser") || ua === "Mozilla/5.0 (Linux; arm_64; Android 15; SM-G965F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.7103.87 YaBrowser/25.4.1.100 Mobile Safari/537.36") {
       setExtraBottomPadding(32);
     }
 
@@ -445,3 +445,4 @@ export default function PlayPage() {
     </div>
   );
 }
+
