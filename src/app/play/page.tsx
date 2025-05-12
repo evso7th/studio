@@ -57,6 +57,7 @@ export default function PlayPage() {
   const [showDebugLevelComplete, setShowDebugLevelComplete] = useState(false);
   const [showExitConfirmation, setShowExitConfirmation] = useState(false);
   const [isGamePausedForDialog, setIsGamePausedForDialog] = useState(false);
+  const [extraBottomPadding, setExtraBottomPadding] = useState(0);
 
 
   useReactEffect(() => {
@@ -239,6 +240,11 @@ export default function PlayPage() {
     document.body.style.touchAction = 'none'; // Prevents default touch actions like scrolling or zooming.
     document.body.addEventListener('touchmove', preventZoom, { passive: false });
 
+    // Check for Yandex Browser
+    if (navigator.userAgent.includes("YandexBrowser")) {
+      setExtraBottomPadding(32);
+    }
+
 
     return () => {
       document.body.removeEventListener('touchmove', preventZoom);
@@ -344,7 +350,7 @@ export default function PlayPage() {
       className="h-screen w-screen flex flex-col overflow-hidden select-none"
       style={{
         backgroundColor: 'hsl(var(--background))',
-        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 48px)', // Added 48px bottom padding
+        paddingBottom: `calc(env(safe-area-inset-bottom, 0px) + ${48 + extraBottomPadding}px)`, 
         boxSizing: 'border-box',
       }}
       aria-label="Главное окно игры"
@@ -373,7 +379,7 @@ export default function PlayPage() {
           backgroundPosition: getBackgroundPosition(gameState.currentLevel, parallaxBgX),
           backgroundRepeat: 'no-repeat',
           perspective: '1000px',
-          // Game area height will be 90% of the (screen height - bottom padding)
+          height: '90vh', // Game area takes 90% of viewport height
         }}
         data-ai-hint="abstract pattern"
       >
@@ -428,7 +434,7 @@ export default function PlayPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <div className="w-full shrink-0" style={{ height: '10vh' }}> {/* Control panel takes 10% of the (screen height - bottom padding) */}
+      <div className="w-full shrink-0" style={{ height: '10vh' }}> {/* Control panel takes 10% of viewport height */}
         <ControlPanel
           dispatch={dispatch}
           onExit={handleOpenExitDialog}
