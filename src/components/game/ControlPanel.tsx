@@ -25,7 +25,6 @@ export function ControlPanel({ dispatch, onExit, disabled = false, currentLevel 
   };
 
   const handleMoveStop = (type: 'MOVE_LEFT_STOP' | 'MOVE_RIGHT_STOP') => {
-    // Always allow move stop to prevent stuck state if controls become disabled while key/button is pressed
     dispatch({ type });
   };
 
@@ -49,7 +48,7 @@ export function ControlPanel({ dispatch, onExit, disabled = false, currentLevel 
 
   return (
     <div
-      className="fixed bottom-0 left-0 right-0 h-20 shadow-lg p-2 flex items-center justify-around z-50 touch-manipulation"
+      className="h-full w-full shadow-lg p-2 flex items-center justify-around z-50 touch-manipulation"
       style={{ 
         backgroundImage: getPanelBackground(currentLevel),
         backgroundSize: 'cover',

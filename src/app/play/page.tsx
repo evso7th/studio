@@ -224,11 +224,9 @@ export default function PlayPage() {
       }
     };
     
-    // Ensure touch-action is set on body to prevent default browser touch behaviors.
     document.body.style.touchAction = 'none';
     document.body.addEventListener('touchmove', preventZoom, { passive: false });
 
-    // Lock screen orientation
     if (typeof screen.orientation?.lock === 'function') {
       screen.orientation.lock('portrait-primary')
         .then(() => console.log('Screen orientation locked to portrait.'))
@@ -239,7 +237,7 @@ export default function PlayPage() {
 
     return () => {
       document.body.removeEventListener('touchmove', preventZoom);
-      document.body.style.touchAction = ''; // Reset touch-action
+      document.body.style.touchAction = ''; 
     };
   }, []);
 
@@ -249,17 +247,15 @@ export default function PlayPage() {
   };
 
   const handleConfirmExit = () => {
-    audioManager.stopAllSounds(); // Stop other sounds first
-    audioManager.playSound('exit'); // Play the exit sound
+    audioManager.stopAllSounds(); 
+    audioManager.playSound('exit'); 
     
     setShowExitConfirmation(false);
     setIsGamePausedForDialog(false);
 
-    // Delay navigation to allow the 'exit' sound to play
     setTimeout(() => {
       router.push('/'); 
-      // The unmount effect of PlayPage will call stopAllSounds again, which is fine.
-    }, 500); // Adjust delay if needed (e.g., for longer sounds)
+    }, 500); 
   };
 
   const handleCancelExit = () => {
@@ -359,7 +355,7 @@ export default function PlayPage() {
 
       <div
         ref={gameAreaRef}
-        className="flex-grow relative w-full overflow-hidden pt-16 pb-20"
+        className="relative w-full overflow-hidden pt-16 h-[90vh]"
         style={{
           backgroundImage: getLevelBackground(gameState.currentLevel),
           backgroundSize: 'cover',
@@ -394,10 +390,10 @@ export default function PlayPage() {
       </div>
       
       <AlertDialog open={showExitConfirmation} onOpenChange={(isOpen) => {
-        if (!isOpen && !isGamePausedForDialog) { // Check if dialog is being closed by means other than buttons
-             handleCancelExit(); // Treat as cancel if closed externally
-        } else if (isOpen && !showExitConfirmation) { // Ensure it's being opened
-            setShowExitConfirmation(true); // Sync state if opened externally
+        if (!isOpen && !isGamePausedForDialog) { 
+             handleCancelExit(); 
+        } else if (isOpen && !showExitConfirmation) { 
+            setShowExitConfirmation(true); 
             setIsGamePausedForDialog(true);
         }
       }}>
@@ -421,13 +417,15 @@ export default function PlayPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-
-      <ControlPanel
-        dispatch={dispatch}
-        onExit={handleOpenExitDialog}
-        disabled={gameState.heroAppearance === 'appearing' || gameState.levelCompleteScreenActive || gameState.gameLost || gameState.gameOver || showExitConfirmation}
-        currentLevel={gameState.currentLevel}
-      />
+      <div className="h-[10vh] w-full">
+        <ControlPanel
+          dispatch={dispatch}
+          onExit={handleOpenExitDialog}
+          disabled={gameState.heroAppearance === 'appearing' || gameState.levelCompleteScreenActive || gameState.gameLost || gameState.gameOver || showExitConfirmation}
+          currentLevel={gameState.currentLevel}
+        />
+      </div>
     </div>
   );
 }
+

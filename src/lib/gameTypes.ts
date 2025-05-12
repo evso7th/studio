@@ -99,9 +99,7 @@ export const COIN_SPAWN_DELAY_MS = 500;
 
 
 export const PLATFORM_GROUND_THICKNESS = 1; 
-// This offset defines the Y-coordinate of the BOTTOM of the ground platform, 
-// relative to the BOTTOM of the game's drawable area (where y=0 is the bottom).
-export const PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET = 64;
+export const PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET = 0;
 
 
 export const HERO_WIDTH = 30;
