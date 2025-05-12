@@ -108,10 +108,20 @@ export const COIN_SIZE = 20;
 export const PLATFORM_DEFAULT_WIDTH = 130; 
 export const PLATFORM_NON_GROUND_HEIGHT = 24;
 
-export const TARGET_JUMP_HEIGHT_PX = 180; 
+export const TARGET_JUMP_HEIGHT_PX = 250; // Updated from 180
 
-export const PLATFORM1_Y_OFFSET = 136; 
-export const PLATFORM2_Y_OFFSET = 275; 
+// Assuming Platform 1 is the lower moving platform and Platform 2 is the upper moving platform.
+// Ground offset = PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET + PLATFORM_GROUND_THICKNESS = 0 + 1 = 1
+// Lower platform (platform1) top surface at Y=200px:
+// PLATFORM1_Y_OFFSET = (desired_top_Y - PLATFORM_NON_GROUND_HEIGHT) - ground_offset
+// PLATFORM1_Y_OFFSET = (200 - 24) - 1 = 176 - 1 = 175
+export const PLATFORM1_Y_OFFSET = 175; // Was 136. New: (200-24)-1 = 175
+
+// Upper platform (platform2) top surface at Y=400px:
+// PLATFORM2_Y_OFFSET = (desired_top_Y - PLATFORM_NON_GROUND_HEIGHT) - ground_offset
+// PLATFORM2_Y_OFFSET = (400 - 24) - 1 = 376 - 1 = 375
+export const PLATFORM2_Y_OFFSET = 375; // Was 275. New: (400-24)-1 = 375
+
 export const ENEMY2_LEVEL3_Y_OFFSET_FROM_PLATFORM2 = 50;
 
 
@@ -126,6 +136,9 @@ export const MIN_DISTANCE_BETWEEN_PAIR_COINS_X_FACTOR = 0.25;
 export const MIN_DISTANCE_BETWEEN_PAIR_COINS_Y_FACTOR = 0.15; 
 
 
+// COIN_ZONE_TOP_OFFSET is the distance from the top of the game area to the top of the coin spawn zone.
+// If gameArea.height = 650 and COIN_ZONE_TOP_OFFSET = 50, then top of coin spawn area (for top of coin) is 650 - 50 = 600px from bottom.
+// Keeping this at 50 to align with "Верхняя граница зоны монеток 600 пикс" for typical screen heights.
 export const COIN_ZONE_TOP_OFFSET = 50; 
 
 export const HERO_BASE_SPEED = 1.25; 
@@ -148,7 +161,7 @@ export const ARMOR_DURATION_LEVEL_3 = 12000;
 export const ARMOR_COOLDOWN_LEVEL_3 = 10000; 
 
 // Platform image sources
-export const PLATFORM_GRASS_SRC = "https://neurostaffing.online/wp-content/uploads/2025/05/PlatformGrassShort.png";
+export const PLATFORM_GRASS_SRC = "/assets/images/PlatformGrassShort.png";
 export const PLATFORM_ICE_SRC = "/assets/images/platform_ice.png";
 export const PLATFORM_STONE_SRC = "/assets/images/platform_stone.png";
 
@@ -197,25 +210,24 @@ export type GameAction =
 
 export const heroAnimationsConfig: HeroAnimations = {
   idle: {
-    src: "https://neurostaffing.online/wp-content/uploads/2025/05/HeroJeans3.png", 
+    src: "/assets/images/HeroJeans3.png", 
     frames: 1,
     fps: 1,
     width: HERO_WIDTH, 
     height: HERO_HEIGHT, 
   },
   run: {
-    src: "https://neurostaffing.online/wp-content/uploads/2025/05/HeroJeans3.png", 
+    src: "/assets/images/HeroJeans3.png", 
     frames: 1, 
     fps: 10, 
     width: HERO_WIDTH, 
     height: HERO_HEIGHT,
   },
   jump: {
-    src: "https://neurostaffing.online/wp-content/uploads/2025/05/HeroJeans3.png", 
+    src: "/assets/images/HeroJeans3.png", 
     frames: 1, 
     fps: 1,
     width: HERO_WIDTH,
     height: HERO_HEIGHT,
   },
 };
-
