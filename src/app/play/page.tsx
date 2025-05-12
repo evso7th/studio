@@ -1,4 +1,3 @@
-
 // @ts-nocheck
 "use client";
 
@@ -24,6 +23,27 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+
+async function exitFullScreen() {
+  if (document.fullscreenElement) {
+    if (document.exitFullscreen) {
+      await document.exitFullscreen().catch(err => console.warn("Exit fullscreen failed:", err.message));
+      // @ts-ignore
+    } else if (document.mozCancelFullScreen) { // Firefox
+      // @ts-ignore
+      await document.mozCancelFullScreen().catch(err => console.warn("Exit fullscreen failed (Firefox):", err.message));
+      // @ts-ignore
+    } else if (document.webkitExitFullscreen) { // Chrome, Safari and Opera
+      // @ts-ignore
+      await document.webkitExitFullscreen().catch(err => console.warn("Exit fullscreen failed (WebKit):", err.message));
+      // @ts-ignore
+    } else if (document.msExitFullscreen) { // IE/Edge
+      // @ts-ignore
+      await document.msExitFullscreen().catch(err => console.warn("Exit fullscreen failed (MS):", err.message));
+    }
+  }
+}
+
 export default function PlayPage() {
   const { gameState, dispatch, gameTick } = useGameLogic();
   const gameAreaRef = useRef<HTMLDivElement>(null);
@@ -42,7 +62,7 @@ export default function PlayPage() {
 
   useReactEffect(() => {
     // To debug final screen:
-    // dispatch({ type: 'SET_DEBUG_LEVEL', payload: 3 }); // Ensure current level is 3 for final screen logic
+    // dispatch({ type: 'SET_DEBUG_LEVEL', payload: 3 }); 
     // setShowDebugFinalScreen(true);
 
     // To debug level complete screen:
@@ -50,28 +70,16 @@ export default function PlayPage() {
     // setShowDebugLevelComplete(true); 
     // dispatch({ type: 'SET_DEBUG_LEVEL', payload: 1 }); 
 
-    // To go to a specific level (e.g., level 3 for debugging):
-    // dispatch({ type: 'SET_DEBUG_LEVEL', payload: 1 }); // Default to level 1
-    // Or to go to level 2 directly:
-    // dispatch({ type: 'SET_DEBUG_LEVEL', payload: 2 });
-    // Or to go to level 3 directly:
-    // dispatch({ type: 'SET_DEBUG_LEVEL', payload: 3 });
-
-
+    // To go to a specific level:
+    // dispatch({ type: 'SET_DEBUG_LEVEL', payload: 1 }); 
   }, [dispatch]);
 
 
   const updateGameAreaSize = useCallback(() => {
     if (gameAreaRef.current) {
       const { clientWidth, clientHeight } = gameAreaRef.current;
-      const style = window.getComputedStyle(gameAreaRef.current);
-      const paddingTop = parseFloat(style.paddingTop) || 0;
-      const paddingBottom = parseFloat(style.paddingBottom) || 0;
-
-      const effectiveWidth = clientWidth;
-      const effectiveHeight = clientHeight - paddingTop - paddingBottom;
-
-      dispatch({ type: 'UPDATE_GAME_AREA', payload: { width: effectiveWidth, height: effectiveHeight, paddingTop: paddingTop } });
+      
+      dispatch({ type: 'UPDATE_GAME_AREA', payload: { width: clientWidth, height: clientHeight, paddingTop: 0 } });
     }
   }, [dispatch]);
 
@@ -92,6 +100,11 @@ export default function PlayPage() {
       if (animationFrameId.current) {
         cancelAnimationFrame(animationFrameId.current);
       }
+       // Attempt to unlock orientation when leaving the game page
+      if (typeof screen.orientation?.unlock === 'function') {
+        screen.orientation.unlock();
+      }
+      exitFullScreen(); // Attempt to exit fullscreen when component unmounts
     };
   }, [updateGameAreaSize]);
 
@@ -246,16 +259,17 @@ export default function PlayPage() {
     setShowExitConfirmation(true);
   };
 
-  const handleConfirmExit = () => {
+  const handleConfirmExit = async () => {
     audioManager.stopAllSounds(); 
     audioManager.playSound('exit'); 
     
     setShowExitConfirmation(false);
     setIsGamePausedForDialog(false);
+    await exitFullScreen();
 
     setTimeout(() => {
       router.push('/'); 
-    }, 500); 
+    }, 300); 
   };
 
   const handleCancelExit = () => {
@@ -274,10 +288,13 @@ export default function PlayPage() {
   };
 
   const getBackgroundPosition = (level: number, pX: number): string => {
-    if (level === 3) {
-      return `calc(50% + ${pX + 200}px) 0%`; 
+    let xOffset = pX;
+    if (level === 2) { // level2_bkg.png is wider
+      xOffset = pX * 0.8; // Adjust parallax factor if needed for this specific background
+    } else if (level === 3) { // level3_bkg.png might be wider or need specific centering
+      xOffset = pX * 1.2 + 200; // Example adjustment for level 3
     }
-    return `calc(50% + ${pX}px) 0%`;
+    return `calc(50% + ${xOffset}px) top`; // Changed to 'top' for consistent vertical alignment
   };
 
 
@@ -334,7 +351,7 @@ export default function PlayPage() {
     <div
       className="h-screen w-screen flex flex-col overflow-hidden select-none"
       style={{
-        backgroundColor: 'hsl(var(--background))',
+        backgroundColor: 'hsl(var(--background))', // Fallback color
       }}
       aria-label="Главное окно игры"
     >
@@ -355,13 +372,13 @@ export default function PlayPage() {
 
       <div
         ref={gameAreaRef}
-        className="relative w-full overflow-hidden pt-16 h-[90vh]"
+        className="relative w-full overflow-hidden flex-grow" // Use flex-grow for game area
         style={{
           backgroundImage: getLevelBackground(gameState.currentLevel),
           backgroundSize: 'cover',
           backgroundPosition: getBackgroundPosition(gameState.currentLevel, parallaxBgX),
           backgroundRepeat: 'no-repeat',
-          backgroundColor: 'hsl(var(--game-bg))',
+          // backgroundColor: 'hsl(var(--game-bg))', // This might be overridden by backgroundImage
           perspective: '1000px',
         }}
         data-ai-hint="abstract pattern"
@@ -390,7 +407,7 @@ export default function PlayPage() {
       </div>
       
       <AlertDialog open={showExitConfirmation} onOpenChange={(isOpen) => {
-        if (!isOpen && !isGamePausedForDialog) { 
+        if (!isOpen && isGamePausedForDialog) {  // Check if dialog was paused by us
              handleCancelExit(); 
         } else if (isOpen && !showExitConfirmation) { 
             setShowExitConfirmation(true); 
@@ -417,7 +434,7 @@ export default function PlayPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <div className="h-[10vh] w-full">
+      <div className="h-[10vh] w-full shrink-0"> {/* Ensure control panel doesn't shrink */}
         <ControlPanel
           dispatch={dispatch}
           onExit={handleOpenExitDialog}
@@ -428,4 +445,3 @@ export default function PlayPage() {
     </div>
   );
 }
-

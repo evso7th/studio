@@ -1,4 +1,3 @@
-
 "use client";
 
 import Image from 'next/image';
@@ -40,6 +39,26 @@ const PARTICLES_PER_BACKGROUND_FIREWORK = 15;
 const FIREWORK_REGENERATION_INTERVAL = 4000;
 
 const TARGET_TITLE = "IPO Mad Racing";
+
+async function requestFullScreen() {
+  const element = document.documentElement;
+  if (element.requestFullscreen) {
+    await element.requestFullscreen().catch(err => console.warn("Fullscreen request failed:", err.message));
+    // @ts-ignore
+  } else if (element.mozRequestFullScreen) { // Firefox
+    // @ts-ignore
+    await element.mozRequestFullScreen().catch(err => console.warn("Fullscreen request failed (Firefox):", err.message));
+    // @ts-ignore
+  } else if (element.webkitRequestFullscreen) { // Chrome, Safari and Opera
+    // @ts-ignore
+    await element.webkitRequestFullscreen().catch(err => console.warn("Fullscreen request failed (WebKit):", err.message));
+    // @ts-ignore
+  } else if (element.msRequestFullscreen) { // IE/Edge
+    // @ts-ignore
+    await element.msRequestFullscreen().catch(err => console.warn("Fullscreen request failed (MS):", err.message));
+  }
+}
+
 
 export default function EntryPage() {
   const router = useRouter();
@@ -126,31 +145,22 @@ export default function EntryPage() {
       clearInterval(fireworksIntervalId);
       clearTimeout(assetLoadingTimeout);
       audioManager.stopSound('First_screen'); // Ensure it stops on unmount
-      // It's generally good practice to unlock orientation when the component unmounts,
-      // but for a game that should always be portrait, this might not be necessary.
-      // if (typeof screen.orientation?.unlock === 'function') {
-      //   screen.orientation.unlock();
-      // }
     };
-  }, []); // Empty dependency array ensures this runs once on mount
+  }, []); 
 
-  // Effect to attempt playing initial sound after preloader is done
   useEffect(() => {
     if (!isLoadingAssets && isMounted) {
-      const playInitialSound = async () => { // Made async
+      const playInitialSound = async () => { 
         if (!audioManager.isInitialized()) {
           try {
-            await audioManager.initAudio(); // Explicitly await initialization
-            // console.log("EntryPage: Audio initialized after preloader.");
+            await audioManager.initAudio(); 
           } catch (error) {
             console.warn("EntryPage: Audio initialization failed after preloader.", error);
           }
         }
-        // Now attempt to play the sound. audioManager.playSound will also check/attempt init if still needed.
         audioManager.playSound('First_screen');
       };
 
-      // Slight delay after preloader hides
       const soundTimeout = setTimeout(playInitialSound, 100);
       return () => clearTimeout(soundTimeout);
     }
@@ -161,9 +171,10 @@ export default function EntryPage() {
       if (!audioManager.isInitialized()) {
         await audioManager.initAudio();
       }
-      audioManager.stopSound('First_screen'); // Stop the entry page music
+      audioManager.stopSound('First_screen'); 
+      await requestFullScreen();
     } catch (error) {
-      console.error("Failed to initialize/manage audio for game start:", error);
+      console.error("Failed to initialize/manage audio or fullscreen for game start:", error);
     }
     router.push('/play');
   }, [router]);
@@ -255,4 +266,3 @@ export default function EntryPage() {
     </div>
   );
 }
-
