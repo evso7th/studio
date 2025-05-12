@@ -208,7 +208,7 @@ export default function EntryPage() {
           <div 
             className="relative w-full max-w-xs sm:max-w-sm md:max-w-md mx-auto aspect-[4/3] my-4 animate-swirl-in"
             style={{
-              backgroundImage: 'url(/assets/images/RelaxMan.png)',
+              backgroundImage: 'url(/assets/images/relaxman.png)',
               backgroundSize: 'contain',
               backgroundRepeat: 'no-repeat',
               backgroundPosition: 'center',
@@ -243,3 +243,4 @@ export default function EntryPage() {
     </div>
   );
 }
+
