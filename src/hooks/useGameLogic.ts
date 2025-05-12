@@ -3,7 +3,7 @@
 "use client";
 
 import type { Reducer} from 'react';
-import { useReducer, useCallback, useEffect, useRef } from 'react'; 
+import { useReducer, useCallback, useEffect as useReactEffect, useRef } from 'react'; 
 import type { GameState, GameAction, HeroType, PlatformType, CoinType, Size } from '@/lib/gameTypes'; 
 import { 
     HERO_APPEARANCE_DURATION_MS, 
@@ -15,8 +15,8 @@ import {
     PLATFORM_NON_GROUND_HEIGHT,
     PLATFORM_DEFAULT_WIDTH,
     TARGET_JUMP_HEIGHT_PX,
-    PLATFORM1_Y_OFFSET,
-    PLATFORM2_Y_OFFSET,
+    PLATFORM1_Y_OFFSET, // This is for the lower platform
+    PLATFORM2_Y_OFFSET, // This is for the upper platform
     INITIAL_PLATFORM_SPEED,
     INITIAL_PLATFORM1_X_PERCENT,
     INITIAL_PLATFORM2_X_PERCENT,
@@ -25,7 +25,7 @@ import {
     COIN_SPAWN_EXPLOSION_DURATION_MS,
     MIN_DISTANCE_BETWEEN_PAIR_COINS_X_FACTOR,
     MIN_DISTANCE_BETWEEN_PAIR_COINS_Y_FACTOR,
-    COIN_ZONE_TOP_OFFSET,
+    MAX_COIN_SPAWN_Y_FROM_BOTTOM, // New constant for coin zone
     COIN_SPAWN_DELAY_MS,
     HERO_BASE_SPEED,
     SLIPPERY_FRICTION_FACTOR,
@@ -48,6 +48,10 @@ import {
     PLATFORM_GRASS_SRC,
     PLATFORM_ICE_SRC,
     PLATFORM_STONE_SRC,
+    BACKGROUND_LEVEL1_SRC,
+    BACKGROUND_LEVEL2_SRC,
+    BACKGROUND_LEVEL3_SRC,
+    LOWER_PLATFORM_TOP_Y_ABS, // For calculating min spawn Y
 } from '@/lib/gameTypes'; 
 import { audioManager } from '@/lib/audioManager';
 
@@ -58,6 +62,7 @@ const MAX_FALL_SPEED = -8;
 const JUMP_STRENGTH = (-GRAVITY_ACCELERATION + Math.sqrt(GRAVITY_ACCELERATION * GRAVITY_ACCELERATION + 8 * GRAVITY_ACCELERATION * TARGET_JUMP_HEIGHT_PX)) / 2;
 
 const calculatePlatformGroundY = (gameAreaHeight: number) => {
+  // Since PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET is 0, the ground platform's bottom is at Y=0 of game area.
   return PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET;
 };
 
@@ -84,7 +89,7 @@ const initialHeroState: HeroType = {
 };
 
 const getLevelPlatforms = (gameAreaWidth: number, gameAreaHeight: number, level: number): PlatformType[] => {
-  const groundPlatformY = calculatePlatformGroundY(gameAreaHeight);
+  const groundPlatformY = calculatePlatformGroundY(gameAreaHeight); // This is Y of bottom of ground platform
   let platformSpeed = INITIAL_PLATFORM_SPEED;
   let isPlatform1Slippery = false;
   let isPlatform2Slippery = false;
@@ -93,8 +98,8 @@ const getLevelPlatforms = (gameAreaWidth: number, gameAreaHeight: number, level:
 
 
   if (level === 1) {
-    platform1ImageSrc = "/assets/images/PlatformGrass.png";
-    platform2ImageSrc = "/assets/images/PlatformGrass.png";
+    platform1ImageSrc = "/public/assets/images/PlatformGrass.png"; // Corrected path
+    platform2ImageSrc = "/public/assets/images/PlatformGrass.png"; // Corrected path
   } else if (level === 2) {
     platformSpeed = 0.75;
     isPlatform1Slippery = true;
@@ -115,12 +120,12 @@ const getLevelPlatforms = (gameAreaWidth: number, gameAreaHeight: number, level:
       id: 'platform_ground', x: -100, y: groundPlatformY, 
       width: gameAreaWidth + 200, height: PLATFORM_GROUND_THICKNESS, 
       isMoving: false, speed: 0, direction: 1, moveAxis: 'x',
-      imageSrc: "https://neurostaffing.online/wp-content/uploads/2025/05/GroundFloor.png", 
+      imageSrc: "/public/assets/images/PlatformGrass.png", // Corrected path for ground platform consistency
     },
-    {
+    { // Lower Platform
       id: 'platform1', 
       x: gameAreaWidth * INITIAL_PLATFORM1_X_PERCENT, 
-      y: groundPlatformY + PLATFORM_GROUND_THICKNESS + PLATFORM1_Y_OFFSET, 
+      y: groundPlatformY + PLATFORM_GROUND_THICKNESS + PLATFORM1_Y_OFFSET, // PLATFORM1_Y_OFFSET is from top of ground to bottom of platform1
       width: PLATFORM_DEFAULT_WIDTH, height: PLATFORM_NON_GROUND_HEIGHT, 
       isMoving: true, speed: platformSpeed, direction: 1, 
       moveAxis: 'x',
@@ -128,10 +133,10 @@ const getLevelPlatforms = (gameAreaWidth: number, gameAreaHeight: number, level:
       imageSrc: platform1ImageSrc,
       isSlippery: isPlatform1Slippery,
     },
-    {
+    { // Upper Platform
       id: 'platform2', 
       x: gameAreaWidth * INITIAL_PLATFORM2_X_PERCENT - PLATFORM_DEFAULT_WIDTH, 
-      y: groundPlatformY + PLATFORM_GROUND_THICKNESS + PLATFORM2_Y_OFFSET, 
+      y: groundPlatformY + PLATFORM_GROUND_THICKNESS + PLATFORM2_Y_OFFSET, // PLATFORM2_Y_OFFSET is from top of ground to bottom of platform2
       width: PLATFORM_DEFAULT_WIDTH, height: PLATFORM_NON_GROUND_HEIGHT,
       isMoving: true, speed: platformSpeed, direction: -1, 
       moveAxis: 'x',
@@ -145,13 +150,13 @@ const getLevelPlatforms = (gameAreaWidth: number, gameAreaHeight: number, level:
 
 const getLevelEnemies = (gameAreaWidth: number, gameAreaHeight: number, level: number, platforms: PlatformType[]): EnemyType[] => {
   const enemies: EnemyType[] = [];
-  const platform1 = platforms.find(p => p.id === 'platform1');
-  const platform2 = platforms.find(p => p.id === 'platform2');
+  const platform1 = platforms.find(p => p.id === 'platform1'); // Lower platform
+  const platform2 = platforms.find(p => p.id === 'platform2'); // Upper platform
 
   let enemyYPositionL2 = gameAreaHeight / 2 - ENEMY_HEIGHT / 2; 
   if (platform1 && platform2) {
-      const lowerPlatformTop = platform1.y + platform1.height;
-      const upperPlatformBottom = platform2.y;
+      const lowerPlatformTop = platform1.y + platform1.height; // This is LOWER_PLATFORM_TOP_Y_ABS
+      const upperPlatformBottom = platform2.y; // This is y of bottom of upper platform
       const midPointY = lowerPlatformTop + (upperPlatformBottom - lowerPlatformTop) / 2;
       enemyYPositionL2 = midPointY - ENEMY_HEIGHT / 2;
   }
@@ -198,8 +203,8 @@ const getLevelEnemies = (gameAreaWidth: number, gameAreaHeight: number, level: n
       periodicFreezeIntervalTimer: ENEMY_PERIODIC_FREEZE_INTERVAL_MS,
     });
 
-    if (platform2) {
-      const enemy2YPosition = platform2.y + platform2.height + ENEMY2_LEVEL3_Y_OFFSET_FROM_PLATFORM2;
+    if (platform2) { // Upper platform
+      const enemy2YPosition = (platform2.y + platform2.height) + ENEMY2_LEVEL3_Y_OFFSET_FROM_PLATFORM2; // y is bottom of platform2, so add height.
       enemies.push({
         id: `enemy_level3_1`,
         enemyId: 'enemy2',
@@ -226,31 +231,38 @@ const getLevelEnemies = (gameAreaWidth: number, gameAreaHeight: number, level: n
 
 
 function spawnNextCoinPair(gameArea: Size, coinSize: number, currentPairId: number, platforms: PlatformType[]): CoinType[] {
-  if (!gameArea.width || !gameArea.height || platforms.length < 3) return []; 
+  if (!gameArea.width || !gameArea.height || platforms.length === 0) return []; 
   audioManager.playSound('Coin_splash');
   const newPair: CoinType[] = [];
   
-  const groundPlatformY = calculatePlatformGroundY(gameArea.height);
-  const platform1 = platforms.find(p => p.id === 'platform1');
-  const platform1TopActualY = platform1 ? platform1.y + platform1.height : groundPlatformY + PLATFORM_GROUND_THICKNESS + PLATFORM1_Y_OFFSET + PLATFORM_NON_GROUND_HEIGHT;
+  const groundPlatformY = calculatePlatformGroundY(gameArea.height); // Y of ground platform bottom
+  const groundPlatformTopY = groundPlatformY + PLATFORM_GROUND_THICKNESS;
 
-  const coinSpawnZoneCeilingY = gameArea.height - COIN_ZONE_TOP_OFFSET - coinSize;
-  const coinSpawnZoneFloorY = platform1TopActualY;
+  // Minimum Y for coin spawn: top of the lower platform (platform1)
+  // LOWER_PLATFORM_TOP_Y_ABS is the y-coordinate of the top surface of the lower platform.
+  // So, coins should spawn above this.
+  const effectiveMinSpawnY = LOWER_PLATFORM_TOP_Y_ABS;
 
+  // Maximum Y for coin spawn (bottom edge of the coin)
+  // MAX_COIN_SPAWN_Y_FROM_BOTTOM is the Y-coordinate of the top of the coin zone.
+  // So, the coin's top edge (y + coinSize) must be <= MAX_COIN_SPAWN_Y_FROM_BOTTOM.
+  // Thus, the coin's bottom edge (y) must be <= MAX_COIN_SPAWN_Y_FROM_BOTTOM - coinSize.
+  let effectiveMaxSpawnY = MAX_COIN_SPAWN_Y_FROM_BOTTOM - coinSize;
+  // Ensure it's within game area
+  effectiveMaxSpawnY = Math.min(effectiveMaxSpawnY, gameArea.height - coinSize);
 
-  let effectiveMinSpawnY = Math.max(groundPlatformY + PLATFORM_GROUND_THICKNESS, coinSpawnZoneFloorY);
-  let effectiveMaxSpawnY = coinSpawnZoneCeilingY;
 
   if (effectiveMinSpawnY >= effectiveMaxSpawnY) {
-    effectiveMinSpawnY = Math.max(groundPlatformY + PLATFORM_GROUND_THICKNESS + 1, platform1TopActualY + 1);
-    effectiveMaxSpawnY = effectiveMinSpawnY; 
-    if (effectiveMinSpawnY + coinSize > gameArea.height -1) { 
-        effectiveMinSpawnY = gameArea.height - coinSize - 1;
-        effectiveMaxSpawnY = effectiveMinSpawnY;
+    // Fallback if spawn zone is invalid (e.g., too small or inverted)
+    console.warn("Coin spawn zone is invalid. Min:", effectiveMinSpawnY, "Max:", effectiveMaxSpawnY, "GameArea H:", gameArea.height, "CoinSize:", coinSize, "MAX_COIN_SPAWN_Y:", MAX_COIN_SPAWN_Y_FROM_BOTTOM);
+    effectiveMaxSpawnY = effectiveMinSpawnY + coinSize; // Make a small valid zone
+    if (effectiveMaxSpawnY + coinSize > gameArea.height -1) { 
+        effectiveMaxSpawnY = gameArea.height - coinSize - 1 - coinSize; // Adjust to ensure coin fits
+        if (effectiveMaxSpawnY < effectiveMinSpawnY) effectiveMaxSpawnY = effectiveMinSpawnY;
     }
   }
   
-  const yRandomFactorRange = effectiveMaxSpawnY - effectiveMinSpawnY;
+  const yRandomFactorRange = Math.max(0, effectiveMaxSpawnY - effectiveMinSpawnY);
   const minDistanceX = gameArea.width * MIN_DISTANCE_BETWEEN_PAIR_COINS_X_FACTOR;
   const minDistanceY = Math.max(20, gameArea.height * MIN_DISTANCE_BETWEEN_PAIR_COINS_Y_FACTOR); 
 
@@ -317,7 +329,7 @@ const getDefaultInitialGameState = (gameAreaWidth = 800, gameAreaHeight = 600, l
     hero: {
       ...initialHeroState,
       x: gameAreaWidth / 2 - initialHeroState.width / 2,
-      y: groundPlatformY + PLATFORM_GROUND_THICKNESS,
+      y: groundPlatformY + PLATFORM_GROUND_THICKNESS, // Hero starts on top of ground platform
       currentSpeedX: 0, 
       isArmored: level === 2 || level === 3, 
       armorTimer: initialArmorTimer,
@@ -543,14 +555,14 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         return coin;
       });
 
-      const groundPlatformY = calculatePlatformGroundY(gameArea.height);
+      const groundPlatformY = calculatePlatformGroundY(gameArea.height); // Y of bottom of ground platform
       nextPlatforms = nextPlatforms.map(p => {
         if (p.id === 'platform_ground') {
-             return {...p, y: groundPlatformY};
+             return {...p, y: groundPlatformY}; // Ensure ground platform Y is correct
         }
         if (p.isMoving && p.id !== 'platform_ground') {
           let platformNewX = p.x;
-          const platformBaseSpeed = (state.currentLevel === 2 || state.currentLevel === 3) ? 0.75 : p.speed;
+          const platformBaseSpeed = (state.currentLevel === 2 || state.currentLevel === 3) ? 0.75 : p.speed; // Use INITIAL_PLATFORM_SPEED
           let platformVelX = platformBaseSpeed * p.direction;
 
           if (p.moveAxis === 'x' && p.moveRange) {
@@ -561,6 +573,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
                platformNewX = Math.max(p.moveRange.min, Math.min(platformNewX, p.moveRange.max));
             }
           }
+           // Recalculate platform Y based on offsets from ground platform top
            const platformNewY = groundPlatformY + PLATFORM_GROUND_THICKNESS + (p.id === 'platform1' ? PLATFORM1_Y_OFFSET : PLATFORM2_Y_OFFSET);
           return { ...p, x: platformNewX, y: platformNewY, velocity: { x: platformVelX, y: 0 }, speed: platformBaseSpeed };
         }
@@ -809,7 +822,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
 
 
         if (heroHitByEnemy && !nextHero.isArmored) { 
-            nextHero.y = groundPlatformY + PLATFORM_GROUND_THICKNESS;
+            nextHero.y = groundPlatformY + PLATFORM_GROUND_THICKNESS; // On top of ground platform
             nextHero.x = gameArea.width / 2 - nextHero.width / 2;
             nextHero.velocity = { x: 0, y: 0 };
             nextHero.isOnPlatform = true;
@@ -979,7 +992,7 @@ export function useGameLogic() {
     dispatch(action);
   }, []); 
   
-  useEffect(() => {
+  useReactEffect(() => {
     if (gameState.gameArea.width > 0 && gameState.gameArea.height > 0 && !gameState.isGameInitialized) {
       dispatch({ 
         type: 'UPDATE_GAME_AREA', 
@@ -995,4 +1008,3 @@ export function useGameLogic() {
 
   return { gameState, dispatch: handleGameAction, gameTick };
 }
-

@@ -99,7 +99,7 @@ export const COIN_SPAWN_DELAY_MS = 500;
 
 
 export const PLATFORM_GROUND_THICKNESS = 1;
-export const PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET = 0; // Ground platform's bottom edge is at Y=0 of playable game area.
+export const PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET = 0; 
 
 export const HERO_WIDTH = 30;
 export const HERO_HEIGHT = 80;
@@ -107,16 +107,13 @@ export const COIN_SIZE = 20;
 export const PLATFORM_DEFAULT_WIDTH = 130;
 export const PLATFORM_NON_GROUND_HEIGHT = 24;
 
-export const TARGET_JUMP_HEIGHT_PX = 250;
+export const TARGET_JUMP_HEIGHT_PX = 250; // Updated
 
 // Absolute Y coordinates for the *top surfaces* of the moving platforms, measured from game area bottom (y=0).
-export const LOWER_PLATFORM_TOP_Y_ABS = 200;
-export const UPPER_PLATFORM_TOP_Y_ABS = 400;
+export const LOWER_PLATFORM_TOP_Y_ABS = 200; // Updated
+export const UPPER_PLATFORM_TOP_Y_ABS = 400; // Updated
 
 // Y offsets for moving platforms, relative to the top of the ground platform, to achieve the absolute top surface heights.
-// PLATFORM_Y_OFFSET = TARGET_PLATFORM_TOP_Y_ABS - ground_platform_top_y - PLATFORM_NON_GROUND_HEIGHT
-// ground_platform_top_y = PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET + PLATFORM_GROUND_THICKNESS
-// PLATFORM_Y_OFFSET = TARGET_PLATFORM_TOP_Y_ABS - (PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET + PLATFORM_GROUND_THICKNESS) - PLATFORM_NON_GROUND_HEIGHT
 export const PLATFORM1_Y_OFFSET = LOWER_PLATFORM_TOP_Y_ABS - (PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET + PLATFORM_GROUND_THICKNESS) - PLATFORM_NON_GROUND_HEIGHT;
 export const PLATFORM2_Y_OFFSET = UPPER_PLATFORM_TOP_Y_ABS - (PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET + PLATFORM_GROUND_THICKNESS) - PLATFORM_NON_GROUND_HEIGHT;
 
@@ -134,11 +131,8 @@ export const COINS_PER_PAIR = 2;
 export const MIN_DISTANCE_BETWEEN_PAIR_COINS_X_FACTOR = 0.25;
 export const MIN_DISTANCE_BETWEEN_PAIR_COINS_Y_FACTOR = 0.15;
 
-
-// Reverting COIN_ZONE_TOP_OFFSET to 100 as a diagnostic step.
-// Previous value was 96, calculated based on gameArea.height - 550.
-// The goal was for the top of the coin zone to be 550px from the control panel top (game area bottom).
-export const COIN_ZONE_TOP_OFFSET = 100; // Distance from game area top to coin zone top. (e.g. if game area height is 650, top of coin zone is at 650-100 = 550px from ground)
+// Max Y-coordinate (from game area bottom) for the top edge of the coin spawn zone.
+export const MAX_COIN_SPAWN_Y_FROM_BOTTOM = 600; // Updated
 
 
 export const HERO_BASE_SPEED = 1.25;
@@ -161,7 +155,7 @@ export const ARMOR_DURATION_LEVEL_3 = 12000;
 export const ARMOR_COOLDOWN_LEVEL_3 = 10000;
 
 // Platform image sources
-export const PLATFORM_GRASS_SRC = "/assets/images/PlatformGrassShort.png";
+export const PLATFORM_GRASS_SRC = "/public/assets/images/PlatformGrass.png";
 export const PLATFORM_ICE_SRC = "/assets/images/platform_ice.png";
 export const PLATFORM_STONE_SRC = "/assets/images/platform_stone.png";
 
