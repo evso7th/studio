@@ -1,4 +1,3 @@
-
 // @ts-nocheck
 "use client";
 
@@ -103,9 +102,7 @@ const initAudio = (): Promise<void> => {
         resolve(); 
       });
     } else {
-      // For browsers that don't return a promise from play() or if it's not supported.
-      // We assume initialization if no immediate error is thrown, or rely on user interaction.
-      isAudioContextInitialized = true; // Tentatively set to true, subsequent plays will confirm
+      isAudioContextInitialized = true; 
       resolve();
     }
   });
@@ -120,9 +117,6 @@ const playSound = async (name: string) => {
   if (!isAudioContextInitialized) {
     try {
       await initAudio();
-      if (!isAudioContextInitialized) {
-        // console.warn(`[AudioManager] Audio context still not initialized after attempt for "${name}". Sound may not play.`);
-      }
     } catch (error) { 
       console.error(`[AudioManager] Fallback initAudio process encountered an issue for "${name}":`, error);
     }
@@ -130,17 +124,18 @@ const playSound = async (name: string) => {
 
   const audio = audioElements[name];
   if (audio) {
-    // If it's a non-looping sound and already playing, restart it.
-    // If it's a looping sound (handled by 'ended' event) and already playing, let it be.
-    // If it's paused, always reset currentTime and play.
     const isLoopingSound = soundEffects[name]?.loop || false;
 
-    if (!audio.paused && !isLoopingSound) { // Non-looping sound currently playing
-      audio.pause();
-      audio.currentTime = 0;
-    } else if (audio.paused) { // Sound is paused (looping or not)
-      audio.currentTime = 0;
+    // If it's a looping sound and already playing, let the 'ended' event handle the loop.
+    // Don't call play() again here as it might cause a hiccup.
+    if (isLoopingSound && !audio.paused) {
+      return;
     }
+
+    // For non-looping sounds that are playing, or any sound that is paused/stopped,
+    // reset its time before playing.
+    // If it's a looping sound that was paused, this will restart it from the beginning.
+    audio.currentTime = 0;
     
     const playPromise = audio.play();
     if (playPromise !== undefined) {
@@ -190,4 +185,3 @@ export const audioManager = {
   setVolume,
   isInitialized: () => isAudioContextInitialized,
 };
-
