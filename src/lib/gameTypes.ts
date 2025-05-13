@@ -99,9 +99,6 @@ export const COIN_SPAWN_DELAY_MS = 500;
 
 
 export const PLATFORM_GROUND_THICKNESS = 1;
-// This constant defines the Y position of the *bottom* of the ground platform,
-// relative to the bottom of the game area (which is the top of the control panel).
-// Setting it to 0 means the ground platform's bottom edge aligns directly with the top of the control panel.
 export const PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET = 0; 
 
 export const HERO_WIDTH = 30;
@@ -112,13 +109,9 @@ export const PLATFORM_NON_GROUND_HEIGHT = 24;
 
 export const TARGET_JUMP_HEIGHT_PX = 250;
 
-// Absolute Y coordinates for the *top surfaces* of the moving platforms, measured from game area bottom (y=0).
 export const LOWER_PLATFORM_TOP_Y_ABS = 200;
 export const UPPER_PLATFORM_TOP_Y_ABS = 400;
 
-// Y offsets for moving platforms, relative to the top of the ground platform, to achieve the absolute top surface heights.
-// These calculations assume PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET is the y-coordinate of the ground platform's bottom.
-// The top of the ground platform is PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET + PLATFORM_GROUND_THICKNESS.
 export const PLATFORM1_Y_OFFSET = LOWER_PLATFORM_TOP_Y_ABS - (PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET + PLATFORM_GROUND_THICKNESS) - PLATFORM_NON_GROUND_HEIGHT;
 export const PLATFORM2_Y_OFFSET = UPPER_PLATFORM_TOP_Y_ABS - (PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET + PLATFORM_GROUND_THICKNESS) - PLATFORM_NON_GROUND_HEIGHT;
 
@@ -127,8 +120,8 @@ export const ENEMY2_LEVEL3_Y_OFFSET_FROM_PLATFORM2 = 50;
 
 
 export const INITIAL_PLATFORM_SPEED = 0.75;
-export const INITIAL_PLATFORM1_X_PERCENT = 1.0; // Starts from right
-export const INITIAL_PLATFORM2_X_PERCENT = 0.0; // Starts from left
+export const INITIAL_PLATFORM1_X_PERCENT = 1.0; 
+export const INITIAL_PLATFORM2_X_PERCENT = 0.0; 
 
 
 export const TOTAL_COINS_PER_LEVEL = 10;
@@ -136,8 +129,7 @@ export const COINS_PER_PAIR = 2;
 export const MIN_DISTANCE_BETWEEN_PAIR_COINS_X_FACTOR = 0.25;
 export const MIN_DISTANCE_BETWEEN_PAIR_COINS_Y_FACTOR = 0.15;
 
-// Max Y-coordinate (from game area bottom) for the top edge of the coin spawn zone.
-export const MAX_COIN_SPAWN_Y_FROM_CONTROL_PANEL_TOP = 600; 
+export const MAX_COIN_SPAWN_Y_FROM_CONTROL_PANEL_TOP = 550; 
 
 
 export const HERO_BASE_SPEED = 1.25;
@@ -148,7 +140,7 @@ export const ENEMY_HEIGHT = 48;
 export const ENEMY_COLLISION_RADIUS = 24;
 export const ENEMY_IMAGE_SRC_LVL2 = "/assets/images/bearface.png";
 export const ENEMY_IMAGE_SRC_LVL3_ENEMY1 = "/assets/images/bearface.png";
-export const ENEMY_IMAGE_SRC_LVL3_ENEMY2 = "/assets/images/BearFaceDark.png";
+export const ENEMY_IMAGE_SRC_LVL3_ENEMY2 = "/assets/images/bearface_dark.png";
 export const ENEMY_DEFAULT_SPEED = 0.4;
 export const ENEMY_DEFEAT_DURATION_MS = 5000;
 export const ENEMY_FREEZE_DURATION_MS = 5000;
@@ -188,8 +180,8 @@ export interface GameState {
   currentPairIndex: number;
   debugMode?: boolean;
   levelCompleteScreenActive: boolean;
-  showDebugLevelComplete?: boolean; // Added for debugging level complete screen
-  showDebugFinalScreen?: boolean; // Added for debugging final screen
+  showDebugLevelComplete?: boolean; 
+  showDebugFinalScreen?: boolean; 
   bearVoicePlayedForLevel: boolean;
 }
 

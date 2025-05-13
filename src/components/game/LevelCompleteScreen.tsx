@@ -86,8 +86,8 @@ export function LevelCompleteScreen({ currentLevel, onNextLevel }: LevelComplete
       className="fixed inset-0 bg-black/70 flex flex-col items-center justify-center z-50 p-4 animate-in fade-in duration-1000"
       style={{
         backgroundImage: 'url(/assets/images/wallpaper1.jpg)',
-        backgroundSize: 'cover', // Changed from 'contain' to 'cover'
-        backgroundPosition: 'center center', // Ensured it is center center
+        backgroundSize: 'cover', 
+        backgroundPosition: 'center center',
         backgroundRepeat: 'no-repeat',
       }}
       aria-modal="true"
@@ -119,7 +119,7 @@ export function LevelCompleteScreen({ currentLevel, onNextLevel }: LevelComplete
         <div 
           className="mx-auto mb-4 h-32 w-32 relative rounded-full animate-image-glow bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage: 'url(/assets/images/Superman.png)',
+            backgroundImage: 'url(/assets/images/superman.png)',
           }}
           role="img"
           aria-label="Superman character"
@@ -143,3 +143,4 @@ export function LevelCompleteScreen({ currentLevel, onNextLevel }: LevelComplete
     </div>
   );
 }
+
