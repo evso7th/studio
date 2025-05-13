@@ -1,9 +1,11 @@
+
 // @ts-nocheck
 "use client";
 
+import type { Reducer} from 'react';
 import { useRef, useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useGameLogic } from '@/hooks/useGameLogic';
+import { useGameLogic, getDefaultInitialGameState } from '@/hooks/useGameLogic';
 import { ControlPanel } from '@/components/game/ControlPanel';
 import { HeroComponent, PlatformComponent, CoinComponent, EnemyComponent } from '@/components/game/GameRenderer';
 import { LevelCompleteScreen } from '@/components/game/LevelCompleteScreen';
@@ -43,6 +45,35 @@ export default function PlayPage() {
     // setShowDebugLevelComplete(true);
     // dispatch({ type: 'SET_DEBUG_LEVEL', payload: 1 });
   }, [dispatch]);
+
+  const requestFullscreen = useCallback(() => {
+    if (typeof window !== 'undefined') { 
+      const element = document.documentElement;
+      if (
+        typeof document !== 'undefined' && // Ensure document is available
+        document.fullscreenElement === null &&
+        (document as any).webkitFullscreenElement === null &&
+        (document as any).mozFullScreenElement === null &&
+        (document as any).msFullscreenElement === null
+      ) {
+        if (element.requestFullscreen) {
+            element.requestFullscreen().catch(err => console.warn(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`));
+        } else if ((element as any).mozRequestFullScreen) { 
+            (element as any).mozRequestFullScreen().catch((err: any) => console.warn(`Error attempting to enable full-screen mode (Firefox): ${err.message} (${err.name})`));
+        } else if ((element as any).webkitRequestFullscreen) { 
+            (element as any).webkitRequestFullscreen().catch((err: any) => console.warn(`Error attempting to enable full-screen mode (WebKit): ${err.message} (${err.name})`));
+        } else if ((element as any).msRequestFullscreen) { 
+            (element as any).msRequestFullscreen().catch((err: any) => console.warn(`Error attempting to enable full-screen mode (IE/Edge): ${err.message} (${err.name})`));
+        }
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (gameState.isGameInitialized) {
+      requestFullscreen();
+    }
+  }, [gameState.isGameInitialized, requestFullscreen]);
 
 
   const updateGameAreaSize = useCallback(() => {
@@ -86,15 +117,23 @@ export default function PlayPage() {
         const currentAudio = audioManager.getCurrentPlayingLoop();
         if (currentAudio !== musicToPlay) { 
           setTimeout(() => {
-             // Check if still on the same level before playing, in case of quick changes
              if (gameState.isGameInitialized && gameState.currentLevel === parseInt(musicToPlay.replace('Level',''))) {
               audioManager.playSound(musicToPlay);
             }
-          }, 500); // Delay to allow New_level sound to play
+          }, 500); 
         }
       }
     }
   }, [gameState.currentLevel, gameState.isGameInitialized]);
+
+  useEffect(() => {
+    if (gameState.isGameInitialized && gameState.activeCoins.length > 0 && gameState.currentPairIndex === 0) {
+      const firstPairExistsAndSpawning = gameState.activeCoins.some(c => c.pairId === 0 && c.isSpawning);
+      if (firstPairExistsAndSpawning) {
+        audioManager.playSound('Coin_splash');
+      }
+    }
+  }, [gameState.isGameInitialized, gameState.activeCoins, gameState.currentPairIndex]);
 
 
   const gameLoop = useCallback(() => {
@@ -124,7 +163,6 @@ export default function PlayPage() {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (showExitConfirmation || showDebugFinalScreen || gameState.heroAppearance === 'appearing' || gameState.levelCompleteScreenActive || gameState.gameLost || gameState.gameOver) return;
 
-      // Prevent default browser actions for game keys, except for development shortcuts
       if (event.key === 'F5' || (event.ctrlKey && event.key.toLowerCase() === 'r')) return;
       if ((event.ctrlKey && event.shiftKey && event.key.toLowerCase() === 'i') ||
           (event.metaKey && event.altKey && event.key.toLowerCase() === 'i') ||
@@ -180,7 +218,6 @@ export default function PlayPage() {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
-      // Ensure movement stops if component unmounts
       dispatch({ type: 'MOVE_LEFT_STOP' });
       dispatch({ type: 'MOVE_RIGHT_STOP' });
     };
@@ -188,7 +225,7 @@ export default function PlayPage() {
 
 
   const handleOpenExitDialog = () => {
-    setIsGamePausedForDialog(true); // Pause game logic
+    setIsGamePausedForDialog(true); 
     setShowExitConfirmation(true);
   };
 
@@ -197,16 +234,16 @@ export default function PlayPage() {
     audioManager.playSound('exit');
 
     setShowExitConfirmation(false);
-    setIsGamePausedForDialog(false); // Unpause, though navigating away
+    setIsGamePausedForDialog(false); 
     
-    setTimeout(() => { // Delay to allow sound to play
+    setTimeout(() => { 
       router.push('/');
     }, 300);
   };
 
   const handleCancelExit = () => {
     setShowExitConfirmation(false);
-    setIsGamePausedForDialog(false); // Resume game logic
+    setIsGamePausedForDialog(false); 
   };
 
 
@@ -367,3 +404,4 @@ export default function PlayPage() {
     </div>
   );
 }
+

@@ -62,11 +62,6 @@ const MAX_FALL_SPEED = -8;
 const JUMP_STRENGTH = (-GRAVITY_ACCELERATION + Math.sqrt(GRAVITY_ACCELERATION * GRAVITY_ACCELERATION + 8 * GRAVITY_ACCELERATION * TARGET_JUMP_HEIGHT_PX)) / 2;
 
 const calculatePlatformGroundY = (gameAreaHeight: number) => {
-  // Game area height is the total visible height for the game.
-  // Control panel height is 10% of the screen.
-  // The game area itself is 90% of the screen.
-  // The ground platform's Y is its TOP edge, from the BOTTOM of the game area.
-  // So, if PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET is 0, it's at the very bottom of the game area.
   return PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET;
 };
 
@@ -114,7 +109,7 @@ const getLevelPlatforms = (gameAreaWidth: number, gameAreaHeight: number, level:
     groundPlatformImageSrc = PLATFORM_ICE_SRC;
   } else if (level === 3) {
     platformSpeed = 0.75; 
-    isPlatform1Slippery = true; 
+    isPlatform1Slippery = false; 
     isPlatform2Slippery = true; 
     platform1ImageSrc = PLATFORM_STONE_SRC;
     platform2ImageSrc = PLATFORM_STONE_SRC; 
@@ -160,16 +155,12 @@ const getLevelEnemies = (gameAreaWidth: number, gameAreaHeight: number, level: n
   const platform1 = platforms.find(p => p.id === 'platform1'); 
   const platform2 = platforms.find(p => p.id === 'platform2'); 
 
-  // Calculate Y position for enemy on level 2, between platforms
-  let enemyYPositionL2 = gameAreaHeight / 2 - ENEMY_HEIGHT / 2; // Default fallback
+  let enemyYPositionL2 = gameAreaHeight / 2 - ENEMY_HEIGHT / 2; 
   if (platform1 && platform2) {
-      // Y position of the top surface of the lower platform (platform1)
       const lowerPlatformTop = platform1.y + platform1.height; 
-      // Y position of the bottom surface of the upper platform (platform2)
       const upperPlatformBottom = platform2.y; 
-      // Midpoint between the two platforms
       const midPointY = lowerPlatformTop + (upperPlatformBottom - lowerPlatformTop) / 2;
-      enemyYPositionL2 = midPointY - ENEMY_HEIGHT / 2; // Adjust to center enemy vertically
+      enemyYPositionL2 = midPointY - ENEMY_HEIGHT / 2; 
   }
   
   if (level === 2) {
@@ -193,7 +184,6 @@ const getLevelEnemies = (gameAreaWidth: number, gameAreaHeight: number, level: n
       periodicFreezeIntervalTimer: ENEMY_PERIODIC_FREEZE_INTERVAL_MS,
     });
   } else if (level === 3) {
-    // Enemy 1 (lower) for Level 3
     enemies.push({
       id: `enemy_level3_0`,
       enemyId: 'enemy1',
@@ -214,8 +204,7 @@ const getLevelEnemies = (gameAreaWidth: number, gameAreaHeight: number, level: n
       periodicFreezeIntervalTimer: ENEMY_PERIODIC_FREEZE_INTERVAL_MS,
     });
 
-    // Enemy 2 (upper) for Level 3
-    if (platform2) { // Ensure platform2 exists to position enemy2 relative to it
+    if (platform2) { 
       const enemy2YPosition = (platform2.y + platform2.height) + ENEMY2_LEVEL3_Y_OFFSET_FROM_PLATFORM2; 
       enemies.push({
         id: `enemy_level3_1`,
@@ -226,7 +215,7 @@ const getLevelEnemies = (gameAreaWidth: number, gameAreaHeight: number, level: n
         height: ENEMY_HEIGHT,
         imageSrc: ENEMY_IMAGE_SRC_LVL3_ENEMY2,
         speed: ENEMY_DEFAULT_SPEED, 
-        direction: -1, // Starts moving left
+        direction: -1, 
         moveAxis: 'x',
         moveRange: { min: 0, max: gameAreaWidth - ENEMY_WIDTH },
         collisionRadius: ENEMY_COLLISION_RADIUS,
@@ -244,28 +233,21 @@ const getLevelEnemies = (gameAreaWidth: number, gameAreaHeight: number, level: n
 
 function spawnNextCoinPair(gameArea: Size, coinSize: number, currentPairId: number, platforms: PlatformType[]): CoinType[] {
   if (!gameArea.width || !gameArea.height || platforms.length === 0) return []; 
-  audioManager.playSound('Coin_splash');
+  // REMOVED: audioManager.playSound('Coin_splash'); - Sound will be played by reducer or useEffect
   const newPair: CoinType[] = [];
   
   const groundPlatformY = calculatePlatformGroundY(gameArea.height); 
 
+  const effectiveMinSpawnY = LOWER_PLATFORM_Y_FROM_BOTTOM; 
 
-  const effectiveMinSpawnY = LOWER_PLATFORM_Y_FROM_BOTTOM; // Use the absolute Y for lower platform
-
-
-  // Max Y for coin spawn: Top of ground platform + MAX_COIN_SPAWN_Y_FROM_CONTROL_PANEL_TOP
-  // Ensure it does not go beyond the game area height.
   let effectiveMaxSpawnY = PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET + COIN_ZONE_MAX_HEIGHT_FROM_CONTROL_PANEL_TOP - coinSize;
   effectiveMaxSpawnY = Math.min(effectiveMaxSpawnY, gameArea.height - coinSize);
 
-
-  // Validate and adjust spawn zone if min is greater than or equal to max
   if (effectiveMinSpawnY >= effectiveMaxSpawnY) {
     console.warn("Coin spawn zone is invalid. Min:", effectiveMinSpawnY, "Max:", effectiveMaxSpawnY, "GameArea H:", gameArea.height, "CoinSize:", coinSize, "MAX_COIN_SPAWN_Y_FROM_CP_TOP:", COIN_ZONE_MAX_HEIGHT_FROM_CONTROL_PANEL_TOP);
-    effectiveMaxSpawnY = effectiveMinSpawnY + coinSize; // Make max slightly larger than min
-    // Further ensure max is within bounds
-    if (effectiveMaxSpawnY + coinSize > gameArea.height -1) { // -1 to avoid exact edge
-        effectiveMaxSpawnY = gameArea.height - coinSize - 1 - coinSize; // leave space for coin itself
+    effectiveMaxSpawnY = effectiveMinSpawnY + coinSize; 
+    if (effectiveMaxSpawnY + coinSize > gameArea.height -1) { 
+        effectiveMaxSpawnY = gameArea.height - coinSize - 1 - coinSize; 
         if (effectiveMaxSpawnY < effectiveMinSpawnY) effectiveMaxSpawnY = effectiveMinSpawnY;
     }
   }
@@ -490,6 +472,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       let gameLostThisTick = false;
       let heroHitByEnemy = false;
       let nextBearVoicePlayed = currentBearVoicePlayed;
+      let playCoinSplashSound = false;
 
 
       // Armor logic
@@ -524,32 +507,33 @@ function gameReducer(state: GameState, action: GameAction): GameState {
 
 
       nextActiveCoins = nextActiveCoins.map(coin => {
-        if (coin.isPendingSpawn && coin.spawnDelayMs !== undefined) {
-          const newDelay = coin.spawnDelayMs - deltaTime;
+        let updatedCoin = { ...coin };
+        if (updatedCoin.isPendingSpawn && updatedCoin.spawnDelayMs !== undefined) {
+          const newDelay = updatedCoin.spawnDelayMs - deltaTime;
           if (newDelay <= 0) {
-            audioManager.playSound('Coin_splash');
-            return {
-              ...coin,
+            playCoinSplashSound = true;
+            updatedCoin = {
+              ...updatedCoin,
               isPendingSpawn: false,
               spawnDelayMs: 0,
-              isSpawning: true, 
+              isSpawning: true,
               spawnExplosionProgress: 0,
             };
+          } else {
+            updatedCoin.spawnDelayMs = newDelay;
           }
-          return { ...coin, spawnDelayMs: newDelay };
         }
-        return coin;
-      });
-
-      nextActiveCoins = nextActiveCoins.map(coin => {
-        if (coin.isSpawning) {
-          const newProgress = (coin.spawnExplosionProgress || 0) + (deltaTime / COIN_SPAWN_EXPLOSION_DURATION_MS);
+      
+        if (updatedCoin.isSpawning) {
+          const newProgress = (updatedCoin.spawnExplosionProgress || 0) + (deltaTime / COIN_SPAWN_EXPLOSION_DURATION_MS);
           if (newProgress >= 1) {
-            return { ...coin, isSpawning: false, spawnExplosionProgress: 1 };
+            updatedCoin.isSpawning = false;
+            updatedCoin.spawnExplosionProgress = 1;
+          } else {
+            updatedCoin.spawnExplosionProgress = newProgress;
           }
-          return { ...coin, spawnExplosionProgress: newProgress };
         }
-        return coin;
+        return updatedCoin;
       });
       
       nextActiveCoins = nextActiveCoins.map(coin => {
@@ -794,11 +778,10 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         if (nextHero.x < 0) nextHero.x = 0;
         if (nextHero.x + nextHero.width > gameArea.width) nextHero.x = gameArea.width - nextHero.width;
         
-        // Prevent hero from going off-screen (vertically - top boundary)
         if (nextHero.y + nextHero.height > gameArea.height) {
             nextHero.y = gameArea.height - nextHero.height;
-            if (nextHero.velocity && nextHero.velocity.y > 0) { // If moving upwards
-                nextHero.velocity.y = 0; // Stop upward movement
+            if (nextHero.velocity && nextHero.velocity.y > 0) { 
+                nextHero.velocity.y = 0; 
             }
         }
         
@@ -933,7 +916,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
               if (coinsOfCurrentPair.length > 0 && coinsOfCurrentPair.every(c => c.collected)) {
                 if (nextTotalCollected < TOTAL_COINS_PER_LEVEL) {
                   nextPairIdx = currentPairIdx + 1;
-                  shouldSpawnNextPair = true;
+                  shouldSpawnNextPair = true; 
                 } else {
                   levelCompleteThisTick = true; 
                   audioManager.playSound('allcoins');
@@ -946,10 +929,14 @@ function gameReducer(state: GameState, action: GameAction): GameState {
             if (shouldSpawnNextPair) {
                 const nextPairCoins = spawnNextCoinPair(gameArea, COIN_SIZE, nextPairIdx, nextPlatforms);
                 nextActiveCoins = [...nextActiveCoins, ...nextPairCoins];
+                playCoinSplashSound = true; 
             }
         }
 
-        // Prevent hero from going off-screen (vertically - bottom boundary - GAME LOST condition)
+        if (playCoinSplashSound) {
+          audioManager.playSound('Coin_splash');
+        }
+
         if (nextHero.y < 0 && !levelCompleteThisTick && !(heroHitByEnemy && !nextHero.isArmored)) { 
           gameLostThisTick = true;
           audioManager.playSound('Hero_fail');
@@ -1024,6 +1011,7 @@ export function useGameLogic() {
 
   return { gameState, dispatch: handleGameAction, gameTick };
 }
+
 
 
 
