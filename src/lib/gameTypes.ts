@@ -81,6 +81,7 @@ export interface EnemyType extends GameObject {
   isFrozen?: boolean;
   frozenTimer?: number;
   periodicFreezeIntervalTimer?: number;
+  defeatExplosionProgress?: number; 
 }
 
 
@@ -99,8 +100,7 @@ export const COIN_SPAWN_DELAY_MS = 500;
 
 
 export const PLATFORM_GROUND_THICKNESS = 1; 
-// The Y position of the ground platform, measured from the bottom of the game area.
-export const PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET = 0; // Ground is at the very bottom of the effective game area.
+export const PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET = 0; 
 
 
 export const HERO_WIDTH = 30;
@@ -111,10 +111,11 @@ export const PLATFORM_NON_GROUND_HEIGHT = 24;
 
 export const TARGET_JUMP_HEIGHT_PX = 250;
 
-// Y positions for moving platforms are offsets from the TOP of the ground platform.
-// So, ground.y + ground.height + OFFSET
-export const LOWER_PLATFORM_Y_FROM_BOTTOM = 200; // Absolute Y position from the bottom for the lower moving platform
-export const UPPER_PLATFORM_Y_FROM_BOTTOM = 400; // Absolute Y position from the bottom for the upper moving platform
+export const LOWER_PLATFORM_Y_FROM_BOTTOM = 200; 
+export const UPPER_PLATFORM_Y_FROM_BOTTOM = 400; 
+
+export const PLATFORM1_Y_OFFSET = LOWER_PLATFORM_Y_FROM_BOTTOM; 
+export const PLATFORM2_Y_OFFSET = UPPER_PLATFORM_Y_FROM_BOTTOM;
 
 
 export const ENEMY2_LEVEL3_Y_OFFSET_FROM_PLATFORM2 = 50;
@@ -162,7 +163,7 @@ export const BACKGROUND_LEVEL1_SRC = "/assets/images/level1_bkg.png";
 export const BACKGROUND_LEVEL2_SRC = "/assets/images/level2_bkg.png";
 export const BACKGROUND_LEVEL3_SRC = "/assets/images/level3_bkg.png";
 
-
+export const CONTROL_PANEL_HEIGHT_PX = 80;
 
 
 export interface GameState {
@@ -228,16 +229,5 @@ export const heroAnimationsConfig: HeroAnimations = {
   },
 };
 
-// Offset from the bottom of the game area to the top of the lower moving platform
-export const PLATFORM1_Y_OFFSET = LOWER_PLATFORM_Y_FROM_BOTTOM; 
-// Offset from the bottom of the game area to the top of the upper moving platform
-export const PLATFORM2_Y_OFFSET = UPPER_PLATFORM_Y_FROM_BOTTOM;
-
-// Derived constants for coin spawning zone, relative to the top of the game area (0 = top)
-// This is the Y coordinate of the top edge of the coin spawning zone
-export const COIN_ZONE_TOP_OFFSET = 0; // Defaulting to 0 for now
-// This is the Y coordinate of the bottom edge of the coin spawning zone
-// It's calculated based on the top of the control panel.
-export const COIN_ZONE_BOTTOM_Y = 600; // was PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET + MAX_COIN_SPAWN_Y_FROM_CONTROL_PANEL_TOP;
 
 export const GAME_TICK_INTERVAL_MS = 1000 / 60; // For a 60 FPS game loop

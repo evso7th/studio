@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useRouter } from 'next/navigation';
@@ -7,7 +8,6 @@ import { useState, useEffect, useCallback } from 'react';
 import type React from 'react';
 import { audioManager } from '@/lib/audioManager';
 import { Preloader } from '@/components/landing/Preloader';
-import type { GameState } from '@/lib/gameTypes'; 
 import { LevelCompleteScreen } from '@/components/game/LevelCompleteScreen'; 
 import { FinalScreen } from '@/components/game/FinalScreen'; 
 
@@ -59,7 +59,7 @@ export default function EntryPage() {
   useEffect(() => {
     // setShowDebugLevelComplete(true);
     // setDebugCurrentLevel(1); // Example: To test level 1 complete screen
-    // setShowDebugFinalScreen(true); 
+    // setShowDebugFinalScreen(false); 
   }, []);
 
   const requestFullscreen = useCallback(async () => {
@@ -92,7 +92,9 @@ export default function EntryPage() {
           console.warn("Fullscreen API is not supported by this browser.");
         }
       } catch (err: any) {
+        
         console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`, err);
+        // Do not re-throw, allow game to continue if fullscreen fails
       }
     }
     return Promise.resolve();
@@ -190,22 +192,23 @@ export default function EntryPage() {
 
 
   const handleStartGame = useCallback(async () => {
-    // Attempt fullscreen but don't wait for it to complete here
     if (typeof window !== 'undefined' && typeof document !== 'undefined') {
-      requestFullscreen().catch(err => {
-        // Log errors from fullscreen request, but don't let them block other operations
-        console.error("Fullscreen request failed (non-blocking):", err);
-      });
-    }
-
-    try {
-      if (!audioManager.isInitialized()) {
-        await audioManager.initAudio();
+      try {
+        await requestFullscreen();
+      } catch (fullscreenErr) {
+        console.error("Fullscreen request failed, proceeding with navigation.", fullscreenErr);
       }
-      audioManager.stopSound('First_screen'); 
-    } catch (error) {
-      console.error("Failed to initialize/manage audio for game start:", error);
     }
+    if (!audioManager.isInitialized()) {
+      try {
+        await audioManager.initAudio();
+      } catch (audioErr) {
+        console.warn("Audio context initialization failed on game start:", audioErr);
+      }
+    }
+    
+    audioManager.stopSound('First_screen');
+    
     router.push('/play');
   }, [router, requestFullscreen]);
 
@@ -224,7 +227,7 @@ export default function EntryPage() {
     <div 
       className="min-h-screen w-screen flex flex-col items-center justify-center text-foreground overflow-hidden relative p-0 m-0"
       style={{ 
-        backgroundImage: 'url(/assets/images/wallpaper2.jpg)', 
+        backgroundImage: 'url(/assets/images/wallpaper2.jpg)',
         backgroundSize: 'cover', 
         backgroundPosition: 'top center',
       }}
@@ -252,8 +255,8 @@ export default function EntryPage() {
         ))}
       </div>
 
-      <div className="text-center w-full h-full flex flex-col items-center justify-between relative z-10 p-0 shadow-xl pt-3 pb-[50px]"> 
-        <div className="max-w-2xl w-full px-6 flex flex-col items-center h-full justify-between"> 
+      <div className="text-center w-full h-full flex flex-col items-center justify-between relative z-10 p-0 shadow-xl pt-12 pb-[50px]"> 
+        <div className="max-w-2xl w-full px-6 flex flex-col items-center h-full justify-between">
           
           <div className="flex flex-col items-center">
             <h1 className="text-[44px] font-bold text-primary whitespace-nowrap pr-1 mr-1 ml-[-5px]">
@@ -267,7 +270,6 @@ export default function EntryPage() {
               Руслана Гайнанова
             </p>
           </div>
-
           
           <div 
             className="relative w-full max-w-xs sm:max-w-sm md:max-w-md mx-auto aspect-[4/3] my-4 animate-swirl-in"
@@ -281,23 +283,22 @@ export default function EntryPage() {
             aria-label="Relaxing Man"
             data-ai-hint="man relaxing business"
           />
-
           
-          <div className="flex flex-col items-center w-full">
+          <div className="flex flex-col items-center w-full space-y-2.5"> 
             <Button
               onClick={handleStartGame}
               variant="destructive"
               size="lg"
-              className="w-full max-w-xs text-xl py-4 rounded-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 mb-2.5"
+              className="w-full max-w-xs text-xl py-4 rounded-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200"
             >
               Начать игру
             </Button>
 
-            <div className="mb-2.5 w-full max-w-xs">
+            <div className="w-full max-w-xs">
                <CreditsDialog />
             </div>
 
-            <p className="text-md md:text-lg text-muted-foreground">
+            <p className="text-md md:text-lg text-muted-foreground pt-2.5"> 
               Собери все монетки и выйди на IPO!
               <br />
               Опасайся медведей!

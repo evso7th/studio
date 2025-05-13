@@ -10,7 +10,7 @@ import { HeroComponent, PlatformComponent, CoinComponent, EnemyComponent } from 
 import { LevelCompleteScreen } from '@/components/game/LevelCompleteScreen';
 import { FinalScreen } from '@/components/game/FinalScreen';
 import type { GameState, GameAction } from '@/lib/gameTypes';
-import { HERO_APPEARANCE_DURATION_MS, BACKGROUND_LEVEL1_SRC, BACKGROUND_LEVEL2_SRC, BACKGROUND_LEVEL3_SRC, PLATFORM_GROUND_THICKNESS } from '@/lib/gameTypes';
+import { HERO_APPEARANCE_DURATION_MS, BACKGROUND_LEVEL1_SRC, BACKGROUND_LEVEL2_SRC, BACKGROUND_LEVEL3_SRC, CONTROL_PANEL_HEIGHT_PX } from '@/lib/gameTypes';
 import { Button } from "@/components/ui/button";
 import { audioManager } from '@/lib/audioManager';
 import {
@@ -20,8 +20,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { calculatePlatformGroundY } from '@/hooks/useGameLogic';
-
 
 export default function PlayPage() {
   const { gameState, dispatch, gameTick } = useGameLogic();
@@ -33,47 +31,42 @@ export default function PlayPage() {
   const [isGamePausedForDialog, setIsGamePausedForDialog] = useState(false);
   
   const [gameDimensions, setGameDimensions] = useState({ width: 0, height: 0 });
-  const [gamePaddingTop, setGamePaddingTop] = useState(0);
 
 
-  // Effect to update game dimensions state on window resize and fullscreen change
   useEffect(() => {
     const updateLayout = () => {
       if (gameAreaRef.current) {
-        // The game area's height is determined by flex-grow, so we use its clientHeight.
-        // Control panel height is fixed at 10vh by its parent div's style.
         setGameDimensions({
           width: gameAreaRef.current.clientWidth,
           height: gameAreaRef.current.clientHeight,
         });
-        // paddingTop is assumed to be 0 as the game area takes the remaining space.
-        setGamePaddingTop(0);
       }
     };
 
-    updateLayout(); // Initial call
-    window.addEventListener('resize', updateLayout);
+    updateLayout(); 
+    const resizeObserver = new ResizeObserver(updateLayout);
+    if (gameAreaRef.current) {
+      resizeObserver.observe(gameAreaRef.current);
+    }
     
-    const handleFullscreenChange = () => updateLayout();
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
-    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+    window.addEventListener('resize', updateLayout);
+
+    // Removed fullscreen request from here to avoid conflict with entry page.
+    // Fullscreen should be initiated by user action on the entry page.
 
     return () => {
+      if (gameAreaRef.current) {
+        resizeObserver.unobserve(gameAreaRef.current);
+      }
+      resizeObserver.disconnect();
       window.removeEventListener('resize', updateLayout);
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
-      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
-      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
-      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
       if (animationFrameId.current) {
         cancelAnimationFrame(animationFrameId.current);
       }
       audioManager.stopAllSounds();
     };
-  }, []); // Empty dependency array, runs once on mount and cleans up on unmount
+  }, []); 
 
-  // Effect to dispatch UPDATE_GAME_AREA when gameDimensions state changes
   useEffect(() => {
     if (gameDimensions.width > 0 && gameDimensions.height > 0) {
       dispatch({
@@ -81,11 +74,11 @@ export default function PlayPage() {
         payload: {
           width: gameDimensions.width,
           height: gameDimensions.height,
-          paddingTop: gamePaddingTop,
+          paddingTop: 0, 
         },
       });
     }
-  }, [gameDimensions, gamePaddingTop, dispatch]);
+  }, [gameDimensions, dispatch]);
 
 
   useEffect(() => {
@@ -116,7 +109,6 @@ export default function PlayPage() {
   useEffect(() => {
     if (gameState.isGameInitialized && gameState.activeCoins.length > 0 && gameState.currentPairIndex === 0) {
       const firstPairExistsAndSpawning = gameState.activeCoins.some(c => c.pairId === 0 && c.isSpawning);
-      // Sound for coin spawn is handled in the reducer now
     }
   }, [gameState.isGameInitialized, gameState.activeCoins, gameState.currentPairIndex]);
 
@@ -292,7 +284,7 @@ export default function PlayPage() {
       className="h-screen w-screen flex flex-col overflow-hidden select-none"
       style={{
         backgroundColor: 'hsl(var(--background))',
-        paddingBottom: 0, // Bottom padding is handled by game area and control panel heights
+        paddingBottom: '0px', // Removed dynamic padding, layout handled by flex
         boxSizing: 'border-box',
       }}
       aria-label="Главное окно игры"
@@ -314,12 +306,12 @@ export default function PlayPage() {
 
       <div
         ref={gameAreaRef}
-        className="relative w-full overflow-hidden flex-grow bg-cover bg-no-repeat" // flex-grow will make it take 90%
+        className="relative w-full overflow-hidden flex-grow bg-cover bg-no-repeat" 
         style={{
           backgroundImage: `url(${getLevelBackground(gameState.currentLevel)})`,
           backgroundSize: 'cover', 
           backgroundPosition: 'center center', 
-          height: '90vh', // Game area takes 90% of viewport height
+          height: `calc(100% - ${CONTROL_PANEL_HEIGHT_PX}px)` 
         }}
         data-ai-hint="abstract pattern"
       >
@@ -328,19 +320,19 @@ export default function PlayPage() {
             <HeroComponent
               hero={gameState.hero}
               gameAreaHeight={gameDimensions.height}
-              paddingTop={gamePaddingTop}
+              paddingTop={0} 
               heroAppearance={gameState.heroAppearance}
               heroAppearElapsedTime={gameState.heroAppearElapsedTime}
               heroAppearanceDuration={HERO_APPEARANCE_DURATION_MS}
             />
             {gameState.platforms.map(platform => (
-              <PlatformComponent key={platform.id} platform={platform} gameAreaHeight={gameDimensions.height} paddingTop={gamePaddingTop} />
+              <PlatformComponent key={platform.id} platform={platform} gameAreaHeight={gameDimensions.height} paddingTop={0} />
             ))}
             {gameState.activeCoins.map(coin => (
-              <CoinComponent key={coin.id} coin={coin} gameAreaHeight={gameDimensions.height} paddingTop={gamePaddingTop} />
+              <CoinComponent key={coin.id} coin={coin} gameAreaHeight={gameDimensions.height} paddingTop={0} />
             ))}
             {gameState.enemies.map(enemy => (
-              <EnemyComponent key={enemy.id} enemy={enemy} gameAreaHeight={gameDimensions.height} paddingTop={gamePaddingTop} />
+              <EnemyComponent key={enemy.id} enemy={enemy} gameAreaHeight={gameDimensions.height} paddingTop={0} />
             ))}
           </>
         )}
@@ -374,7 +366,7 @@ export default function PlayPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <div className="w-full shrink-0" style={{ height: '10vh' }}>  {/* Control panel takes 10% of viewport height */}
+      <div className="w-full shrink-0" style={{ height: `${CONTROL_PANEL_HEIGHT_PX}px` }}>  
         <ControlPanel
           dispatch={dispatch}
           onExit={handleOpenExitDialog}
