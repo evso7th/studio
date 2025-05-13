@@ -25,7 +25,7 @@ import {
     COIN_SPAWN_EXPLOSION_DURATION_MS,
     MIN_DISTANCE_BETWEEN_PAIR_COINS_X_FACTOR,
     MIN_DISTANCE_BETWEEN_PAIR_COINS_Y_FACTOR,
-    MAX_COIN_SPAWN_Y_FROM_CONTROL_PANEL_TOP,
+    COIN_ZONE_MAX_HEIGHT_FROM_CONTROL_PANEL_TOP,
     COIN_SPAWN_DELAY_MS,
     HERO_BASE_SPEED,
     SLIPPERY_FRICTION_FACTOR,
@@ -51,7 +51,7 @@ import {
     BACKGROUND_LEVEL1_SRC,
     BACKGROUND_LEVEL2_SRC,
     BACKGROUND_LEVEL3_SRC,
-    LOWER_PLATFORM_TOP_Y_ABS, 
+    LOWER_PLATFORM_Y_FROM_BOTTOM, 
 } from '@/lib/gameTypes'; 
 import { audioManager } from '@/lib/audioManager';
 
@@ -62,6 +62,11 @@ const MAX_FALL_SPEED = -8;
 const JUMP_STRENGTH = (-GRAVITY_ACCELERATION + Math.sqrt(GRAVITY_ACCELERATION * GRAVITY_ACCELERATION + 8 * GRAVITY_ACCELERATION * TARGET_JUMP_HEIGHT_PX)) / 2;
 
 const calculatePlatformGroundY = (gameAreaHeight: number) => {
+  // Game area height is the total visible height for the game.
+  // Control panel height is 10% of the screen.
+  // The game area itself is 90% of the screen.
+  // The ground platform's Y is its TOP edge, from the BOTTOM of the game area.
+  // So, if PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET is 0, it's at the very bottom of the game area.
   return PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET;
 };
 
@@ -109,7 +114,7 @@ const getLevelPlatforms = (gameAreaWidth: number, gameAreaHeight: number, level:
     groundPlatformImageSrc = PLATFORM_ICE_SRC;
   } else if (level === 3) {
     platformSpeed = 0.75; 
-    isPlatform1Slippery = false; 
+    isPlatform1Slippery = true; 
     isPlatform2Slippery = true; 
     platform1ImageSrc = PLATFORM_STONE_SRC;
     platform2ImageSrc = PLATFORM_STONE_SRC; 
@@ -155,12 +160,16 @@ const getLevelEnemies = (gameAreaWidth: number, gameAreaHeight: number, level: n
   const platform1 = platforms.find(p => p.id === 'platform1'); 
   const platform2 = platforms.find(p => p.id === 'platform2'); 
 
-  let enemyYPositionL2 = gameAreaHeight / 2 - ENEMY_HEIGHT / 2; 
+  // Calculate Y position for enemy on level 2, between platforms
+  let enemyYPositionL2 = gameAreaHeight / 2 - ENEMY_HEIGHT / 2; // Default fallback
   if (platform1 && platform2) {
+      // Y position of the top surface of the lower platform (platform1)
       const lowerPlatformTop = platform1.y + platform1.height; 
+      // Y position of the bottom surface of the upper platform (platform2)
       const upperPlatformBottom = platform2.y; 
+      // Midpoint between the two platforms
       const midPointY = lowerPlatformTop + (upperPlatformBottom - lowerPlatformTop) / 2;
-      enemyYPositionL2 = midPointY - ENEMY_HEIGHT / 2;
+      enemyYPositionL2 = midPointY - ENEMY_HEIGHT / 2; // Adjust to center enemy vertically
   }
   
   if (level === 2) {
@@ -184,7 +193,7 @@ const getLevelEnemies = (gameAreaWidth: number, gameAreaHeight: number, level: n
       periodicFreezeIntervalTimer: ENEMY_PERIODIC_FREEZE_INTERVAL_MS,
     });
   } else if (level === 3) {
-    
+    // Enemy 1 (lower) for Level 3
     enemies.push({
       id: `enemy_level3_0`,
       enemyId: 'enemy1',
@@ -205,7 +214,8 @@ const getLevelEnemies = (gameAreaWidth: number, gameAreaHeight: number, level: n
       periodicFreezeIntervalTimer: ENEMY_PERIODIC_FREEZE_INTERVAL_MS,
     });
 
-    if (platform2) { 
+    // Enemy 2 (upper) for Level 3
+    if (platform2) { // Ensure platform2 exists to position enemy2 relative to it
       const enemy2YPosition = (platform2.y + platform2.height) + ENEMY2_LEVEL3_Y_OFFSET_FROM_PLATFORM2; 
       enemies.push({
         id: `enemy_level3_1`,
@@ -216,7 +226,7 @@ const getLevelEnemies = (gameAreaWidth: number, gameAreaHeight: number, level: n
         height: ENEMY_HEIGHT,
         imageSrc: ENEMY_IMAGE_SRC_LVL3_ENEMY2,
         speed: ENEMY_DEFAULT_SPEED, 
-        direction: -1, 
+        direction: -1, // Starts moving left
         moveAxis: 'x',
         moveRange: { min: 0, max: gameAreaWidth - ENEMY_WIDTH },
         collisionRadius: ENEMY_COLLISION_RADIUS,
@@ -240,18 +250,22 @@ function spawnNextCoinPair(gameArea: Size, coinSize: number, currentPairId: numb
   const groundPlatformY = calculatePlatformGroundY(gameArea.height); 
 
 
-  const effectiveMinSpawnY = LOWER_PLATFORM_TOP_Y_ABS;
+  const effectiveMinSpawnY = LOWER_PLATFORM_Y_FROM_BOTTOM; // Use the absolute Y for lower platform
 
 
-  let effectiveMaxSpawnY = PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET + MAX_COIN_SPAWN_Y_FROM_CONTROL_PANEL_TOP - coinSize;
+  // Max Y for coin spawn: Top of ground platform + MAX_COIN_SPAWN_Y_FROM_CONTROL_PANEL_TOP
+  // Ensure it does not go beyond the game area height.
+  let effectiveMaxSpawnY = PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET + COIN_ZONE_MAX_HEIGHT_FROM_CONTROL_PANEL_TOP - coinSize;
   effectiveMaxSpawnY = Math.min(effectiveMaxSpawnY, gameArea.height - coinSize);
 
 
+  // Validate and adjust spawn zone if min is greater than or equal to max
   if (effectiveMinSpawnY >= effectiveMaxSpawnY) {
-    console.warn("Coin spawn zone is invalid. Min:", effectiveMinSpawnY, "Max:", effectiveMaxSpawnY, "GameArea H:", gameArea.height, "CoinSize:", coinSize, "MAX_COIN_SPAWN_Y_FROM_CP_TOP:", MAX_COIN_SPAWN_Y_FROM_CONTROL_PANEL_TOP);
-    effectiveMaxSpawnY = effectiveMinSpawnY + coinSize; 
-    if (effectiveMaxSpawnY + coinSize > gameArea.height -1) { 
-        effectiveMaxSpawnY = gameArea.height - coinSize - 1 - coinSize; 
+    console.warn("Coin spawn zone is invalid. Min:", effectiveMinSpawnY, "Max:", effectiveMaxSpawnY, "GameArea H:", gameArea.height, "CoinSize:", coinSize, "MAX_COIN_SPAWN_Y_FROM_CP_TOP:", COIN_ZONE_MAX_HEIGHT_FROM_CONTROL_PANEL_TOP);
+    effectiveMaxSpawnY = effectiveMinSpawnY + coinSize; // Make max slightly larger than min
+    // Further ensure max is within bounds
+    if (effectiveMaxSpawnY + coinSize > gameArea.height -1) { // -1 to avoid exact edge
+        effectiveMaxSpawnY = gameArea.height - coinSize - 1 - coinSize; // leave space for coin itself
         if (effectiveMaxSpawnY < effectiveMinSpawnY) effectiveMaxSpawnY = effectiveMinSpawnY;
     }
   }
@@ -1010,5 +1024,6 @@ export function useGameLogic() {
 
   return { gameState, dispatch: handleGameAction, gameTick };
 }
+
 
 
