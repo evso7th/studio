@@ -20,7 +20,8 @@ import {
     MARQUEE_HEIGHT_PX,
     SAFE_AREA_BOTTOM_PADDING,
     YANDEX_BROWSER_BOTTOM_OFFSET,
-    PLATFORM_GROUND_THICKNESS
+    PLATFORM_GROUND_THICKNESS,
+    GROUND_FLOOR_SRC
 } from '@/lib/gameTypes';
 import { Button } from "@/components/ui/button";
 import { audioManager } from '@/lib/audioManager';
@@ -47,41 +48,51 @@ export default function PlayPage() {
   const [gameDimensions, setGameDimensions] = useState({ width: 0, height: 0 });
   
   const [effectiveBottomPadding, setEffectiveBottomPadding] = useState(SAFE_AREA_BOTTOM_PADDING);
-  const [controlPanelHeight, setControlPanelHeight] = useState(CONTROL_PANEL_HEIGHT_PX); // Initialize with default
+  const [controlPanelHeight, setControlPanelHeight] = useState(CONTROL_PANEL_HEIGHT_PX); 
+  const [totalPageHeight, setTotalPageHeight] = useState(0);
+
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const ua = navigator.userAgent;
-      const isYandex = /YaBrowser/.test(ua);
-      setEffectiveBottomPadding(isYandex ? SAFE_AREA_BOTTOM_PADDING + YANDEX_BROWSER_BOTTOM_OFFSET : SAFE_AREA_BOTTOM_PADDING);
-    }
+    // This effect now only runs once on mount to set the initial total page height
+    // and potentially other one-time setup.
+    const updateTotalPageHeight = () => {
+      if (typeof window !== 'undefined') {
+        setTotalPageHeight(window.innerHeight);
+      }
+    };
+    updateTotalPageHeight(); // Initial call
+  
+    // No need to add window resize listener here if it's handled by ResizeObserver
   }, []);
+
 
   useEffect(() => {
     const updateLayout = () => {
-      if (containerRef.current && gameAreaRef.current) {
-        const newContainerClientHeight = containerRef.current.clientHeight;
+      if (containerRef.current && gameAreaRef.current && totalPageHeight > 0) {
         
-        const calculatedControlPanelHeight = newContainerClientHeight * 0.1; // 10% of total height
-        setControlPanelHeight(calculatedControlPanelHeight);
+        const newControlPanelHeight = totalPageHeight * 0.10; // 10% of total height
+        setControlPanelHeight(newControlPanelHeight);
         
-        const calculatedGameAreaHeight = newContainerClientHeight * 0.9; // 90% of total height
+        const newGameAreaHeight = totalPageHeight * 0.90 - MARQUEE_HEIGHT_PX; // 90% of total height minus marquee
 
         setGameDimensions({
           width: gameAreaRef.current.clientWidth, 
-          height: calculatedGameAreaHeight,
+          height: newGameAreaHeight,
         });
       }
     };
 
     updateLayout(); 
+
+    // Using ResizeObserver for containerRef if its size can change dynamically
+    // independent of window resize (e.g., sidebar animations, etc.)
     const resizeObserver = new ResizeObserver(updateLayout);
     if (containerRef.current) {
       resizeObserver.observe(containerRef.current);
     }
     
+    // Still useful to listen to window resize for overall page changes
     window.addEventListener('resize', updateLayout);
-    // requestFullscreen(); // Attempt fullscreen on mount
 
     return () => {
       if (containerRef.current) {
@@ -94,7 +105,8 @@ export default function PlayPage() {
       }
       audioManager.stopAllSounds();
     };
-  }, [effectiveBottomPadding]); // Removed requestFullscreen from dependencies
+  }, [totalPageHeight]); // Depend on totalPageHeight to recalculate layout
+
 
   useEffect(() => {
     if (gameDimensions.width > 0 && gameDimensions.height > 0) {
@@ -109,12 +121,9 @@ export default function PlayPage() {
         speed: 0,
         direction: 1,
         moveAxis: 'x',
-        imageSrc: GROUND_FLOOR_SRC, // Default, will be overridden by level
+        imageSrc: GROUND_FLOOR_SRC, 
       };
       
-      // Update initial game state with correct ground platform Y
-      const updatedInitialState = getDefaultInitialGameState(gameDimensions.width, gameDimensions.height, gameState.currentLevel);
-      // Ensure the dispatch happens with the new dimensions.
       dispatch({
         type: 'UPDATE_GAME_AREA',
         payload: {
@@ -131,10 +140,9 @@ export default function PlayPage() {
     if (gameState.isGameInitialized) {
       audioManager.stopAllSounds(); 
       
-      if (gameState.soundToPlay !== 'New_level') { // Avoid playing New_level twice if it's already set
-        dispatch({ type: 'SOUND_PLAYED' }); // Reset if it was New_level from previous logic
-        dispatch({ type: 'GAME_TICK', payload: { deltaTime: 0 } }); // Force a tick to play New_level
-        // This ensures gameReducer sets soundToPlay to 'New_level'
+      if (gameState.soundToPlay !== 'New_level') { 
+        dispatch({ type: 'SOUND_PLAYED' }); 
+        dispatch({ type: 'GAME_TICK', payload: { deltaTime: 0 } }); 
       }
 
 
@@ -266,14 +274,14 @@ export default function PlayPage() {
   };
 
   const handleConfirmExit = async () => {
-    dispatch({ type: 'EXIT_GAME' }); // This will trigger the sound via reducer
+    dispatch({ type: 'EXIT_GAME' }); 
     
     setShowExitConfirmation(false);
     setIsGamePausedForDialog(false); 
     
     setTimeout(() => { 
       router.push('/');
-    }, 300); // Delay to allow sound to play
+    }, 300); 
   };
 
   const handleCancelExit = () => {
@@ -341,7 +349,7 @@ export default function PlayPage() {
       className="h-screen w-screen flex flex-col overflow-hidden select-none"
       style={{
         backgroundColor: 'hsl(var(--background))',
-        paddingBottom: `${effectiveBottomPadding}px`,
+        // paddingBottom: `${effectiveBottomPadding}px`, // Removed fixed padding
         boxSizing: 'border-box',
       }}
       aria-label="Главное окно игры"
@@ -441,5 +449,3 @@ export default function PlayPage() {
     </div>
   );
 }
-
-```
