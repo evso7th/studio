@@ -2,7 +2,7 @@
 // @ts-nocheck
 "use client";
 
-import { useRef, useCallback, useEffect as useReactEffect, useState } from 'react';
+import { useRef, useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useGameLogic } from '@/hooks/useGameLogic';
 import { ControlPanel } from '@/components/game/ControlPanel';
@@ -33,22 +33,39 @@ export default function PlayPage() {
   const [showExitConfirmation, setShowExitConfirmation] = useState(false);
   const [isGamePausedForDialog, setIsGamePausedForDialog] = useState(false);
   
-  const bottomPadding = `0px`; // No bottom padding, control panel height managed by flex
+  const bottomPadding = `0px`; 
 
 
-  useReactEffect(() => {
-    // To debug final screen:
+  useEffect(() => {
     // dispatch({ type: 'SET_DEBUG_LEVEL', payload: 3 });
     // setShowDebugFinalScreen(true);
 
-    // To debug level complete screen:
     // dispatch({ type: 'SET_DEBUG_LEVEL_COMPLETE', payload: true });
     // setShowDebugLevelComplete(true);
     // dispatch({ type: 'SET_DEBUG_LEVEL', payload: 1 });
-
-    // To go to a specific level:
-    // dispatch({ type: 'SET_DEBUG_LEVEL', payload: 1 }); // Ensure this is used if page is reloaded on /play
   }, [dispatch]);
+
+  const requestFullscreen = useCallback(() => {
+    const element = document.documentElement;
+    if (element.requestFullscreen) {
+      element.requestFullscreen().catch(err => console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`));
+    } else if (element.mozRequestFullScreen) { /* Firefox */
+      element.mozRequestFullScreen().catch(err => console.error(`Error attempting to enable full-screen mode (Firefox): ${err.message} (${err.name})`));
+    } else if (element.webkitRequestFullscreen) { /* Chrome, Safari and Opera */
+      element.webkitRequestFullscreen().catch(err => console.error(`Error attempting to enable full-screen mode (WebKit): ${err.message} (${err.name})`));
+    } else if (element.msRequestFullscreen) { /* IE/Edge */
+      element.msRequestFullscreen().catch(err => console.error(`Error attempting to enable full-screen mode (IE/Edge): ${err.message} (${err.name})`));
+    }
+  }, []);
+
+  useEffect(() => {
+    // Attempt to enter fullscreen when the component mounts
+    // This might be blocked by the browser if not triggered by a direct user interaction on some platforms.
+    // However, for PWAs or trusted contexts, it might work.
+    // It's best paired with a user-initiated action (like a "Start Game" button on a previous screen)
+    // but we'll try here as a general approach for the game page itself.
+    requestFullscreen();
+  }, [requestFullscreen]);
 
 
   const updateGameAreaSize = useCallback(() => {
@@ -63,7 +80,7 @@ export default function PlayPage() {
     }
   }, [dispatch]);
 
-  useReactEffect(() => {
+  useEffect(() => {
     updateGameAreaSize();
     window.addEventListener('resize', updateGameAreaSize);
 
@@ -76,7 +93,7 @@ export default function PlayPage() {
     };
   }, [updateGameAreaSize]);
 
-  useReactEffect(() => {
+  useEffect(() => {
     if (gameState.isGameInitialized) {
       audioManager.stopAllSounds(); 
       audioManager.playSound('New_level'); 
@@ -92,10 +109,11 @@ export default function PlayPage() {
         const currentAudio = audioManager.getCurrentPlayingLoop();
         if (currentAudio !== musicToPlay) { 
           setTimeout(() => {
+             // Check if still on the same level before playing, in case of quick changes
              if (gameState.isGameInitialized && gameState.currentLevel === parseInt(musicToPlay.replace('Level',''))) {
               audioManager.playSound(musicToPlay);
             }
-          }, 500); 
+          }, 500); // Delay to allow New_level sound to play
         }
       }
     }
@@ -109,7 +127,7 @@ export default function PlayPage() {
     animationFrameId.current = requestAnimationFrame(gameLoop);
   }, [gameTick, gameState.isGameInitialized, gameState.gameArea.width, gameState.gameArea.height, gameState.levelCompleteScreenActive, gameState.gameOver, gameState.gameLost, isGamePausedForDialog]);
 
-  useReactEffect(() => {
+  useEffect(() => {
     if (!isGamePausedForDialog) {
       animationFrameId.current = requestAnimationFrame(gameLoop);
     } else {
@@ -125,10 +143,11 @@ export default function PlayPage() {
   }, [gameLoop, isGamePausedForDialog]);
 
 
-  useReactEffect(() => {
+  useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (showExitConfirmation || showDebugFinalScreen || gameState.heroAppearance === 'appearing' || gameState.levelCompleteScreenActive || gameState.gameLost || gameState.gameOver) return;
 
+      // Prevent default browser actions for game keys, except for development shortcuts
       if (event.key === 'F5' || (event.ctrlKey && event.key.toLowerCase() === 'r')) return;
       if ((event.ctrlKey && event.shiftKey && event.key.toLowerCase() === 'i') ||
           (event.metaKey && event.altKey && event.key.toLowerCase() === 'i') ||
@@ -184,6 +203,7 @@ export default function PlayPage() {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
+      // Ensure movement stops if component unmounts
       dispatch({ type: 'MOVE_LEFT_STOP' });
       dispatch({ type: 'MOVE_RIGHT_STOP' });
     };
@@ -191,7 +211,7 @@ export default function PlayPage() {
 
 
   const handleOpenExitDialog = () => {
-    setIsGamePausedForDialog(true);
+    setIsGamePausedForDialog(true); // Pause game logic
     setShowExitConfirmation(true);
   };
 
@@ -200,16 +220,16 @@ export default function PlayPage() {
     audioManager.playSound('exit');
 
     setShowExitConfirmation(false);
-    setIsGamePausedForDialog(false);
-
-    setTimeout(() => {
+    setIsGamePausedForDialog(false); // Unpause, though navigating away
+    
+    setTimeout(() => { // Delay to allow sound to play
       router.push('/');
     }, 300);
   };
 
   const handleCancelExit = () => {
     setShowExitConfirmation(false);
-    setIsGamePausedForDialog(false);
+    setIsGamePausedForDialog(false); // Resume game logic
   };
 
 
@@ -302,8 +322,8 @@ export default function PlayPage() {
         className="relative w-full overflow-hidden flex-grow bg-cover bg-center bg-no-repeat"
         style={{
           backgroundImage: `url(${getLevelBackground(gameState.currentLevel)})`,
-          backgroundSize: 'cover', // Changed from '100% 100%' for better aspect ratio handling
-          backgroundPosition: 'center', // Ensure background is centered
+          backgroundSize: 'cover', 
+          backgroundPosition: gameState.currentLevel === 3 ? 'top right' : 'top center',
           height: 'calc(100% - 10vh)', 
         }}
         data-ai-hint="abstract pattern"
@@ -332,12 +352,13 @@ export default function PlayPage() {
       </div>
 
       <AlertDialog open={showExitConfirmation} onOpenChange={(isOpen) => {
-        if (!isOpen && isGamePausedForDialog) {
+        if (!isOpen && isGamePausedForDialog) { // Dialog closed by user action (e.g., Esc, overlay click)
              handleCancelExit();
-        } else if (isOpen && !showExitConfirmation) {
+        } else if (isOpen && !showExitConfirmation) { // Dialog opened programmatically (should not happen here)
             setShowExitConfirmation(true);
             setIsGamePausedForDialog(true);
         }
+        // Do nothing if isOpen === showExitConfirmation (internal state sync)
       }}>
         <AlertDialogContent>
           <AlertDialogHeader className="items-center">
@@ -359,7 +380,7 @@ export default function PlayPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <div className="w-full shrink-0" style={{ height: '10vh' }}> {/* Control panel takes 10% of viewport height */}
+      <div className="w-full shrink-0" style={{ height: '10vh' }}> 
         <ControlPanel
           dispatch={dispatch}
           onExit={handleOpenExitDialog}
@@ -370,4 +391,3 @@ export default function PlayPage() {
     </div>
   );
 }
-

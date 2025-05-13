@@ -8,6 +8,10 @@ import { useState, useEffect, useCallback } from 'react';
 import type React from 'react';
 import { audioManager } from '@/lib/audioManager';
 import { Preloader } from '@/components/landing/Preloader';
+import type { GameState } from '@/lib/gameTypes'; // Assuming GameState is exported
+import { LevelCompleteScreen } from '@/components/game/LevelCompleteScreen'; // Import LevelCompleteScreen
+import { FinalScreen } from '@/components/game/FinalScreen'; // Import FinalScreen
+
 
 interface FireworkParticle {
   id: number;
@@ -47,13 +51,25 @@ export default function EntryPage() {
   const [isLoadingAssets, setIsLoadingAssets] = useState(true);
   const [backgroundFireworks, setBackgroundFireworks] = useState<FireworkParticle[]>([]);
   const [animatedTitle, setAnimatedTitle] = useState<string[]>(Array(TARGET_TITLE.length).fill('\u00A0'));
+  const [showDebugLevelComplete, setShowDebugLevelComplete] = useState(false);
+  const [showDebugFinalScreen, setShowDebugFinalScreen] = useState(false);
+  const [debugCurrentLevel, setDebugCurrentLevel] = useState(1);
+  // const initialGameState = getDefaultInitialGameState(); // Assuming this function exists
+  // initialGameState.levelCompleteScreenActive = true; // Temporarily set for debugging
 
-  // Effect for one-time setup on mount (preload sounds, orientation, animations, asset timeout)
+  useEffect(() => {
+    // Example: To debug level complete screen for level 1
+    // setShowDebugLevelComplete(true);
+    // setDebugCurrentLevel(1);
+
+    // Example: To debug final screen
+    // setShowDebugFinalScreen(true);
+  }, []);
+
   useEffect(() => {
     setIsMounted(true);
     audioManager.preloadSounds();
 
-    // Title Animation
     const titleChars = TARGET_TITLE.split('');
     const indices = titleChars.map((_, i) => i);
     for (let i = indices.length - 1; i > 0; i--) {
@@ -62,7 +78,7 @@ export default function EntryPage() {
     }
     let currentAnimatedChars = Array(TARGET_TITLE.length).fill('\u00A0');
     let charRevealCount = 0;
-    const titleIntervalTime = 100; // 0.1 sec per char
+    const titleIntervalTime = 100; 
     const titleIntervalId = setInterval(() => {
       if (charRevealCount < indices.length) {
         const indexToReveal = indices[charRevealCount];
@@ -74,7 +90,6 @@ export default function EntryPage() {
       }
     }, titleIntervalTime);
 
-    // Fireworks
     const generatePageFireworks = () => {
       const newFireworks: FireworkParticle[] = [];
       for (let i = 0; i < NUM_BACKGROUND_FIREWORKS; i++) {
@@ -108,16 +123,15 @@ export default function EntryPage() {
     generatePageFireworks();
     const fireworksIntervalId = setInterval(generatePageFireworks, FIREWORK_REGENERATION_INTERVAL);
 
-    // Asset Loading timeout for preloader
     const assetLoadingTimeout = setTimeout(() => {
       setIsLoadingAssets(false);
-    }, 1500); // Show preloader for 1.5 seconds
+    }, 1500); 
 
     return () => {
       clearInterval(titleIntervalId);
       clearInterval(fireworksIntervalId);
       clearTimeout(assetLoadingTimeout);
-      audioManager.stopSound('First_screen'); // Ensure it stops on unmount
+      audioManager.stopSound('First_screen'); 
     };
   }, []); 
 
@@ -131,7 +145,6 @@ export default function EntryPage() {
             console.warn("EntryPage: Audio initialization failed after preloader.", error);
           }
         }
-        // Only play if initialization was successful or if it was already initialized
         if (audioManager.isInitialized()) {
           audioManager.playSound('First_screen');
         }
@@ -142,7 +155,21 @@ export default function EntryPage() {
     }
   }, [isLoadingAssets, isMounted]);
 
+  const requestFullscreen = useCallback(() => {
+    const element = document.documentElement;
+    if (element.requestFullscreen) {
+      element.requestFullscreen().catch(err => console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`));
+    } else if (element.mozRequestFullScreen) { /* Firefox */
+      element.mozRequestFullScreen().catch(err => console.error(`Error attempting to enable full-screen mode (Firefox): ${err.message} (${err.name})`));
+    } else if (element.webkitRequestFullscreen) { /* Chrome, Safari and Opera */
+      element.webkitRequestFullscreen().catch(err => console.error(`Error attempting to enable full-screen mode (WebKit): ${err.message} (${err.name})`));
+    } else if (element.msRequestFullscreen) { /* IE/Edge */
+      element.msRequestFullscreen().catch(err => console.error(`Error attempting to enable full-screen mode (IE/Edge): ${err.message} (${err.name})`));
+    }
+  }, []);
+
   const handleStartGame = useCallback(async () => {
+    requestFullscreen(); // Attempt fullscreen on game start
     try {
       if (!audioManager.isInitialized()) {
         await audioManager.initAudio();
@@ -152,10 +179,17 @@ export default function EntryPage() {
       console.error("Failed to initialize/manage audio for game start:", error);
     }
     router.push('/play');
-  }, [router]);
+  }, [router, requestFullscreen]);
 
   if (!isMounted || isLoadingAssets) {
     return <Preloader />;
+  }
+
+  if (showDebugLevelComplete) {
+    return <LevelCompleteScreen currentLevel={debugCurrentLevel} onNextLevel={() => {setShowDebugLevelComplete(false); router.push('/play');}}/>;
+  }
+  if (showDebugFinalScreen) {
+    return <FinalScreen />;
   }
 
   return (
@@ -243,4 +277,3 @@ export default function EntryPage() {
     </div>
   );
 }
-
