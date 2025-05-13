@@ -41,7 +41,7 @@ export function ControlPanel({ dispatch, onExit, disabled = false, currentLevel 
       case 2:
         return 'url("/assets/images/platform_ice.png")';
       case 3:
-        return 'url("/assets/images/platform_stone.png")';
+        return 'url("/assets/images/platform_metal.png")'; // Changed for level 3
       default:
         return 'url("/assets/images/groundfloor.png")';
     }
@@ -49,7 +49,7 @@ export function ControlPanel({ dispatch, onExit, disabled = false, currentLevel 
 
   return (
     <div
-      className="h-full w-full p-2 flex items-center justify-around z-50 touch-manipulation" // Removed shadow-lg
+      className="h-full w-full p-2 flex items-center justify-around z-50 touch-manipulation"
       style={{ 
         backgroundImage: getPanelBackground(currentLevel),
         backgroundSize: 'cover',
