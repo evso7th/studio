@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useRouter } from 'next/navigation';
@@ -8,9 +7,9 @@ import { useState, useEffect, useCallback } from 'react';
 import type React from 'react';
 import { audioManager } from '@/lib/audioManager';
 import { Preloader } from '@/components/landing/Preloader';
-import type { GameState } from '@/lib/gameTypes'; // Assuming GameState is exported
-import { LevelCompleteScreen } from '@/components/game/LevelCompleteScreen'; // Import LevelCompleteScreen
-import { FinalScreen } from '@/components/game/FinalScreen'; // Import FinalScreen
+import type { GameState } from '@/lib/gameTypes'; 
+import { LevelCompleteScreen } from '@/components/game/LevelCompleteScreen'; 
+import { FinalScreen } from '@/components/game/FinalScreen'; 
 
 
 interface FireworkParticle {
@@ -54,8 +53,7 @@ export default function EntryPage() {
   const [showDebugLevelComplete, setShowDebugLevelComplete] = useState(false);
   const [showDebugFinalScreen, setShowDebugFinalScreen] = useState(false);
   const [debugCurrentLevel, setDebugCurrentLevel] = useState(1);
-  // const initialGameState = getDefaultInitialGameState(); // Assuming this function exists
-  // initialGameState.levelCompleteScreenActive = true; // Temporarily set for debugging
+  
 
   useEffect(() => {
     // Example: To debug level complete screen for level 1
@@ -157,19 +155,22 @@ export default function EntryPage() {
 
   const requestFullscreen = useCallback(() => {
     const element = document.documentElement;
-    if (element.requestFullscreen) {
-      element.requestFullscreen().catch(err => console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`));
-    } else if (element.mozRequestFullScreen) { /* Firefox */
-      element.mozRequestFullScreen().catch(err => console.error(`Error attempting to enable full-screen mode (Firefox): ${err.message} (${err.name})`));
-    } else if (element.webkitRequestFullscreen) { /* Chrome, Safari and Opera */
-      element.webkitRequestFullscreen().catch(err => console.error(`Error attempting to enable full-screen mode (WebKit): ${err.message} (${err.name})`));
-    } else if (element.msRequestFullscreen) { /* IE/Edge */
-      element.msRequestFullscreen().catch(err => console.error(`Error attempting to enable full-screen mode (IE/Edge): ${err.message} (${err.name})`));
+    if (typeof window !== 'undefined' && element) { // Check if window is defined
+        if (element.requestFullscreen) {
+            element.requestFullscreen().catch(err => console.info(`Fullscreen request failed: ${err.message} (${err.name})`));
+        } else if ((element as any).mozRequestFullScreen) { /* Firefox */
+            (element as any).mozRequestFullScreen().catch((err: any) => console.info(`Fullscreen request failed (Firefox): ${err.message} (${err.name})`));
+        } else if ((element as any).webkitRequestFullscreen) { /* Chrome, Safari and Opera */
+            (element as any).webkitRequestFullscreen().catch((err: any) => console.info(`Fullscreen request failed (WebKit): ${err.message} (${err.name})`));
+        } else if ((element as any).msRequestFullscreen) { /* IE/Edge */
+            (element as any).msRequestFullscreen().catch((err: any) => console.info(`Fullscreen request failed (IE/Edge): ${err.message} (${err.name})`));
+        }
     }
   }, []);
 
+
   const handleStartGame = useCallback(async () => {
-    requestFullscreen(); // Attempt fullscreen on game start
+    requestFullscreen(); 
     try {
       if (!audioManager.isInitialized()) {
         await audioManager.initAudio();

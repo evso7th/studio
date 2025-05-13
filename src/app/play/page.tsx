@@ -1,4 +1,3 @@
-
 // @ts-nocheck
 "use client";
 
@@ -44,28 +43,6 @@ export default function PlayPage() {
     // setShowDebugLevelComplete(true);
     // dispatch({ type: 'SET_DEBUG_LEVEL', payload: 1 });
   }, [dispatch]);
-
-  const requestFullscreen = useCallback(() => {
-    const element = document.documentElement;
-    if (element.requestFullscreen) {
-      element.requestFullscreen().catch(err => console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`));
-    } else if (element.mozRequestFullScreen) { /* Firefox */
-      element.mozRequestFullScreen().catch(err => console.error(`Error attempting to enable full-screen mode (Firefox): ${err.message} (${err.name})`));
-    } else if (element.webkitRequestFullscreen) { /* Chrome, Safari and Opera */
-      element.webkitRequestFullscreen().catch(err => console.error(`Error attempting to enable full-screen mode (WebKit): ${err.message} (${err.name})`));
-    } else if (element.msRequestFullscreen) { /* IE/Edge */
-      element.msRequestFullscreen().catch(err => console.error(`Error attempting to enable full-screen mode (IE/Edge): ${err.message} (${err.name})`));
-    }
-  }, []);
-
-  useEffect(() => {
-    // Attempt to enter fullscreen when the component mounts
-    // This might be blocked by the browser if not triggered by a direct user interaction on some platforms.
-    // However, for PWAs or trusted contexts, it might work.
-    // It's best paired with a user-initiated action (like a "Start Game" button on a previous screen)
-    // but we'll try here as a general approach for the game page itself.
-    requestFullscreen();
-  }, [requestFullscreen]);
 
 
   const updateGameAreaSize = useCallback(() => {
@@ -352,13 +329,12 @@ export default function PlayPage() {
       </div>
 
       <AlertDialog open={showExitConfirmation} onOpenChange={(isOpen) => {
-        if (!isOpen && isGamePausedForDialog) { // Dialog closed by user action (e.g., Esc, overlay click)
+        if (!isOpen && isGamePausedForDialog) { 
              handleCancelExit();
-        } else if (isOpen && !showExitConfirmation) { // Dialog opened programmatically (should not happen here)
+        } else if (isOpen && !showExitConfirmation) { 
             setShowExitConfirmation(true);
             setIsGamePausedForDialog(true);
         }
-        // Do nothing if isOpen === showExitConfirmation (internal state sync)
       }}>
         <AlertDialogContent>
           <AlertDialogHeader className="items-center">
