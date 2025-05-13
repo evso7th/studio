@@ -29,8 +29,6 @@ export default function PlayPage() {
   const animationFrameId = useRef<number>();
   const router = useRouter();
 
-  const [showDebugFinalScreen, setShowDebugFinalScreen] = useState(false);
-  const [showDebugLevelComplete, setShowDebugLevelComplete] = useState(false);
   const [showExitConfirmation, setShowExitConfirmation] = useState(false);
   const [isGamePausedForDialog, setIsGamePausedForDialog] = useState(false);
   
@@ -53,6 +51,43 @@ export default function PlayPage() {
     }
     setBottomPadding(calculatedPadding);
   }, [userAgentString]);
+
+  const requestFullscreen = useCallback(async () => {
+    if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+      const element = document.documentElement as HTMLElement & {
+        mozRequestFullScreen?: () => Promise<void>;
+        webkitRequestFullscreen?: () => Promise<void>;
+        msRequestFullscreen?: () => Promise<void>;
+      };
+      
+      if (
+        document.fullscreenElement ||
+        (document as any).webkitFullscreenElement ||
+        (document as any).mozFullScreenElement ||
+        (document as any).msFullscreenElement
+      ) {
+        // Already in fullscreen
+        return Promise.resolve();
+      }
+
+      try {
+        if (element.requestFullscreen) {
+          await element.requestFullscreen();
+        } else if (element.webkitRequestFullscreen) { /* Safari, Chrome */
+          await element.webkitRequestFullscreen();
+        } else if (element.mozRequestFullScreen) { /* Firefox */
+          await element.mozRequestFullScreen();
+        } else if (element.msRequestFullscreen) { /* IE/Edge */
+          await element.msRequestFullscreen();
+        }
+      } catch (err: any) {
+        console.error(`Error attempting to enable full-screen mode from play page: ${err.message} (${err.name})`, err);
+      }
+    }
+    return Promise.resolve();
+  }, []);
+
+  // Removed useEffect that called requestFullscreen on gameState.isGameInitialized
 
   const updateGameAreaSize = useCallback(() => {
     if (gameAreaRef.current) {
@@ -139,7 +174,7 @@ export default function PlayPage() {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (showExitConfirmation || showDebugFinalScreen || gameState.heroAppearance === 'appearing' || gameState.levelCompleteScreenActive || gameState.gameLost || gameState.gameOver) return;
+      if (showExitConfirmation || gameState.heroAppearance === 'appearing' || gameState.levelCompleteScreenActive || gameState.gameLost || gameState.gameOver) return;
 
       if (event.key === 'F5' || (event.ctrlKey && event.key.toLowerCase() === 'r')) return;
       if ((event.ctrlKey && event.shiftKey && event.key.toLowerCase() === 'i') ||
@@ -171,7 +206,7 @@ export default function PlayPage() {
     };
 
     const handleKeyUp = (event: KeyboardEvent) => {
-      if (showExitConfirmation || showDebugFinalScreen || gameState.heroAppearance === 'appearing' || gameState.levelCompleteScreenActive || gameState.gameLost || gameState.gameOver) return;
+      if (showExitConfirmation || gameState.heroAppearance === 'appearing' || gameState.levelCompleteScreenActive || gameState.gameLost || gameState.gameOver) return;
       let handled = false;
       switch (event.key.toLowerCase()) {
         case 'arrowleft':
@@ -199,7 +234,7 @@ export default function PlayPage() {
       dispatch({ type: 'MOVE_LEFT_STOP' });
       dispatch({ type: 'MOVE_RIGHT_STOP' });
     };
-  }, [dispatch, gameState.heroAppearance, gameState.levelCompleteScreenActive, gameState.gameLost, gameState.gameOver, showDebugFinalScreen, showExitConfirmation]);
+  }, [dispatch, gameState.heroAppearance, gameState.levelCompleteScreenActive, gameState.gameLost, gameState.gameOver, showExitConfirmation]);
 
 
   const handleOpenExitDialog = () => {
@@ -235,10 +270,6 @@ export default function PlayPage() {
   };
 
 
-  if (showDebugFinalScreen) {
-    return <FinalScreen />;
-  }
-
   if (gameState.gameLost) {
     return (
       <div className="h-screen w-screen flex flex-col items-center justify-center bg-background text-foreground p-4">
@@ -266,14 +297,14 @@ export default function PlayPage() {
     );
   }
 
-  if (gameState.levelCompleteScreenActive || showDebugLevelComplete) {
+  if (gameState.levelCompleteScreenActive || gameState.showDebugLevelComplete) {
     return (
       <LevelCompleteScreen
         currentLevel={gameState.currentLevel}
         onNextLevel={() => {
           audioManager.stopAllSounds();
           dispatch({ type: 'NEXT_LEVEL' });
-          if (showDebugLevelComplete) setShowDebugLevelComplete(false);
+          if (gameState.showDebugLevelComplete) dispatch({type: 'SET_DEBUG_LEVEL_COMPLETE', payload: false });
         }}
       />
     );
@@ -311,11 +342,11 @@ export default function PlayPage() {
 
       <div
         ref={gameAreaRef}
-        className="relative w-full overflow-hidden flex-grow bg-cover bg-center bg-no-repeat"
+        className="relative w-full overflow-hidden flex-grow bg-cover bg-no-repeat"
         style={{
           backgroundImage: `url(${getLevelBackground(gameState.currentLevel)})`,
           backgroundSize: 'cover', 
-          backgroundPosition: gameState.currentLevel === 3 ? 'top right' : 'top center',
+          backgroundPosition: 'center center', 
           height: `calc(100% - 10vh - ${bottomPadding})`, 
         }}
         data-ai-hint="abstract pattern"

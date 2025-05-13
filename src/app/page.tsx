@@ -51,18 +51,17 @@ export default function EntryPage() {
   const [isLoadingAssets, setIsLoadingAssets] = useState(true);
   const [backgroundFireworks, setBackgroundFireworks] = useState<FireworkParticle[]>([]);
   const [animatedTitle, setAnimatedTitle] = useState<string[]>(Array(TARGET_TITLE.length).fill('\u00A0'));
+  
+  // Debug states - set to false for production
   const [showDebugLevelComplete, setShowDebugLevelComplete] = useState(false);
-  const [showDebugFinalScreen, setShowDebugFinalScreen] = useState(false);
   const [debugCurrentLevel, setDebugCurrentLevel] = useState(1);
+  const [showDebugFinalScreen, setShowDebugFinalScreen] = useState(false);
   
 
   useEffect(() => {
-    // Example: To debug level complete screen for level 1
     // setShowDebugLevelComplete(true);
     // setDebugCurrentLevel(1);
-
-    // Example: To debug final screen
-    // setShowDebugFinalScreen(true);
+    // setShowDebugFinalScreen(true); 
   }, []);
 
   useEffect(() => {
@@ -164,15 +163,18 @@ export default function EntryPage() {
         msRequestFullscreen?: () => Promise<void>;
       };
 
-      try {
-        if (document.fullscreenElement || 
-            (document as any).webkitFullscreenElement || 
-            (document as any).mozFullScreenElement || 
-            (document as any).msFullscreenElement) {
-          console.log("Already in fullscreen mode or request pending.");
-          return Promise.resolve();
-        }
+      // Check if already in fullscreen to avoid errors
+      if (
+        document.fullscreenElement ||
+        (document as any).webkitFullscreenElement ||
+        (document as any).mozFullScreenElement ||
+        (document as any).msFullscreenElement
+      ) {
+        // console.log("Already in fullscreen mode or request pending.");
+        return Promise.resolve();
+      }
 
+      try {
         if (element.requestFullscreen) {
           await element.requestFullscreen();
         } else if (element.webkitRequestFullscreen) { /* Safari, Chrome */
@@ -185,6 +187,8 @@ export default function EntryPage() {
           console.warn("Fullscreen API is not supported by this browser.");
         }
       } catch (err: any) {
+         // Catch errors to prevent them from stopping the game launch.
+         // Log the error for debugging but allow the game to proceed.
         console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`, err);
       }
     }
@@ -248,8 +252,8 @@ export default function EntryPage() {
         ))}
       </div>
 
-      <div className="text-center w-full h-full flex flex-col items-center justify-between relative z-10 p-0 shadow-xl pt-12 pb-[50px] box-border">
-        <div className="max-w-2xl w-full px-6 flex flex-col items-center h-full justify-between pt-12 pb-[50px] box-border">
+      <div className="text-center w-full h-full flex flex-col items-center justify-between relative z-10 p-0 shadow-xl pt-3 pb-[50px]">
+        <div className="max-w-2xl w-full px-6 flex flex-col items-center h-full justify-between">
           <div className="flex flex-col items-center">
             <h1 className="text-[44px] font-bold text-primary whitespace-nowrap pr-1 mr-1 ml-[-5px]">
               {animatedTitle.join('')}
