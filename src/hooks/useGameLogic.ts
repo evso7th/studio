@@ -1,4 +1,3 @@
-
 // @ts-nocheck
 "use client";
 
@@ -61,7 +60,7 @@ const MAX_FALL_SPEED = -8;
 
 const JUMP_STRENGTH = (-GRAVITY_ACCELERATION + Math.sqrt(GRAVITY_ACCELERATION * GRAVITY_ACCELERATION + 8 * GRAVITY_ACCELERATION * TARGET_JUMP_HEIGHT_PX)) / 2;
 
-const calculatePlatformGroundY = (gameAreaHeight: number) => {
+export const calculatePlatformGroundY = (gameAreaHeight: number) => {
   return PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET;
 };
 
@@ -233,14 +232,14 @@ const getLevelEnemies = (gameAreaWidth: number, gameAreaHeight: number, level: n
 
 function spawnNextCoinPair(gameArea: Size, coinSize: number, currentPairId: number, platforms: PlatformType[]): CoinType[] {
   if (!gameArea.width || !gameArea.height || platforms.length === 0) return []; 
-  // REMOVED: audioManager.playSound('Coin_splash'); - Sound will be played by reducer or useEffect
+  
   const newPair: CoinType[] = [];
   
   const groundPlatformY = calculatePlatformGroundY(gameArea.height); 
 
   const effectiveMinSpawnY = LOWER_PLATFORM_Y_FROM_BOTTOM; 
 
-  let effectiveMaxSpawnY = PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET + COIN_ZONE_MAX_HEIGHT_FROM_CONTROL_PANEL_TOP - coinSize;
+  let effectiveMaxSpawnY = COIN_ZONE_MAX_HEIGHT_FROM_CONTROL_PANEL_TOP - coinSize; // Relative to game area top (0)
   effectiveMaxSpawnY = Math.min(effectiveMaxSpawnY, gameArea.height - coinSize);
 
   if (effectiveMinSpawnY >= effectiveMaxSpawnY) {
@@ -293,7 +292,7 @@ function spawnNextCoinPair(gameArea: Size, coinSize: number, currentPairId: numb
 }
 
 
-const getDefaultInitialGameState = (gameAreaWidth = 800, gameAreaHeight = 600, level = 1): GameState => {
+export const getDefaultInitialGameState = (gameAreaWidth = 800, gameAreaHeight = 600, level = 1): GameState => {
   const groundPlatformY = calculatePlatformGroundY(gameAreaHeight);
   const platforms = getLevelPlatforms(gameAreaWidth, gameAreaHeight, level);
   const enemies = getLevelEnemies(gameAreaWidth, gameAreaHeight, level, platforms); 
@@ -349,7 +348,7 @@ const getDefaultInitialGameState = (gameAreaWidth = 800, gameAreaHeight = 600, l
 let initialGameState = getDefaultInitialGameState(undefined, undefined, 1);
 
 
-function gameReducer(state: GameState, action: GameAction): GameState {
+export function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
     case 'MOVE_LEFT_START':
       if (state.heroAppearance === 'visible' && !state.levelCompleteScreenActive && !state.gameLost && !state.gameOver) {
@@ -381,15 +380,61 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       return state;
     case 'UPDATE_GAME_AREA': {
       const { width, height, paddingTop } = action.payload;
-      if (width <= 0 || height <= 0) return state; 
+      if (width <= 0 || height <= 0) return state;
 
-      const startingLevel = state.currentLevel > 1 ? state.currentLevel : 1;
-      const newState = getDefaultInitialGameState(width, height, state.isGameInitialized ? state.currentLevel : startingLevel);
+      const currentLevel = state.isGameInitialized ? state.currentLevel : (initialGameState.currentLevel || 1);
+      const newPlatforms = getLevelPlatforms(width, height, currentLevel);
+      const newEnemies = getLevelEnemies(width, height, currentLevel, newPlatforms);
+      
+      let newHeroState = state.hero;
+      if (!state.isGameInitialized) {
+          newHeroState = {
+            ...initialHeroState,
+            x: width / 2 - initialHeroState.width / 2,
+            y: calculatePlatformGroundY(height) + PLATFORM_GROUND_THICKNESS,
+            isArmored: currentLevel === 2 || currentLevel === 3,
+            armorTimer: currentLevel === 2 ? ARMOR_DURATION_LEVEL_2 : (currentLevel === 3 ? ARMOR_DURATION_LEVEL_3 : 0),
+            armorRemainingTime: Math.ceil((currentLevel === 2 ? ARMOR_DURATION_LEVEL_2 : (currentLevel === 3 ? ARMOR_DURATION_LEVEL_3 : 0)) / 1000),
+          };
+      } else {
+          // If already initialized, try to maintain some hero state but reposition
+          newHeroState = {
+            ...state.hero,
+            x: width / 2 - state.hero.width / 2, // Recenter hero
+            y: calculatePlatformGroundY(height) + PLATFORM_GROUND_THICKNESS, // Reset to ground
+            action: 'idle',
+            velocity: { x:0, y:0 },
+            isOnPlatform: true,
+            platformId: 'platform_ground',
+            // Keep armor status if game was running
+            isArmored: state.hero.isArmored,
+            armorTimer: state.hero.armorTimer,
+            armorCooldownTimer: state.hero.armorCooldownTimer,
+            armorRemainingTime: state.hero.armorRemainingTime,
+          };
+      }
+      
+      // Recalculate coin positions if game area changes significantly or if not initialized
+      let newActiveCoins = state.activeCoins;
+      if (!state.isGameInitialized || state.gameArea.width !== width || state.gameArea.height !== height) {
+        newActiveCoins = spawnNextCoinPair({ width, height }, COIN_SIZE, 0, newPlatforms);
+      }
+
       return {
-        ...newState,
+        ...state,
+        gameArea: { width, height },
         paddingTop,
-        isGameInitialized: true, 
-        bearVoicePlayedForLevel: false, 
+        hero: newHeroState,
+        platforms: newPlatforms,
+        enemies: newEnemies,
+        activeCoins: newActiveCoins,
+        score: state.isGameInitialized ? state.score : 0,
+        totalCoinsCollectedInLevel: state.isGameInitialized ? state.totalCoinsCollectedInLevel : 0,
+        currentPairIndex: state.isGameInitialized ? state.currentPairIndex : 0,
+        isGameInitialized: true,
+        bearVoicePlayedForLevel: state.isGameInitialized ? state.bearVoicePlayedForLevel : false,
+        heroAppearance: state.isGameInitialized ? 'visible' : 'appearing',
+        heroAppearElapsedTime: state.isGameInitialized ? HERO_APPEARANCE_DURATION_MS : 0,
       };
     }
      case 'RESTART_LEVEL': {
@@ -996,6 +1041,9 @@ export function useGameLogic() {
   }, []); 
   
   useEffect(() => {
+    // This effect now primarily serves to trigger an initial UPDATE_GAME_AREA
+    // if dimensions are available but the game isn't marked as initialized.
+    // The actual dimension updates are handled by PlayPage's useEffect.
     if (gameState.gameArea.width > 0 && gameState.gameArea.height > 0 && !gameState.isGameInitialized) {
       dispatch({ 
         type: 'UPDATE_GAME_AREA', 
@@ -1006,12 +1054,8 @@ export function useGameLogic() {
         } 
       });
     }
-  }, [gameState.gameArea.width, gameState.gameArea.height, gameState.isGameInitialized, gameState.paddingTop]);
+  }, [gameState.gameArea.width, gameState.gameArea.height, gameState.isGameInitialized, gameState.paddingTop, dispatch]);
 
 
   return { gameState, dispatch: handleGameAction, gameTick };
 }
-
-
-
-
