@@ -144,45 +144,54 @@ export default function EntryPage() {
             console.warn("EntryPage: Audio initialization failed after preloader.", error);
           }
         }
-        // Check if audio is initialized AND no other loop is playing (or if First_screen should take precedence)
+        
         if (audioManager.isInitialized() && audioManager.getCurrentPlayingLoop() !== 'First_screen') {
           audioManager.playSound('First_screen');
         }
       };
 
-      // Delay slightly to ensure user interaction might have happened if required by browser
+      
       const soundTimeout = setTimeout(playInitialSound, 100);
       return () => clearTimeout(soundTimeout);
     }
   }, [isLoadingAssets, isMounted]);
 
- const requestFullscreen = useCallback(() => {
+  const requestFullscreen = useCallback(async () => {
     if (typeof window !== 'undefined' && typeof document !== 'undefined') {
         const element = document.documentElement as HTMLElement & {
             mozRequestFullScreen?: () => Promise<void>;
             webkitRequestFullscreen?: () => Promise<void>;
             msRequestFullscreen?: () => Promise<void>;
         };
-        // Check if not already in fullscreen to prevent errors
+        
         if (document.fullscreenElement || (document as any).webkitFullscreenElement || (document as any).mozFullScreenElement || (document as any).msFullscreenElement) {
-            return;
+            console.log("Already in fullscreen mode.");
+            return Promise.resolve();
         }
         
-        if (element.requestFullscreen) {
-            element.requestFullscreen().catch(err => console.info(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`));
-        } else if (element.mozRequestFullScreen) { /* Firefox */
-            element.mozRequestFullScreen().catch((err: any) => console.info(`Error attempting to enable full-screen mode (Firefox): ${err.message} (${err.name})`));
-        } else if (element.webkitRequestFullscreen) { /* Chrome, Safari and Opera */
-            element.webkitRequestFullscreen().catch((err: any) => console.info(`Error attempting to enable full-screen mode (WebKit): ${err.message} (${err.name})`));
-        } else if (element.msRequestFullscreen) { /* IE/Edge */
-            element.msRequestFullscreen().catch((err: any) => console.info(`Error attempting to enable full-screen mode (IE/Edge): ${err.message} (${err.name})`));
+        try {
+            if (element.requestFullscreen) {
+                await element.requestFullscreen();
+            } else if (element.webkitRequestFullscreen) { /* Safari, Chrome */
+                await element.webkitRequestFullscreen();
+            } else if (element.mozRequestFullScreen) { /* Firefox */
+                await element.mozRequestFullScreen();
+            } else if (element.msRequestFullscreen) { /* IE/Edge */
+                await element.msRequestFullscreen();
+            } else {
+                console.warn("Fullscreen API is not supported by this browser.");
+            }
+        } catch (err: any) {
+             console.info(`Fullscreen request failed or was denied: ${err.message} (${err.name})`);
+             // Do not rethrow, allow game to continue
         }
     }
+    return Promise.resolve();
   }, []);
 
 
   const handleStartGame = useCallback(async () => {
-    requestFullscreen(); 
+    await requestFullscreen(); 
     try {
       if (!audioManager.isInitialized()) {
         await audioManager.initAudio();
@@ -290,3 +299,4 @@ export default function EntryPage() {
     </div>
   );
 }
+
