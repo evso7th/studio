@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useRouter } from 'next/navigation';
@@ -52,7 +51,6 @@ export default function EntryPage() {
   const [backgroundFireworks, setBackgroundFireworks] = useState<FireworkParticle[]>([]);
   const [animatedTitle, setAnimatedTitle] = useState<string[]>(Array(TARGET_TITLE.length).fill('\u00A0'));
   
-  // Debug states - set to false for production
   const [showDebugLevelComplete, setShowDebugLevelComplete] = useState(false);
   const [debugCurrentLevel, setDebugCurrentLevel] = useState(1);
   const [showDebugFinalScreen, setShowDebugFinalScreen] = useState(false);
@@ -60,8 +58,44 @@ export default function EntryPage() {
 
   useEffect(() => {
     // setShowDebugLevelComplete(true);
-    // setDebugCurrentLevel(1);
+    // setDebugCurrentLevel(1); // Example: To test level 1 complete screen
     // setShowDebugFinalScreen(true); 
+  }, []);
+
+  const requestFullscreen = useCallback(async () => {
+    if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+      const element = document.documentElement as HTMLElement & {
+        mozRequestFullScreen?: () => Promise<void>;
+        webkitRequestFullscreen?: () => Promise<void>;
+        msRequestFullscreen?: () => Promise<void>;
+      };
+
+      if (
+        document.fullscreenElement ||
+        (document as any).webkitFullscreenElement ||
+        (document as any).mozFullScreenElement ||
+        (document as any).msFullscreenElement
+      ) {
+        return Promise.resolve(); 
+      }
+
+      try {
+        if (element.requestFullscreen) {
+          await element.requestFullscreen();
+        } else if (element.webkitRequestFullscreen) { 
+          await element.webkitRequestFullscreen();
+        } else if (element.mozRequestFullScreen) { 
+          await element.mozRequestFullScreen();
+        } else if (element.msRequestFullscreen) { 
+          await element.msRequestFullscreen();
+        } else {
+          console.warn("Fullscreen API is not supported by this browser.");
+        }
+      } catch (err: any) {
+        console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`, err);
+      }
+    }
+    return Promise.resolve();
   }, []);
 
   useEffect(() => {
@@ -74,6 +108,7 @@ export default function EntryPage() {
       const j = Math.floor(Math.random() * (i + 1));
       [indices[i], indices[j]] = [indices[j], indices[i]];
     }
+
     let currentAnimatedChars = Array(TARGET_TITLE.length).fill('\u00A0');
     let charRevealCount = 0;
     const titleIntervalTime = 100; 
@@ -91,12 +126,12 @@ export default function EntryPage() {
     const generatePageFireworks = () => {
       const newFireworks: FireworkParticle[] = [];
       for (let i = 0; i < NUM_BACKGROUND_FIREWORKS; i++) {
-        const originXNum = 5 + Math.random() * 90;
-        const originYNum = 5 + Math.random() * 90;
+        const originXNum = 5 + Math.random() * 90; 
+        const originYNum = 5 + Math.random() * 90; 
 
         for (let j = 0; j < PARTICLES_PER_BACKGROUND_FIREWORK; j++) {
           const angle = Math.random() * Math.PI * 2;
-          const radius = Math.random() * 25 + 15;
+          const radius = Math.random() * 25 + 15; 
 
           const targetOffsetXNum = Math.cos(angle) * radius;
           const targetOffsetYNum = Math.sin(angle) * radius;
@@ -106,12 +141,12 @@ export default function EntryPage() {
             id: Date.now() + i * PARTICLES_PER_BACKGROUND_FIREWORK + j + Math.random(),
             originX: `${originXNum}%`,
             originY: `${originYNum}%`,
-            targetOffsetX: `${targetOffsetXNum}vmin`,
+            targetOffsetX: `${targetOffsetXNum}vmin`, 
             targetOffsetY: `${targetOffsetYNum}vmin`,
-            size: (2 + Math.random() * 2.5) * 2 * 2,
+            size: (2 + Math.random() * 2.5) * 2 * 2, 
             color: FIREWORK_COLORS[Math.floor(Math.random() * FIREWORK_COLORS.length)],
-            delay: Math.random() * (FIREWORK_REGENERATION_INTERVAL / 1000 / 2),
-            duration: 1.5 + Math.random() * 1,
+            delay: Math.random() * (FIREWORK_REGENERATION_INTERVAL / 1000 / 2), 
+            duration: 1.5 + Math.random() * 1, 
             trailAngle: particleTrailAngleDeg,
           });
         }
@@ -148,56 +183,21 @@ export default function EntryPage() {
           audioManager.playSound('First_screen');
         }
       };
-
-      
-      const soundTimeout = setTimeout(playInitialSound, 100);
+      const soundTimeout = setTimeout(playInitialSound, 100); 
       return () => clearTimeout(soundTimeout);
     }
   }, [isLoadingAssets, isMounted]);
 
-  const requestFullscreen = useCallback(async () => {
-    if (typeof window !== 'undefined' && typeof document !== 'undefined') {
-      const element = document.documentElement as HTMLElement & {
-        mozRequestFullScreen?: () => Promise<void>;
-        webkitRequestFullscreen?: () => Promise<void>;
-        msRequestFullscreen?: () => Promise<void>;
-      };
-
-      // Check if already in fullscreen to avoid errors
-      if (
-        document.fullscreenElement ||
-        (document as any).webkitFullscreenElement ||
-        (document as any).mozFullScreenElement ||
-        (document as any).msFullscreenElement
-      ) {
-        // console.log("Already in fullscreen mode or request pending.");
-        return Promise.resolve();
-      }
-
-      try {
-        if (element.requestFullscreen) {
-          await element.requestFullscreen();
-        } else if (element.webkitRequestFullscreen) { /* Safari, Chrome */
-          await element.webkitRequestFullscreen();
-        } else if (element.mozRequestFullScreen) { /* Firefox */
-          await element.mozRequestFullScreen();
-        } else if (element.msRequestFullscreen) { /* IE/Edge */
-          await element.msRequestFullscreen();
-        } else {
-          console.warn("Fullscreen API is not supported by this browser.");
-        }
-      } catch (err: any) {
-         // Catch errors to prevent them from stopping the game launch.
-         // Log the error for debugging but allow the game to proceed.
-        console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`, err);
-      }
-    }
-    return Promise.resolve();
-  }, []);
-
 
   const handleStartGame = useCallback(async () => {
-    await requestFullscreen(); 
+    // Attempt fullscreen but don't wait for it to complete here
+    if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+      requestFullscreen().catch(err => {
+        // Log errors from fullscreen request, but don't let them block other operations
+        console.error("Fullscreen request failed (non-blocking):", err);
+      });
+    }
+
     try {
       if (!audioManager.isInitialized()) {
         await audioManager.initAudio();
@@ -247,13 +247,14 @@ export default function EntryPage() {
               animationDuration: `${particle.duration}s`,
               '--particle-initial-size': `${particle.size}px`,
               '--trail-angle': `${particle.trailAngle}deg`,
-            } as React.CSSProperties}
+            } as React.CSSProperties} 
           />
         ))}
       </div>
 
-      <div className="text-center w-full h-full flex flex-col items-center justify-between relative z-10 p-0 shadow-xl pt-3 pb-[50px]">
-        <div className="max-w-2xl w-full px-6 flex flex-col items-center h-full justify-between">
+      <div className="text-center w-full h-full flex flex-col items-center justify-between relative z-10 p-0 shadow-xl pt-3 pb-[50px]"> 
+        <div className="max-w-2xl w-full px-6 flex flex-col items-center h-full justify-between"> 
+          
           <div className="flex flex-col items-center">
             <h1 className="text-[44px] font-bold text-primary whitespace-nowrap pr-1 mr-1 ml-[-5px]">
               {animatedTitle.join('')}
@@ -267,6 +268,7 @@ export default function EntryPage() {
             </p>
           </div>
 
+          
           <div 
             className="relative w-full max-w-xs sm:max-w-sm md:max-w-md mx-auto aspect-[4/3] my-4 animate-swirl-in"
             style={{
@@ -280,6 +282,7 @@ export default function EntryPage() {
             data-ai-hint="man relaxing business"
           />
 
+          
           <div className="flex flex-col items-center w-full">
             <Button
               onClick={handleStartGame}
@@ -305,4 +308,3 @@ export default function EntryPage() {
     </div>
   );
 }
-
