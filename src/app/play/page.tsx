@@ -3,7 +3,7 @@
 "use client";
 
 import type { Reducer} from 'react';
-import { useRef, useCallback, useEffect, useState } from 'react';
+import { useReducer, useCallback, useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useGameLogic, getDefaultInitialGameState, gameReducer } from '@/hooks/useGameLogic';
 import { ControlPanel } from '@/components/game/ControlPanel';
@@ -44,7 +44,7 @@ export default function PlayPage() {
   }, []);
 
   useEffect(() => {
-    let calculatedPadding = '0px'; // Default padding
+    let calculatedPadding = '0px'; 
     if (userAgentString) {
       const isYandexBrowser = /YaBrowser/i.test(userAgentString);
       if (isYandexBrowser) {
@@ -56,20 +56,25 @@ export default function PlayPage() {
 
 
   const requestFullscreen = useCallback(() => {
-    if (typeof window !== 'undefined' && typeof document !== 'undefined' ) { 
-      const element = document.documentElement as HTMLElement & {
-        mozRequestFullScreen?: () => Promise<void>;
-        webkitRequestFullscreen?: () => Promise<void>;
-        msRequestFullscreen?: () => Promise<void>;
-      };
+    if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+        const element = document.documentElement as HTMLElement & {
+            mozRequestFullScreen?: () => Promise<void>;
+            webkitRequestFullscreen?: () => Promise<void>;
+            msRequestFullscreen?: () => Promise<void>;
+        };
+        
+        if (document.fullscreenElement || (document as any).webkitFullscreenElement || (document as any).mozFullScreenElement || (document as any).msFullscreenElement) {
+            return;
+        }
+        
         if (element.requestFullscreen) {
-            element.requestFullscreen().catch(err => console.warn(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`));
+            element.requestFullscreen().catch(err => console.info(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`));
         } else if (element.mozRequestFullScreen) { 
-            element.mozRequestFullScreen().catch((err: any) => console.warn(`Error attempting to enable full-screen mode (Firefox): ${err.message} (${err.name})`));
+            element.mozRequestFullScreen().catch((err: any) => console.info(`Error attempting to enable full-screen mode (Firefox): ${err.message} (${err.name})`));
         } else if (element.webkitRequestFullscreen) { 
-            element.webkitRequestFullscreen().catch((err: any) => console.warn(`Error attempting to enable full-screen mode (WebKit): ${err.message} (${err.name})`));
+            element.webkitRequestFullscreen().catch((err: any) => console.info(`Error attempting to enable full-screen mode (WebKit): ${err.message} (${err.name})`));
         } else if (element.msRequestFullscreen) { 
-            element.msRequestFullscreen().catch((err: any) => console.warn(`Error attempting to enable full-screen mode (IE/Edge): ${err.message} (${err.name})`));
+            element.msRequestFullscreen().catch((err: any) => console.info(`Error attempting to enable full-screen mode (IE/Edge): ${err.message} (${err.name})`));
         }
     }
   }, []);
@@ -119,8 +124,8 @@ export default function PlayPage() {
       const musicToPlay = levelMusicMap[gameState.currentLevel];
 
       if (musicToPlay) {
-        const currentAudio = audioManager.getCurrentPlayingLoop();
-        if (currentAudio !== musicToPlay) { 
+        const currentAudioLoop = audioManager.getCurrentPlayingLoop();
+        if (currentAudioLoop !== musicToPlay) { 
           setTimeout(() => {
              if (gameState.isGameInitialized && gameState.currentLevel === parseInt(musicToPlay.replace('Level',''))) {
               audioManager.playSound(musicToPlay);
@@ -409,3 +414,4 @@ export default function PlayPage() {
     </div>
   );
 }
+

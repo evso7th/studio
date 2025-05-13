@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useRouter } from 'next/navigation';
@@ -143,27 +144,38 @@ export default function EntryPage() {
             console.warn("EntryPage: Audio initialization failed after preloader.", error);
           }
         }
-        if (audioManager.isInitialized()) {
+        // Check if audio is initialized AND no other loop is playing (or if First_screen should take precedence)
+        if (audioManager.isInitialized() && audioManager.getCurrentPlayingLoop() !== 'First_screen') {
           audioManager.playSound('First_screen');
         }
       };
 
+      // Delay slightly to ensure user interaction might have happened if required by browser
       const soundTimeout = setTimeout(playInitialSound, 100);
       return () => clearTimeout(soundTimeout);
     }
   }, [isLoadingAssets, isMounted]);
 
-  const requestFullscreen = useCallback(() => {
-    const element = document.documentElement;
-    if (typeof window !== 'undefined' && element) { // Check if window is defined
+ const requestFullscreen = useCallback(() => {
+    if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+        const element = document.documentElement as HTMLElement & {
+            mozRequestFullScreen?: () => Promise<void>;
+            webkitRequestFullscreen?: () => Promise<void>;
+            msRequestFullscreen?: () => Promise<void>;
+        };
+        // Check if not already in fullscreen to prevent errors
+        if (document.fullscreenElement || (document as any).webkitFullscreenElement || (document as any).mozFullScreenElement || (document as any).msFullscreenElement) {
+            return;
+        }
+        
         if (element.requestFullscreen) {
-            element.requestFullscreen().catch(err => console.info(`Fullscreen request failed: ${err.message} (${err.name})`));
-        } else if ((element as any).mozRequestFullScreen) { /* Firefox */
-            (element as any).mozRequestFullScreen().catch((err: any) => console.info(`Fullscreen request failed (Firefox): ${err.message} (${err.name})`));
-        } else if ((element as any).webkitRequestFullscreen) { /* Chrome, Safari and Opera */
-            (element as any).webkitRequestFullscreen().catch((err: any) => console.info(`Fullscreen request failed (WebKit): ${err.message} (${err.name})`));
-        } else if ((element as any).msRequestFullscreen) { /* IE/Edge */
-            (element as any).msRequestFullscreen().catch((err: any) => console.info(`Fullscreen request failed (IE/Edge): ${err.message} (${err.name})`));
+            element.requestFullscreen().catch(err => console.info(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`));
+        } else if (element.mozRequestFullScreen) { /* Firefox */
+            element.mozRequestFullScreen().catch((err: any) => console.info(`Error attempting to enable full-screen mode (Firefox): ${err.message} (${err.name})`));
+        } else if (element.webkitRequestFullscreen) { /* Chrome, Safari and Opera */
+            element.webkitRequestFullscreen().catch((err: any) => console.info(`Error attempting to enable full-screen mode (WebKit): ${err.message} (${err.name})`));
+        } else if (element.msRequestFullscreen) { /* IE/Edge */
+            element.msRequestFullscreen().catch((err: any) => console.info(`Error attempting to enable full-screen mode (IE/Edge): ${err.message} (${err.name})`));
         }
     }
   }, []);
@@ -226,16 +238,16 @@ export default function EntryPage() {
       </div>
 
       <div className="text-center w-full h-full flex flex-col items-center justify-between relative z-10 p-0 shadow-xl pt-3 pb-[50px]">
-        <div className="max-w-2xl w-full px-6 flex flex-col items-center h-full justify-between">
+        <div className="max-w-2xl w-full px-6 flex flex-col items-center h-full justify-between pt-12 pb-[50px] box-border">
           <div className="flex flex-col items-center">
             <h1 className="text-[44px] font-bold text-primary whitespace-nowrap pr-1 mr-1 ml-[-5px]">
               {animatedTitle.join('')}
             </h1>
-            <p className="text-xl md:text-2xl text-foreground/90 mt-1">
+            <p className="text-xl md:text-2xl text-foreground/90 mt-[-10px]">
               Специальное издание <br />
               в честь Дня Рождения
             </p>
-            <p className="text-2xl md:text-3xl font-semibold text-accent mt-1">
+            <p className="text-2xl md:text-3xl font-semibold text-accent mt-[-10px]">
               Руслана Гайнанова
             </p>
           </div>
