@@ -42,52 +42,43 @@ export default function PlayPage() {
   }, []);
 
   useEffect(() => {
-    let calculatedPadding = '0px'; 
-    if (userAgentString) {
-      const isYandexBrowser = /YaBrowser/i.test(userAgentString);
-      if (isYandexBrowser) {
-        calculatedPadding = '32px'; 
+    const updatePadding = () => {
+      const isInFullscreen = !!document.fullscreenElement ||
+                             !!(document as any).webkitFullscreenElement ||
+                             !!(document as any).mozFullScreenElement ||
+                             !!(document as any).msFullscreenElement;
+
+      if (!isInFullscreen) {
+        setBottomPadding('48px');
+      } else {
+        // Revert to default/Yandex-specific if fullscreen
+        let defaultPadding = '0px';
+        if (userAgentString && /YaBrowser/i.test(userAgentString)) {
+          defaultPadding = '32px';
+        }
+        setBottomPadding(defaultPadding);
       }
-    }
-    setBottomPadding(calculatedPadding);
+    };
+
+    updatePadding(); // Initial check
+
+    const handleFullscreenChange = () => {
+      updatePadding();
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+    };
   }, [userAgentString]);
 
-  const requestFullscreen = useCallback(async () => {
-    if (typeof window !== 'undefined' && typeof document !== 'undefined') {
-      const element = document.documentElement as HTMLElement & {
-        mozRequestFullScreen?: () => Promise<void>;
-        webkitRequestFullscreen?: () => Promise<void>;
-        msRequestFullscreen?: () => Promise<void>;
-      };
-      
-      if (
-        document.fullscreenElement ||
-        (document as any).webkitFullscreenElement ||
-        (document as any).mozFullScreenElement ||
-        (document as any).msFullscreenElement
-      ) {
-        // Already in fullscreen
-        return Promise.resolve();
-      }
-
-      try {
-        if (element.requestFullscreen) {
-          await element.requestFullscreen();
-        } else if (element.webkitRequestFullscreen) { /* Safari, Chrome */
-          await element.webkitRequestFullscreen();
-        } else if (element.mozRequestFullScreen) { /* Firefox */
-          await element.mozRequestFullScreen();
-        } else if (element.msRequestFullscreen) { /* IE/Edge */
-          await element.msRequestFullscreen();
-        }
-      } catch (err: any) {
-        console.error(`Error attempting to enable full-screen mode from play page: ${err.message} (${err.name})`, err);
-      }
-    }
-    return Promise.resolve();
-  }, []);
-
-  // Removed useEffect that called requestFullscreen on gameState.isGameInitialized
 
   const updateGameAreaSize = useCallback(() => {
     if (gameAreaRef.current) {
@@ -347,7 +338,7 @@ export default function PlayPage() {
           backgroundImage: `url(${getLevelBackground(gameState.currentLevel)})`,
           backgroundSize: 'cover', 
           backgroundPosition: 'center center', 
-          height: `calc(100% - 10vh - ${bottomPadding})`, 
+          height: `calc(100% - 10vh)`, // Control panel height is 10vh, bottom padding is on parent
         }}
         data-ai-hint="abstract pattern"
       >
