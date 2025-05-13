@@ -5,7 +5,7 @@
 import type { Reducer} from 'react';
 import { useReducer, useCallback, useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { useGameLogic, getDefaultInitialGameState, gameReducer, calculatePlatformGroundY } from '@/hooks/useGameLogic';
+import { getDefaultInitialGameState, gameReducer, calculatePlatformGroundY } from '@/hooks/useGameLogic';
 import { ControlPanel } from '@/components/game/ControlPanel';
 import { HeroComponent, PlatformComponent, CoinComponent, EnemyComponent } from '@/components/game/GameRenderer';
 import { LevelCompleteScreen } from '@/components/game/LevelCompleteScreen';
@@ -17,7 +17,10 @@ import {
     BACKGROUND_LEVEL2_SRC, 
     BACKGROUND_LEVEL3_SRC, 
     CONTROL_PANEL_HEIGHT_PX,
-    YANDEX_BROWSER_BOTTOM_OFFSET
+    MARQUEE_HEIGHT_PX,
+    SAFE_AREA_BOTTOM_PADDING,
+    YANDEX_BROWSER_BOTTOM_OFFSET,
+    PLATFORM_GROUND_THICKNESS
 } from '@/lib/gameTypes';
 import { Button } from "@/components/ui/button";
 import { audioManager } from '@/lib/audioManager';
@@ -30,8 +33,6 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export default function PlayPage() {
-  // Initialize with static default dimensions for SSR and first client render.
-  // Actual dimensions will be set by useEffect.
   const initialGameStateForReducer = getDefaultInitialGameState(800, 600, 1);
   const [gameState, dispatch] = useReducer<Reducer<GameState, GameAction>>(gameReducer, initialGameStateForReducer);
   
@@ -44,17 +45,14 @@ export default function PlayPage() {
   const [isGamePausedForDialog, setIsGamePausedForDialog] = useState(false);
   
   const [gameDimensions, setGameDimensions] = useState({ width: 0, height: 0 });
-  const [controlPanelHeight, setControlPanelHeight] = useState(CONTROL_PANEL_HEIGHT_PX);
   
-  const SAFE_AREA_BOTTOM_PADDING = 48; 
-  const [isYandexBrowser, setIsYandexBrowser] = useState(false);
   const [effectiveBottomPadding, setEffectiveBottomPadding] = useState(SAFE_AREA_BOTTOM_PADDING);
+  const [controlPanelHeight, setControlPanelHeight] = useState(CONTROL_PANEL_HEIGHT_PX); // Initialize with default
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const ua = navigator.userAgent;
       const isYandex = /YaBrowser/.test(ua);
-      setIsYandexBrowser(isYandex);
       setEffectiveBottomPadding(isYandex ? SAFE_AREA_BOTTOM_PADDING + YANDEX_BROWSER_BOTTOM_OFFSET : SAFE_AREA_BOTTOM_PADDING);
     }
   }, []);
@@ -63,26 +61,27 @@ export default function PlayPage() {
     const updateLayout = () => {
       if (containerRef.current && gameAreaRef.current) {
         const newContainerClientHeight = containerRef.current.clientHeight;
-        const cpHeight = CONTROL_PANEL_HEIGHT_PX; 
-        setControlPanelHeight(cpHeight);
-
-        // The game area height is the container height minus control panel and bottom padding
-        const calculatedGameAreaHeight = Math.max(100, newContainerClientHeight - cpHeight - effectiveBottomPadding);
         
+        const calculatedControlPanelHeight = newContainerClientHeight * 0.1; // 10% of total height
+        setControlPanelHeight(calculatedControlPanelHeight);
+        
+        const calculatedGameAreaHeight = newContainerClientHeight * 0.9; // 90% of total height
+
         setGameDimensions({
-          width: gameAreaRef.current.clientWidth, // Game area width takes full available width
+          width: gameAreaRef.current.clientWidth, 
           height: calculatedGameAreaHeight,
         });
       }
     };
 
-    updateLayout(); // Initial layout calculation
+    updateLayout(); 
     const resizeObserver = new ResizeObserver(updateLayout);
     if (containerRef.current) {
       resizeObserver.observe(containerRef.current);
     }
     
     window.addEventListener('resize', updateLayout);
+    // requestFullscreen(); // Attempt fullscreen on mount
 
     return () => {
       if (containerRef.current) {
@@ -95,10 +94,27 @@ export default function PlayPage() {
       }
       audioManager.stopAllSounds();
     };
-  }, [effectiveBottomPadding]); // Rerun if effectiveBottomPadding changes
+  }, [effectiveBottomPadding]); // Removed requestFullscreen from dependencies
 
   useEffect(() => {
     if (gameDimensions.width > 0 && gameDimensions.height > 0) {
+      const groundY = calculatePlatformGroundY(gameDimensions.height);
+      const platformGround = {
+        id: 'platform_ground',
+        x: -100,
+        y: groundY,
+        width: gameDimensions.width + 200,
+        height: PLATFORM_GROUND_THICKNESS,
+        isMoving: false,
+        speed: 0,
+        direction: 1,
+        moveAxis: 'x',
+        imageSrc: GROUND_FLOOR_SRC, // Default, will be overridden by level
+      };
+      
+      // Update initial game state with correct ground platform Y
+      const updatedInitialState = getDefaultInitialGameState(gameDimensions.width, gameDimensions.height, gameState.currentLevel);
+      // Ensure the dispatch happens with the new dimensions.
       dispatch({
         type: 'UPDATE_GAME_AREA',
         payload: {
@@ -108,13 +124,19 @@ export default function PlayPage() {
         },
       });
     }
-  }, [gameDimensions, dispatch]);
+  }, [gameDimensions, dispatch, gameState.currentLevel]);
 
 
   useEffect(() => {
     if (gameState.isGameInitialized) {
       audioManager.stopAllSounds(); 
-      audioManager.playSound('New_level'); 
+      
+      if (gameState.soundToPlay !== 'New_level') { // Avoid playing New_level twice if it's already set
+        dispatch({ type: 'SOUND_PLAYED' }); // Reset if it was New_level from previous logic
+        dispatch({ type: 'GAME_TICK', payload: { deltaTime: 0 } }); // Force a tick to play New_level
+        // This ensures gameReducer sets soundToPlay to 'New_level'
+      }
+
 
       const levelMusicMap: Record<number, string> = {
         1: 'Level1',
@@ -124,8 +146,8 @@ export default function PlayPage() {
       const musicToPlay = levelMusicMap[gameState.currentLevel];
 
       if (musicToPlay) {
-        const currentAudioLoop = audioManager.getCurrentPlayingLoop();
-        if (currentAudioLoop !== musicToPlay) { 
+        const currentAudio = audioManager.getCurrentPlayingLoop();
+        if (currentAudio !== musicToPlay) { 
           setTimeout(() => {
              if(gameState.isGameInitialized && gameState.currentLevel === parseInt(musicToPlay.replace('Level',''))) {
               audioManager.playSound(musicToPlay);
@@ -134,7 +156,14 @@ export default function PlayPage() {
         }
       }
     }
-  }, [gameState.currentLevel, gameState.isGameInitialized]);
+  }, [gameState.currentLevel, gameState.isGameInitialized, dispatch]);
+
+  useEffect(() => {
+    if (gameState.soundToPlay) {
+      audioManager.playSound(gameState.soundToPlay);
+      dispatch({ type: 'SOUND_PLAYED' });
+    }
+  }, [gameState.soundToPlay, dispatch]);
 
   useEffect(() => {
     if (gameState.isGameInitialized && gameState.activeCoins.length > 0 && gameState.currentPairIndex === 0) {
@@ -145,7 +174,7 @@ export default function PlayPage() {
 
   const gameLoop = useCallback(() => { 
     if (gameState.isGameInitialized && gameState.gameArea.width > 0 && gameState.gameArea.height > 0 && !gameState.levelCompleteScreenActive && !gameState.gameOver && !gameState.gameLost && !isGamePausedForDialog) {
-       dispatch({ type: 'GAME_TICK', payload: { deltaTime: 1000 / 60 } }); // Fixed deltaTime
+       dispatch({ type: 'GAME_TICK', payload: { deltaTime: 1000 / 60 } }); 
     }
     animationFrameId.current = requestAnimationFrame(gameLoop);
   }, [dispatch, gameState.isGameInitialized, gameState.gameArea.width, gameState.gameArea.height, gameState.levelCompleteScreenActive, gameState.gameOver, gameState.gameLost, isGamePausedForDialog]);
@@ -237,15 +266,14 @@ export default function PlayPage() {
   };
 
   const handleConfirmExit = async () => {
-    audioManager.stopAllSounds();
-    audioManager.playSound('exit');
-
+    dispatch({ type: 'EXIT_GAME' }); // This will trigger the sound via reducer
+    
     setShowExitConfirmation(false);
     setIsGamePausedForDialog(false); 
     
     setTimeout(() => { 
       router.push('/');
-    }, 300);
+    }, 300); // Delay to allow sound to play
   };
 
   const handleCancelExit = () => {
@@ -271,7 +299,6 @@ export default function PlayPage() {
         <p className="text-xl mb-8 text-center">Кажется, наш герой немного увлекся полетом...</p>
         <Button
           onClick={() => {
-            audioManager.stopAllSounds();
             dispatch({ type: 'RESTART_LEVEL' });
           }}
           size="lg"
@@ -296,7 +323,6 @@ export default function PlayPage() {
       <LevelCompleteScreen
         currentLevel={gameState.currentLevel}
         onNextLevel={() => {
-          audioManager.stopAllSounds();
           dispatch({ type: 'NEXT_LEVEL' });
           if (gameState.showDebugLevelComplete) dispatch({type: 'SET_DEBUG_LEVEL_COMPLETE', payload: false });
         }}
@@ -336,13 +362,12 @@ export default function PlayPage() {
       </header>
 
       <div
-        ref={gameAreaRef} // This is the game rendering area
-        className="relative w-full overflow-hidden flex-grow" // flex-grow makes it take available space
+        ref={gameAreaRef}
+        className="relative w-full overflow-hidden flex-grow"
         style={{
           backgroundImage: `url(${getLevelBackground(gameState.currentLevel)})`,
           backgroundSize: 'cover', 
           backgroundPosition: 'center center',
-          // Explicit height is removed; flex-grow handles it.
         }}
         data-ai-hint="abstract pattern"
       >
@@ -351,7 +376,7 @@ export default function PlayPage() {
             <HeroComponent
               hero={gameState.hero}
               gameAreaHeight={gameDimensions.height}
-              paddingTop={0} // paddingTop is for the container, not the game area itself now
+              paddingTop={0} 
               heroAppearance={gameState.heroAppearance}
               heroAppearElapsedTime={gameState.heroAppearElapsedTime}
               heroAppearanceDuration={HERO_APPEARANCE_DURATION_MS}
@@ -405,7 +430,16 @@ export default function PlayPage() {
           currentLevel={gameState.currentLevel}
         />
       </div>
+       <div 
+        className="w-full shrink-0 flex items-center overflow-hidden bg-black text-white"
+        style={{ height: `${MARQUEE_HEIGHT_PX}px` }}
+      >
+        <p className="marquee-text whitespace-nowrap text-sm">
+          В знак уважения и восхищения наш скромный подарок в честь Вашего Дня рождения. С самыми добрыми пожеланиями Наталья, Евгений и Сергей
+        </p>
+      </div>
     </div>
   );
 }
 
+```

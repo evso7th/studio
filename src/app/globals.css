@@ -124,27 +124,28 @@
     }
   }
   .animate-rotate-y {
-    animation: rotate-y 1.8s linear infinite; 
+    animation: rotate-y 1.8s linear infinite;
     transform-style: preserve-3d; 
+    /* Adding a border for a 3D effect */
+    border: 1px solid hsl(var(--coin-color) / 0.5);
+    box-shadow: 0 0 5px hsl(var(--coin-color) / 0.3), 
+                inset 0 0 3px hsl(var(--coin-color) / 0.2);
   }
 
   .firework-particle {
     position: absolute;
-    /* Uses background-color from inline style */
-    /* Initial width & height are set by --particle-initial-size, then animated */
     width: var(--particle-initial-size);
     height: var(--particle-initial-size);
-    border-radius: 50%; /* Start as a circle */
+    border-radius: 50%; 
     animation-name: firework-explode;
     animation-timing-function: ease-out;
     animation-fill-mode: forwards;
-    will-change: transform, opacity, width, height, border-radius; /* Properties animated */
-    transform-origin: center center; /* Rotate around its center */
+    will-change: transform, opacity, width, height, border-radius; 
+    transform-origin: center center; 
   }
 
   @keyframes firework-explode {
     0% {
-      /* Start small, circular, and rotated to its future path */
       transform: scale(0.3) translate(0,0) rotate(var(--trail-angle, 0deg));
       width: var(--particle-initial-size);
       height: var(--particle-initial-size);
@@ -152,16 +153,13 @@
       border-radius: 50%;
     }
     50% {
-      /* Mid-flight: stretch into a trail, move partway */
       transform: scale(0.8) translate(calc(var(--tx) * 0.5), calc(var(--ty) * 0.5)) rotate(var(--trail-angle, 0deg));
-      /* Height becomes length, width becomes thickness, relative to initial size */
-      width: calc(var(--particle-initial-size) * 0.3); /* Thinner streak */
-      height: calc(var(--particle-initial-size) * 2.0); /* Longer streak */
+      width: calc(var(--particle-initial-size) * 0.3); 
+      height: calc(var(--particle-initial-size) * 2.0); 
       opacity: 0.9;
-      border-radius: calc(var(--particle-initial-size) * 0.15); /* Rounded ends for the streak */
+      border-radius: calc(var(--particle-initial-size) * 0.15); 
     }
     100% {
-      /* End of life: small, circular, faded, at destination */
       transform: scale(1.2) translate(var(--tx), var(--ty)) rotate(var(--trail-angle, 0deg));
       width: calc(var(--particle-initial-size) * 0.1);
       height: calc(var(--particle-initial-size) * 0.1);
@@ -198,14 +196,14 @@
     }
     100% {
       transform: scale(1) rotate(0deg);
-      clip-path: circle(150% at center); /* Large enough to reveal full rectangular image */
+      clip-path: circle(150% at center); 
       opacity: 1;
     }
   }
 
   .animate-swirl-in {
     animation: swirl-in 1.5s ease-out forwards;
-    transform-origin: center; /* Important for scale and rotate */
+    transform-origin: center; 
   }
 
   /* Animation delay utilities for preloader */
@@ -214,5 +212,22 @@
   }
   .animation-delay-400 {
     animation-delay: 0.4s;
+  }
+
+  /* Marquee Animation */
+  @keyframes marquee {
+    0% {
+      transform: translateX(100%);
+    }
+    100% {
+      transform: translateX(-100%);
+    }
+  }
+
+  .marquee-text {
+    display: inline-block;
+    padding-left: 100%; /* Start off-screen to the right */
+    white-space: nowrap;
+    animation: marquee 25s linear infinite;
   }
 }
