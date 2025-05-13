@@ -31,7 +31,8 @@ export function ControlPanel({ dispatch, onExit, disabled = false, currentLevel 
   const commonButtonStyles = "p-3 h-16 w-16 rounded-full text-foreground shadow-lg hover:shadow-xl active:shadow-lg active:translate-y-px transition-all duration-150 ease-in-out";
   const disabledButtonStyles = "disabled:opacity-70 disabled:bg-transparent disabled:border disabled:border-destructive disabled:text-destructive disabled:shadow-none disabled:cursor-not-allowed";
   
-  const getRadialGradientStyle = (isDisabled: boolean) => !isDisabled ? { backgroundImage: 'radial-gradient(circle, #f48c25, #e74210)' } : {};
+  const getRadialGradientStyle = (isDisabled: boolean) => !isDisabled ? { backgroundImage: 'radial-gradient(circle, hsl(var(--destructive)), #e74210, #f48c25 )' } : {};
+
 
   const getPanelBackground = (level: number) => {
     switch (level) {
@@ -48,7 +49,7 @@ export function ControlPanel({ dispatch, onExit, disabled = false, currentLevel 
 
   return (
     <div
-      className="h-full w-full shadow-lg p-2 flex items-center justify-around z-50 touch-manipulation"
+      className="h-full w-full p-2 flex items-center justify-around z-50 touch-manipulation" // Removed shadow-lg
       style={{ 
         backgroundImage: getPanelBackground(currentLevel),
         backgroundSize: 'cover',
@@ -111,4 +112,3 @@ export function ControlPanel({ dispatch, onExit, disabled = false, currentLevel 
     </div>
   );
 }
-

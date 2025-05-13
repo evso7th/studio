@@ -83,11 +83,11 @@ export function LevelCompleteScreen({ currentLevel, onNextLevel }: LevelComplete
 
   return (
     <div 
-      className="fixed inset-0 bg-black/70 flex flex-col items-center justify-center z-50 p-4 animate-in fade-in duration-700"
+      className="fixed inset-0 bg-black/70 flex flex-col items-center justify-center z-50 p-4 animate-in fade-in duration-1000"
       style={{
         backgroundImage: 'url(/assets/images/wallpaper1.jpg)',
-        backgroundSize: 'contain',
-        backgroundPosition: 'center center',
+        backgroundSize: 'cover', // Changed from 'contain' to 'cover'
+        backgroundPosition: 'center center', // Ensured it is center center
         backgroundRepeat: 'no-repeat',
       }}
       aria-modal="true"
@@ -117,12 +117,9 @@ export function LevelCompleteScreen({ currentLevel, onNextLevel }: LevelComplete
 
       <div className="bg-card text-card-foreground p-8 rounded-xl shadow-2xl text-center z-10 transform transition-all animate-in fade-in zoom-in-90 duration-1000"> {/* Dialog content, z-index 10 ensures it's above background and fireworks */}
         <div 
-          className="mx-auto mb-4 h-32 w-32 relative rounded-full animate-image-glow"
+          className="mx-auto mb-4 h-32 w-32 relative rounded-full animate-image-glow bg-cover bg-center bg-no-repeat"
           style={{
             backgroundImage: 'url(/assets/images/Superman.png)',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
           }}
           role="img"
           aria-label="Superman character"
@@ -146,4 +143,3 @@ export function LevelCompleteScreen({ currentLevel, onNextLevel }: LevelComplete
     </div>
   );
 }
-
