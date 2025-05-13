@@ -1,8 +1,6 @@
 
 import type { Metadata, Viewport } from 'next';
 import { Roboto } from 'next/font/google';
-// import { GeistSans } from 'geist/font/sans'; // Removed due to "Module not found" error
-// import { GeistMono } from 'geist/font/mono'; // Removed due to "Module not found" error
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import type React from 'react';
@@ -13,26 +11,18 @@ const roboto = Roboto({
   variable: '--font-roboto',
 });
 
-// Removed GeistSans and GeistMono due to "Module not found" errors.
-// const geistSans = GeistSans;
-// const geistMono = GeistMono;
-
-
 export const metadata: Metadata = {
   title: 'IPO Mad Racing',
   description: 'An exciting platformer game by Firebase Studio',
-  icons: {
-    icon: '/favicon.ico',
-  },
-  // Viewport configuration removed from here
+  manifest: '/manifest.json', 
+  icons: '/favicon.ico', // Simplified for debugging
 };
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  viewportFit: 'cover',
-  // Ensure touch actions are disabled and zooming is prevented for PWA-like experience
-  interactiveWidget: 'resizes-content', // May help with viewport issues on mobile
+  // viewportFit: 'cover', // Simplified for debugging
+  // interactiveWidget: 'resizes-content', // Simplified for debugging
 };
 
 
@@ -44,7 +34,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full">
       <head>
-        {/* The viewport meta tag is now handled by the viewport export above */}
+        {/* Favicon and manifest are now primarily handled by metadata and viewport exports */}
       </head>
       <body className={`${roboto.variable} font-sans antialiased h-full dark`}>
         {children}
