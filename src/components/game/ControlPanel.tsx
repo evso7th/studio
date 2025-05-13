@@ -36,13 +36,13 @@ export function ControlPanel({ dispatch, onExit, disabled = false, currentLevel 
   const getPanelBackground = (level: number) => {
     switch (level) {
       case 1:
-        return 'url("/assets/images/GroundFloor.png")';
+        return 'url("/assets/images/groundfloor.png")';
       case 2:
         return 'url("/assets/images/platform_ice.png")';
       case 3:
         return 'url("/assets/images/platform_stone.png")';
       default:
-        return 'url("/assets/images/GroundFloor.png")';
+        return 'url("/assets/images/groundfloor.png")';
     }
   };
 

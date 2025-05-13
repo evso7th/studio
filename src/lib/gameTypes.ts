@@ -99,7 +99,7 @@ export const COIN_SPAWN_DELAY_MS = 500;
 
 
 export const PLATFORM_GROUND_THICKNESS = 1;
-export const PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET = 0; 
+export const PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET = 60; 
 
 export const HERO_WIDTH = 30;
 export const HERO_HEIGHT = 80;
@@ -107,11 +107,11 @@ export const COIN_SIZE = 20;
 export const PLATFORM_DEFAULT_WIDTH = 130;
 export const PLATFORM_NON_GROUND_HEIGHT = 24;
 
-export const TARGET_JUMP_HEIGHT_PX = 250; // Updated
+export const TARGET_JUMP_HEIGHT_PX = 250;
 
 // Absolute Y coordinates for the *top surfaces* of the moving platforms, measured from game area bottom (y=0).
-export const LOWER_PLATFORM_TOP_Y_ABS = 200; // Updated
-export const UPPER_PLATFORM_TOP_Y_ABS = 400; // Updated
+export const LOWER_PLATFORM_TOP_Y_ABS = 200;
+export const UPPER_PLATFORM_TOP_Y_ABS = 400;
 
 // Y offsets for moving platforms, relative to the top of the ground platform, to achieve the absolute top surface heights.
 export const PLATFORM1_Y_OFFSET = LOWER_PLATFORM_TOP_Y_ABS - (PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET + PLATFORM_GROUND_THICKNESS) - PLATFORM_NON_GROUND_HEIGHT;
@@ -122,8 +122,8 @@ export const ENEMY2_LEVEL3_Y_OFFSET_FROM_PLATFORM2 = 50;
 
 
 export const INITIAL_PLATFORM_SPEED = 0.75;
-export const INITIAL_PLATFORM1_X_PERCENT = 0.0;
-export const INITIAL_PLATFORM2_X_PERCENT = 1.0;
+export const INITIAL_PLATFORM1_X_PERCENT = 1.0; // Starts from right
+export const INITIAL_PLATFORM2_X_PERCENT = 0.0; // Starts from left
 
 
 export const TOTAL_COINS_PER_LEVEL = 10;
@@ -132,7 +132,9 @@ export const MIN_DISTANCE_BETWEEN_PAIR_COINS_X_FACTOR = 0.25;
 export const MIN_DISTANCE_BETWEEN_PAIR_COINS_Y_FACTOR = 0.15;
 
 // Max Y-coordinate (from game area bottom) for the top edge of the coin spawn zone.
-export const MAX_COIN_SPAWN_Y_FROM_BOTTOM = 600; // Updated
+// This is 550px from the *top* of the control panel. Control panel top is at y = PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET.
+// So, max coin spawn Y = PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET + 550.
+export const MAX_COIN_SPAWN_Y_FROM_CONTROL_PANEL_TOP = 550; 
 
 
 export const HERO_BASE_SPEED = 1.25;
@@ -155,7 +157,7 @@ export const ARMOR_DURATION_LEVEL_3 = 12000;
 export const ARMOR_COOLDOWN_LEVEL_3 = 10000;
 
 // Platform image sources
-export const PLATFORM_GRASS_SRC = "/public/assets/images/PlatformGrass.png";
+export const PLATFORM_GRASS_SRC = "/assets/images/platform_grass.png";
 export const PLATFORM_ICE_SRC = "/assets/images/platform_ice.png";
 export const PLATFORM_STONE_SRC = "/assets/images/platform_stone.png";
 
@@ -183,6 +185,8 @@ export interface GameState {
   currentPairIndex: number;
   debugMode?: boolean;
   levelCompleteScreenActive: boolean;
+  showDebugLevelComplete?: boolean; // Added for debugging level complete screen
+  showDebugFinalScreen?: boolean; // Added for debugging final screen
   bearVoicePlayedForLevel: boolean;
 }
 
@@ -225,3 +229,4 @@ export const heroAnimationsConfig: HeroAnimations = {
     height: HERO_HEIGHT,
   },
 };
+

@@ -3,7 +3,7 @@
 import type { HeroType, PlatformType, CoinType, EnemyType } from "@/lib/gameTypes";
 import type React from 'react';
 import { cn } from "@/lib/utils";
-import { PLATFORM_GRASS_SRC } from "@/lib/gameTypes"; // Default platform image
+import { PLATFORM_GRASS_SRC } from "@/lib/gameTypes"; 
 
 interface AppearanceProps {
   type: 'heroAppear';
@@ -179,9 +179,7 @@ export function PlatformComponent({ platform, gameAreaHeight, paddingTop }: { pl
 
   const platformStyle: React.CSSProperties = {
     ...baseStyle,
-    backgroundImage: platform.id === 'platform_ground'
-      ? 'url("/assets/images/GroundFloor.png")' 
-      : `url(${platform.imageSrc || PLATFORM_GRASS_SRC})`,
+    backgroundImage: `url(${platform.imageSrc || PLATFORM_GRASS_SRC})`,
     backgroundSize: platform.id === 'platform_ground' ? 'auto 100%' : '100% 100%',
     backgroundPosition: platform.id === 'platform_ground' ? 'left bottom' : 'center',
     backgroundRepeat: platform.id === 'platform_ground' ? 'repeat-x' : 'no-repeat',
@@ -189,11 +187,20 @@ export function PlatformComponent({ platform, gameAreaHeight, paddingTop }: { pl
     border: 'none',
   };
 
+  let aiHint = "grass platform"; // Default
+  if (platform.imageSrc) {
+    if (platform.imageSrc.includes("groundfloor")) aiHint = "stone ground";
+    else if (platform.imageSrc.includes("ice")) aiHint = "ice platform";
+    else if (platform.imageSrc.includes("stone")) aiHint = "stone platform";
+    else if (platform.imageSrc.includes("grass")) aiHint = "grass platform";
+  }
+
+
   return (
     <div
       style={platformStyle}
       role="presentation"
-      data-ai-hint={platform.id === 'platform_ground' ? "stone ground" : (platform.imageSrc?.includes("ice") ? "ice platform" : (platform.imageSrc?.includes("stone") ? "stone platform" : "grass platform"))}
+      data-ai-hint={aiHint}
     />
   );
 }
@@ -291,7 +298,7 @@ export function CoinComponent({ coin, gameAreaHeight, paddingTop }: { coin: Coin
         className="animate-rotate-y"
         style={{
           ...baseStyle,
-          transformStyle: 'preserve-3d', // Important for 3D rotation
+          transformStyle: 'preserve-3d', 
           boxShadow: '2px 2px 3px rgba(0,0,0,0.2), inset 0 0 2px rgba(255,255,255,0.3)',
         }}
         role="img"
@@ -334,3 +341,4 @@ export function EnemyComponent({ enemy, gameAreaHeight, paddingTop }: EnemyCompo
     />
   );
 }
+
