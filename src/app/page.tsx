@@ -158,33 +158,35 @@ export default function EntryPage() {
 
   const requestFullscreen = useCallback(async () => {
     if (typeof window !== 'undefined' && typeof document !== 'undefined') {
-        const element = document.documentElement as HTMLElement & {
-            mozRequestFullScreen?: () => Promise<void>;
-            webkitRequestFullscreen?: () => Promise<void>;
-            msRequestFullscreen?: () => Promise<void>;
-        };
-        
-        if (document.fullscreenElement || (document as any).webkitFullscreenElement || (document as any).mozFullScreenElement || (document as any).msFullscreenElement) {
-            console.log("Already in fullscreen mode.");
-            return Promise.resolve();
+      const element = document.documentElement as HTMLElement & {
+        mozRequestFullScreen?: () => Promise<void>;
+        webkitRequestFullscreen?: () => Promise<void>;
+        msRequestFullscreen?: () => Promise<void>;
+      };
+
+      try {
+        if (document.fullscreenElement || 
+            (document as any).webkitFullscreenElement || 
+            (document as any).mozFullScreenElement || 
+            (document as any).msFullscreenElement) {
+          console.log("Already in fullscreen mode or request pending.");
+          return Promise.resolve();
         }
-        
-        try {
-            if (element.requestFullscreen) {
-                await element.requestFullscreen();
-            } else if (element.webkitRequestFullscreen) { /* Safari, Chrome */
-                await element.webkitRequestFullscreen();
-            } else if (element.mozRequestFullScreen) { /* Firefox */
-                await element.mozRequestFullScreen();
-            } else if (element.msRequestFullscreen) { /* IE/Edge */
-                await element.msRequestFullscreen();
-            } else {
-                console.warn("Fullscreen API is not supported by this browser.");
-            }
-        } catch (err: any) {
-             console.info(`Fullscreen request failed or was denied: ${err.message} (${err.name})`);
-             // Do not rethrow, allow game to continue
+
+        if (element.requestFullscreen) {
+          await element.requestFullscreen();
+        } else if (element.webkitRequestFullscreen) { /* Safari, Chrome */
+          await element.webkitRequestFullscreen();
+        } else if (element.mozRequestFullScreen) { /* Firefox */
+          await element.mozRequestFullScreen();
+        } else if (element.msRequestFullscreen) { /* IE/Edge */
+          await element.msRequestFullscreen();
+        } else {
+          console.warn("Fullscreen API is not supported by this browser.");
         }
+      } catch (err: any) {
+        console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`, err);
+      }
     }
     return Promise.resolve();
   }, []);
@@ -246,7 +248,7 @@ export default function EntryPage() {
         ))}
       </div>
 
-      <div className="text-center w-full h-full flex flex-col items-center justify-between relative z-10 p-0 shadow-xl pt-3 pb-[50px]">
+      <div className="text-center w-full h-full flex flex-col items-center justify-between relative z-10 p-0 shadow-xl pt-12 pb-[50px] box-border">
         <div className="max-w-2xl w-full px-6 flex flex-col items-center h-full justify-between pt-12 pb-[50px] box-border">
           <div className="flex flex-col items-center">
             <h1 className="text-[44px] font-bold text-primary whitespace-nowrap pr-1 mr-1 ml-[-5px]">

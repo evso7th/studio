@@ -54,41 +54,6 @@ export default function PlayPage() {
     setBottomPadding(calculatedPadding);
   }, [userAgentString]);
 
-
- const requestFullscreen = useCallback(async () => {
-    if (typeof window !== 'undefined' && typeof document !== 'undefined') {
-        const element = document.documentElement as HTMLElement & {
-            mozRequestFullScreen?: () => Promise<void>;
-            webkitRequestFullscreen?: () => Promise<void>;
-            msRequestFullscreen?: () => Promise<void>;
-        };
-        
-        if (document.fullscreenElement || (document as any).webkitFullscreenElement || (document as any).mozFullScreenElement || (document as any).msFullscreenElement) {
-            console.log("Already in fullscreen mode.");
-            return Promise.resolve();
-        }
-        
-        try {
-            if (element.requestFullscreen) {
-                await element.requestFullscreen();
-            } else if (element.webkitRequestFullscreen) { /* Safari, Chrome */
-                await element.webkitRequestFullscreen();
-            } else if (element.mozRequestFullScreen) { /* Firefox */
-                await element.mozRequestFullScreen();
-            } else if (element.msRequestFullscreen) { /* IE/Edge */
-                await element.msRequestFullscreen();
-            } else {
-                console.warn("Fullscreen API is not supported by this browser.");
-            }
-        } catch (err: any) {
-             console.info(`Fullscreen request failed or was denied: ${err.message} (${err.name})`);
-             // Do not rethrow, allow game to continue
-        }
-    }
-    return Promise.resolve();
-  }, []);
-
-
   const updateGameAreaSize = useCallback(() => {
     if (gameAreaRef.current) {
       const { clientWidth, clientHeight } = gameAreaRef.current;
