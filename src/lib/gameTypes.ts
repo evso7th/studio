@@ -146,8 +146,8 @@ export const SLIPPERY_FRICTION_FACTOR = 0.92;
 export const ENEMY_WIDTH = 48;
 export const ENEMY_HEIGHT = 48;
 export const ENEMY_COLLISION_RADIUS = 24;
-export const ENEMY_IMAGE_SRC_LVL2 = "/assets/images/bearFace.png";
-export const ENEMY_IMAGE_SRC_LVL3_ENEMY1 = "/assets/images/bearFace.png";
+export const ENEMY_IMAGE_SRC_LVL2 = "/assets/images/bearface.png";
+export const ENEMY_IMAGE_SRC_LVL3_ENEMY1 = "/assets/images/bearface.png";
 export const ENEMY_IMAGE_SRC_LVL3_ENEMY2 = "/assets/images/BearFaceDark.png";
 export const ENEMY_DEFAULT_SPEED = 0.4;
 export const ENEMY_DEFEAT_DURATION_MS = 5000;
@@ -160,7 +160,7 @@ export const ARMOR_DURATION_LEVEL_3 = 12000;
 export const ARMOR_COOLDOWN_LEVEL_3 = 10000;
 
 // Platform image sources
-export const PLATFORM_GRASS_SRC = "/assets/images/PlatformGrass.png";
+export const PLATFORM_GRASS_SRC = "/assets/images/platform_grass.png";
 export const PLATFORM_ICE_SRC = "/assets/images/platform_ice.png";
 export const PLATFORM_STONE_SRC = "/assets/images/platform_stone.png";
 
@@ -211,21 +211,21 @@ export type GameAction =
 
 export const heroAnimationsConfig: HeroAnimations = {
   idle: {
-    src: "/assets/images/HeroJeans3.png",
+    src: "/assets/images/hero_jeans3.png",
     frames: 1,
     fps: 1,
     width: HERO_WIDTH,
     height: HERO_HEIGHT,
   },
   run: {
-    src: "/assets/images/HeroJeans3.png",
+    src: "/assets/images/hero_jeans3.png",
     frames: 1,
     fps: 10,
     width: HERO_WIDTH,
     height: HERO_HEIGHT,
   },
   jump: {
-    src: "/assets/images/HeroJeans3.png",
+    src: "/assets/images/hero_jeans3.png",
     frames: 1,
     fps: 1,
     width: HERO_WIDTH,

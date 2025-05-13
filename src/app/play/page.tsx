@@ -2,7 +2,6 @@
 // @ts-nocheck
 "use client";
 
-import type { useEffect as useEffectType } from 'react'; // Renamed type import to avoid conflict if we decide to import useEffect directly
 import { useRef, useCallback, useEffect as useReactEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useGameLogic } from '@/hooks/useGameLogic';
@@ -33,17 +32,8 @@ export default function PlayPage() {
   const [showDebugLevelComplete, setShowDebugLevelComplete] = useState(false);
   const [showExitConfirmation, setShowExitConfirmation] = useState(false);
   const [isGamePausedForDialog, setIsGamePausedForDialog] = useState(false);
-  const [userAgentString, setUserAgentString] = useState('');
-
-  useReactEffect(() => {
-    if (typeof window !== 'undefined') {
-      setUserAgentString(navigator.userAgent);
-    }
-  }, []);
-
-  const isYandexBrowser = userAgentString.includes('YaBrowser');
-  // Adjusted padding calculation to ensure it's always a string with 'px'
-  const bottomPadding = `${64 + (isYandexBrowser ? 32 : 0)}px`;
+  
+  const bottomPadding = `0px`; // No bottom padding, control panel height managed by flex
 
 
   useReactEffect(() => {
@@ -88,8 +78,8 @@ export default function PlayPage() {
 
   useReactEffect(() => {
     if (gameState.isGameInitialized) {
-      audioManager.stopAllSounds(); // Stop all sounds first to ensure clean transition
-      audioManager.playSound('New_level'); // Play new level sound
+      audioManager.stopAllSounds(); 
+      audioManager.playSound('New_level'); 
 
       const levelMusicMap: Record<number, string> = {
         1: 'Level1',
@@ -99,14 +89,14 @@ export default function PlayPage() {
       const musicToPlay = levelMusicMap[gameState.currentLevel];
 
       if (musicToPlay) {
-        // No need to check currentAudio here if stopAllSounds is effective
-        // The playSound in audioManager will handle not restarting if it's already the target looping sound
-        setTimeout(() => {
-          // Check currentLevel again inside setTimeout to ensure it hasn't changed by another action
-           if (gameState.isGameInitialized && gameState.currentLevel === parseInt(musicToPlay.replace('Level',''))) {
-            audioManager.playSound(musicToPlay);
-          }
-        }, 500); // Delay to allow New_level sound to play a bit
+        const currentAudio = audioManager.getCurrentPlayingLoop();
+        if (currentAudio !== musicToPlay) { 
+          setTimeout(() => {
+             if (gameState.isGameInitialized && gameState.currentLevel === parseInt(musicToPlay.replace('Level',''))) {
+              audioManager.playSound(musicToPlay);
+            }
+          }, 500); 
+        }
       }
     }
   }, [gameState.currentLevel, gameState.isGameInitialized]);
@@ -294,7 +284,7 @@ export default function PlayPage() {
     >
       <header className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center z-10 pointer-events-none">
         <div>
-          <h1 className="text-xs font-normal text-white font-roboto shadow-md">IPO Mad Racing</h1>
+          <h1 className="font-roboto text-2xl font-bold text-white shadow-md">IPO Mad Racing</h1>
           {gameState.hero?.isArmored && gameState.hero.armorRemainingTime > 0 && (
             <p className="text-xs font-normal text-accent font-roboto shadow-md">
               Броня: {gameState.hero.armorRemainingTime}с
@@ -312,8 +302,9 @@ export default function PlayPage() {
         className="relative w-full overflow-hidden flex-grow bg-cover bg-center bg-no-repeat"
         style={{
           backgroundImage: `url(${getLevelBackground(gameState.currentLevel)})`,
-          perspective: '1000px',
-          height: 'calc(100% - 10vh)', // Game area takes 90% of viewport height (100% - 10vh for control panel)
+          backgroundSize: 'cover', // Changed from '100% 100%' for better aspect ratio handling
+          backgroundPosition: 'center', // Ensure background is centered
+          height: 'calc(100% - 10vh)', 
         }}
         data-ai-hint="abstract pattern"
       >
@@ -379,3 +370,4 @@ export default function PlayPage() {
     </div>
   );
 }
+

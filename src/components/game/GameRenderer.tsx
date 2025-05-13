@@ -293,7 +293,7 @@ export function CoinComponent({ coin, gameAreaHeight, paddingTop }: { coin: Coin
   if (!coin.collected && !coin.isSpawning) {
     return (
       <img
-        src="/assets/images/Thankscoin.png"
+        src="/assets/images/thankscoin.png"
         alt="Coin"
         className="animate-rotate-y"
         style={{

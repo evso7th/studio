@@ -85,8 +85,10 @@ export function LevelCompleteScreen({ currentLevel, onNextLevel }: LevelComplete
     <div 
       className="fixed inset-0 bg-black/70 flex flex-col items-center justify-center z-50 p-4 animate-in fade-in duration-700"
       style={{
-        backgroundImage: 'url(/assets/images/Wallpaper1.jpg)',
-        backgroundSize: 'cover',
+        backgroundImage: 'url(/assets/images/wallpaper1.jpg)',
+        backgroundSize: 'contain',
+        backgroundPosition: 'center center',
+        backgroundRepeat: 'no-repeat',
       }}
       aria-modal="true"
       role="dialog"
@@ -144,3 +146,4 @@ export function LevelCompleteScreen({ currentLevel, onNextLevel }: LevelComplete
     </div>
   );
 }
+

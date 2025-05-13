@@ -3,7 +3,7 @@
 "use client";
 
 import type { Reducer} from 'react';
-import { useReducer, useCallback, useEffect as useReactEffect, useRef } from 'react'; 
+import { useReducer, useCallback, useEffect, useRef } from 'react'; 
 import type { GameState, GameAction, HeroType, PlatformType, CoinType, Size } from '@/lib/gameTypes'; 
 import { 
     HERO_APPEARANCE_DURATION_MS, 
@@ -780,6 +780,14 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         if (nextHero.x < 0) nextHero.x = 0;
         if (nextHero.x + nextHero.width > gameArea.width) nextHero.x = gameArea.width - nextHero.width;
         
+        // Prevent hero from going off-screen (vertically - top boundary)
+        if (nextHero.y + nextHero.height > gameArea.height) {
+            nextHero.y = gameArea.height - nextHero.height;
+            if (nextHero.velocity && nextHero.velocity.y > 0) { // If moving upwards
+                nextHero.velocity.y = 0; // Stop upward movement
+            }
+        }
+        
         for (let i = 0; i < nextEnemies.length; i++) {
           const enemy = nextEnemies[i];
           if (enemy.isDefeated || enemy.isFrozen) continue; 
@@ -927,7 +935,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
             }
         }
 
-
+        // Prevent hero from going off-screen (vertically - bottom boundary - GAME LOST condition)
         if (nextHero.y < 0 && !levelCompleteThisTick && !(heroHitByEnemy && !nextHero.isArmored)) { 
           gameLostThisTick = true;
           audioManager.playSound('Hero_fail');
@@ -986,7 +994,7 @@ export function useGameLogic() {
     dispatch(action);
   }, []); 
   
-  useReactEffect(() => {
+  useEffect(() => {
     if (gameState.gameArea.width > 0 && gameState.gameArea.height > 0 && !gameState.isGameInitialized) {
       dispatch({ 
         type: 'UPDATE_GAME_AREA', 
