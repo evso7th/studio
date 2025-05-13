@@ -5,12 +5,12 @@
 import type { Reducer} from 'react';
 import { useRef, useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useGameLogic, getDefaultInitialGameState } from '@/hooks/useGameLogic';
+import { useGameLogic, getDefaultInitialGameState, gameReducer } from '@/hooks/useGameLogic';
 import { ControlPanel } from '@/components/game/ControlPanel';
 import { HeroComponent, PlatformComponent, CoinComponent, EnemyComponent } from '@/components/game/GameRenderer';
 import { LevelCompleteScreen } from '@/components/game/LevelCompleteScreen';
 import { FinalScreen } from '@/components/game/FinalScreen';
-import type { GameState } from '@/lib/gameTypes';
+import type { GameState, GameAction } from '@/lib/gameTypes';
 import { HERO_APPEARANCE_DURATION_MS, BACKGROUND_LEVEL1_SRC, BACKGROUND_LEVEL2_SRC, BACKGROUND_LEVEL3_SRC } from '@/lib/gameTypes';
 import { Button } from "@/components/ui/button";
 import { audioManager } from '@/lib/audioManager';
@@ -34,44 +34,49 @@ export default function PlayPage() {
   const [showExitConfirmation, setShowExitConfirmation] = useState(false);
   const [isGamePausedForDialog, setIsGamePausedForDialog] = useState(false);
   
-  const bottomPadding = `0px`; 
-
+  const [bottomPadding, setBottomPadding] = useState('0px');
+  const [userAgentString, setUserAgentString] = useState('');
 
   useEffect(() => {
-    // dispatch({ type: 'SET_DEBUG_LEVEL', payload: 3 });
-    // setShowDebugFinalScreen(true);
+    if (typeof window !== 'undefined') {
+      setUserAgentString(navigator.userAgent);
+    }
+  }, []);
 
-    // dispatch({ type: 'SET_DEBUG_LEVEL_COMPLETE', payload: true });
-    // setShowDebugLevelComplete(true);
-    // dispatch({ type: 'SET_DEBUG_LEVEL', payload: 1 });
-  }, [dispatch]);
+  useEffect(() => {
+    let calculatedPadding = '0px'; // Default padding
+    if (userAgentString) {
+      const isYandexBrowser = /YaBrowser/i.test(userAgentString);
+      if (isYandexBrowser) {
+        calculatedPadding = '32px'; 
+      }
+    }
+    setBottomPadding(calculatedPadding);
+  }, [userAgentString]);
+
 
   const requestFullscreen = useCallback(() => {
-    if (typeof window !== 'undefined') { 
-      const element = document.documentElement;
-      if (
-        typeof document !== 'undefined' && // Ensure document is available
-        document.fullscreenElement === null &&
-        (document as any).webkitFullscreenElement === null &&
-        (document as any).mozFullScreenElement === null &&
-        (document as any).msFullscreenElement === null
-      ) {
+    if (typeof window !== 'undefined' && typeof document !== 'undefined' ) { 
+      const element = document.documentElement as HTMLElement & {
+        mozRequestFullScreen?: () => Promise<void>;
+        webkitRequestFullscreen?: () => Promise<void>;
+        msRequestFullscreen?: () => Promise<void>;
+      };
         if (element.requestFullscreen) {
             element.requestFullscreen().catch(err => console.warn(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`));
-        } else if ((element as any).mozRequestFullScreen) { 
-            (element as any).mozRequestFullScreen().catch((err: any) => console.warn(`Error attempting to enable full-screen mode (Firefox): ${err.message} (${err.name})`));
-        } else if ((element as any).webkitRequestFullscreen) { 
-            (element as any).webkitRequestFullscreen().catch((err: any) => console.warn(`Error attempting to enable full-screen mode (WebKit): ${err.message} (${err.name})`));
-        } else if ((element as any).msRequestFullscreen) { 
-            (element as any).msRequestFullscreen().catch((err: any) => console.warn(`Error attempting to enable full-screen mode (IE/Edge): ${err.message} (${err.name})`));
+        } else if (element.mozRequestFullScreen) { 
+            element.mozRequestFullScreen().catch((err: any) => console.warn(`Error attempting to enable full-screen mode (Firefox): ${err.message} (${err.name})`));
+        } else if (element.webkitRequestFullscreen) { 
+            element.webkitRequestFullscreen().catch((err: any) => console.warn(`Error attempting to enable full-screen mode (WebKit): ${err.message} (${err.name})`));
+        } else if (element.msRequestFullscreen) { 
+            element.msRequestFullscreen().catch((err: any) => console.warn(`Error attempting to enable full-screen mode (IE/Edge): ${err.message} (${err.name})`));
         }
-      }
     }
   }, []);
 
   useEffect(() => {
     if (gameState.isGameInitialized) {
-      requestFullscreen();
+      requestFullscreen(); 
     }
   }, [gameState.isGameInitialized, requestFullscreen]);
 
@@ -130,7 +135,7 @@ export default function PlayPage() {
     if (gameState.isGameInitialized && gameState.activeCoins.length > 0 && gameState.currentPairIndex === 0) {
       const firstPairExistsAndSpawning = gameState.activeCoins.some(c => c.pairId === 0 && c.isSpawning);
       if (firstPairExistsAndSpawning) {
-        audioManager.playSound('Coin_splash');
+        // audioManager.playSound('Coin_splash'); // Sound handled in reducer
       }
     }
   }, [gameState.isGameInitialized, gameState.activeCoins, gameState.currentPairIndex]);
@@ -338,7 +343,7 @@ export default function PlayPage() {
           backgroundImage: `url(${getLevelBackground(gameState.currentLevel)})`,
           backgroundSize: 'cover', 
           backgroundPosition: gameState.currentLevel === 3 ? 'top right' : 'top center',
-          height: 'calc(100% - 10vh)', 
+          height: `calc(100% - 10vh - ${bottomPadding})`, 
         }}
         data-ai-hint="abstract pattern"
       >
@@ -404,4 +409,3 @@ export default function PlayPage() {
     </div>
   );
 }
-
