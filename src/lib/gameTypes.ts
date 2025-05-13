@@ -99,7 +99,10 @@ export const COIN_SPAWN_DELAY_MS = 500;
 
 
 export const PLATFORM_GROUND_THICKNESS = 1;
-export const PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET = 60; 
+// This constant defines the Y position of the *bottom* of the ground platform,
+// relative to the bottom of the game area (which is the top of the control panel).
+// Setting it to 0 means the ground platform's bottom edge aligns directly with the top of the control panel.
+export const PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET = 0; 
 
 export const HERO_WIDTH = 30;
 export const HERO_HEIGHT = 80;
@@ -114,6 +117,8 @@ export const LOWER_PLATFORM_TOP_Y_ABS = 200;
 export const UPPER_PLATFORM_TOP_Y_ABS = 400;
 
 // Y offsets for moving platforms, relative to the top of the ground platform, to achieve the absolute top surface heights.
+// These calculations assume PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET is the y-coordinate of the ground platform's bottom.
+// The top of the ground platform is PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET + PLATFORM_GROUND_THICKNESS.
 export const PLATFORM1_Y_OFFSET = LOWER_PLATFORM_TOP_Y_ABS - (PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET + PLATFORM_GROUND_THICKNESS) - PLATFORM_NON_GROUND_HEIGHT;
 export const PLATFORM2_Y_OFFSET = UPPER_PLATFORM_TOP_Y_ABS - (PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET + PLATFORM_GROUND_THICKNESS) - PLATFORM_NON_GROUND_HEIGHT;
 
@@ -132,9 +137,7 @@ export const MIN_DISTANCE_BETWEEN_PAIR_COINS_X_FACTOR = 0.25;
 export const MIN_DISTANCE_BETWEEN_PAIR_COINS_Y_FACTOR = 0.15;
 
 // Max Y-coordinate (from game area bottom) for the top edge of the coin spawn zone.
-// This is 550px from the *top* of the control panel. Control panel top is at y = PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET.
-// So, max coin spawn Y = PLATFORM_GROUND_Y_FROM_BOTTOM_OFFSET + 550.
-export const MAX_COIN_SPAWN_Y_FROM_CONTROL_PANEL_TOP = 550; 
+export const MAX_COIN_SPAWN_Y_FROM_CONTROL_PANEL_TOP = 600; 
 
 
 export const HERO_BASE_SPEED = 1.25;
@@ -157,7 +160,7 @@ export const ARMOR_DURATION_LEVEL_3 = 12000;
 export const ARMOR_COOLDOWN_LEVEL_3 = 10000;
 
 // Platform image sources
-export const PLATFORM_GRASS_SRC = "/assets/images/platform_grass.png";
+export const PLATFORM_GRASS_SRC = "/assets/images/PlatformGrass.png";
 export const PLATFORM_ICE_SRC = "/assets/images/platform_ice.png";
 export const PLATFORM_STONE_SRC = "/assets/images/platform_stone.png";
 

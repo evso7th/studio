@@ -3,7 +3,7 @@
 "use client";
 
 import type { Reducer} from 'react';
-import { useReducer, useCallback, useEffect, useRef } from 'react'; 
+import { useReducer, useCallback, useEffect as useReactEffect, useRef } from 'react'; 
 import type { GameState, GameAction, HeroType, PlatformType, CoinType, Size } from '@/lib/gameTypes'; 
 import { 
     HERO_APPEARANCE_DURATION_MS, 
@@ -94,11 +94,11 @@ const getLevelPlatforms = (gameAreaWidth: number, gameAreaHeight: number, level:
   let isPlatform2Slippery = false;
   let platform1ImageSrc = PLATFORM_GRASS_SRC;
   let platform2ImageSrc = PLATFORM_GRASS_SRC;
-  let groundPlatformImageSrc = "/assets/images/groundfloor.png"; // Default for L1
+  let groundPlatformImageSrc = "/assets/images/groundfloor.png";
 
   if (level === 1) {
-    platform1ImageSrc = "/assets/images/platform_grass.png"; 
-    platform2ImageSrc = "/assets/images/platform_grass.png";
+    platform1ImageSrc = PLATFORM_GRASS_SRC; 
+    platform2ImageSrc = PLATFORM_GRASS_SRC;
     groundPlatformImageSrc = "/assets/images/groundfloor.png";
   } else if (level === 2) {
     platformSpeed = 0.75;
@@ -126,10 +126,10 @@ const getLevelPlatforms = (gameAreaWidth: number, gameAreaHeight: number, level:
     },
     { 
       id: 'platform1', 
-      x: gameAreaWidth * INITIAL_PLATFORM1_X_PERCENT - (INITIAL_PLATFORM1_X_PERCENT === 1.0 ? PLATFORM_DEFAULT_WIDTH: 0), // Adjust if starting from right edge
+      x: gameAreaWidth * INITIAL_PLATFORM1_X_PERCENT - (INITIAL_PLATFORM1_X_PERCENT === 1.0 ? PLATFORM_DEFAULT_WIDTH: 0), 
       y: groundPlatformY + PLATFORM_GROUND_THICKNESS + PLATFORM1_Y_OFFSET, 
       width: PLATFORM_DEFAULT_WIDTH, height: PLATFORM_NON_GROUND_HEIGHT, 
-      isMoving: true, speed: platformSpeed, direction: INITIAL_PLATFORM1_X_PERCENT === 1.0 ? -1 : 1, // Move left if starting from right
+      isMoving: true, speed: platformSpeed, direction: INITIAL_PLATFORM1_X_PERCENT === 1.0 ? -1 : 1, 
       moveAxis: 'x',
       moveRange: { min: 0, max: gameAreaWidth - PLATFORM_DEFAULT_WIDTH },
       imageSrc: platform1ImageSrc,
@@ -137,10 +137,10 @@ const getLevelPlatforms = (gameAreaWidth: number, gameAreaHeight: number, level:
     },
     { 
       id: 'platform2', 
-      x: gameAreaWidth * INITIAL_PLATFORM2_X_PERCENT - (INITIAL_PLATFORM2_X_PERCENT === 1.0 ? PLATFORM_DEFAULT_WIDTH: 0), // Adjust if starting from right edge
+      x: gameAreaWidth * INITIAL_PLATFORM2_X_PERCENT - (INITIAL_PLATFORM2_X_PERCENT === 1.0 ? PLATFORM_DEFAULT_WIDTH: 0), 
       y: groundPlatformY + PLATFORM_GROUND_THICKNESS + PLATFORM2_Y_OFFSET, 
       width: PLATFORM_DEFAULT_WIDTH, height: PLATFORM_NON_GROUND_HEIGHT,
-      isMoving: true, speed: platformSpeed, direction: INITIAL_PLATFORM2_X_PERCENT === 1.0 ? -1 : 1,  // Move left if starting from right
+      isMoving: true, speed: platformSpeed, direction: INITIAL_PLATFORM2_X_PERCENT === 1.0 ? -1 : 1, 
       moveAxis: 'x',
       moveRange: { min: 0, max: gameAreaWidth - PLATFORM_DEFAULT_WIDTH },
       imageSrc: platform2ImageSrc,
@@ -238,7 +238,6 @@ function spawnNextCoinPair(gameArea: Size, coinSize: number, currentPairId: numb
   const newPair: CoinType[] = [];
   
   const groundPlatformY = calculatePlatformGroundY(gameArea.height); 
-  const groundPlatformTopY = groundPlatformY + PLATFORM_GROUND_THICKNESS;
 
 
   const effectiveMinSpawnY = LOWER_PLATFORM_TOP_Y_ABS;
@@ -987,7 +986,7 @@ export function useGameLogic() {
     dispatch(action);
   }, []); 
   
-  useEffect(() => {
+  useReactEffect(() => {
     if (gameState.gameArea.width > 0 && gameState.gameArea.height > 0 && !gameState.isGameInitialized) {
       dispatch({ 
         type: 'UPDATE_GAME_AREA', 
@@ -1003,4 +1002,5 @@ export function useGameLogic() {
 
   return { gameState, dispatch: handleGameAction, gameTick };
 }
+
 
